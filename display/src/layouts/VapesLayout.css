@@ -1,0 +1,132 @@
+/* VapesLayout.css */
+
+@keyframes smoke-rise {
+    0% {
+        transform: translateY(0) translateX(0) scale(1);
+        opacity: 0.4;
+    }
+
+    50% {
+        transform: translateY(-60px) translateX(10px) scale(1.5);
+        opacity: 0.2;
+    }
+
+    100% {
+        transform: translateY(-120px) translateX(-5px) scale(2);
+        opacity: 0;
+    }
+}
+
+@keyframes shelf-pan {
+    0% {
+        transform: perspective(1200px) rotateX(4deg) translateX(0);
+    }
+
+    50% {
+        transform: perspective(1200px) rotateX(4deg) translateX(-3%);
+    }
+
+    100% {
+        transform: perspective(1200px) rotateX(4deg) translateX(0);
+    }
+}
+
+.vapes-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.vapes-shelf-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5vh;
+    width: 100%;
+    animation: shelf-pan 18s ease-in-out infinite;
+    transform-origin: center center;
+}
+
+.vapes-shelf {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.vapes-shelf--0 {
+    transform: perspective(800px) rotateX(3deg);
+}
+
+.vapes-shelf--1 {
+    transform: perspective(800px) rotateX(5deg) scale(0.92);
+    opacity: 0.85;
+}
+
+.vapes-shelf__plank {
+    width: 95vw;
+    height: 6px;
+    background: linear-gradient(90deg,
+            transparent,
+            var(--category-accent) 20%,
+            rgba(200, 169, 81, 0.7) 50%,
+            var(--category-accent) 80%,
+            transparent);
+    border-radius: 3px;
+    box-shadow: 0 0 20px var(--category-accent);
+    margin-bottom: 10px;
+}
+
+.vapes-shelf__products {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(8px, 2vw, 24px);
+    flex-wrap: wrap;
+    padding: 0 2vw;
+}
+
+.vapes-product-slot {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: card-appear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.vapes-smoke {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    animation: smoke-rise 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.vapes-smoke::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    top: -8px;
+    left: 3px;
+    animation: smoke-rise 3s ease-in-out 0.5s infinite;
+}
+
+.vapes-light-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 40% at 50% 30%, rgba(200, 169, 81, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+}

@@ -1,0 +1,305 @@
+/* DealsLayout.css — "The Vault" full design system */
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* SCENE ROOT                                                          */
+/* ═══════════════════════════════════════════════════════════════════ */
+.vault-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    background: radial-gradient(ellipse at center bottom,
+            #2e0800 0%,
+            #150500 60%,
+            #0a0000 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* CONCENTRIC RINGS (Vault Open)                                       */
+/* ═══════════════════════════════════════════════════════════════════ */
+.vault-rings {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes vault-ring-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.vault-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 170, 0, 0.25);
+    box-shadow: 0 0 12px rgba(255, 100, 0, 0.15);
+    animation: vault-ring-spin linear infinite;
+}
+
+.vault-ring--1 {
+    width: 14vw;
+    height: 14vw;
+    border-color: rgba(255, 100, 0, 0.35);
+    animation-duration: 25s;
+}
+
+.vault-ring--2 {
+    width: 28vw;
+    height: 28vw;
+    border-color: rgba(255, 100, 0, 0.25);
+    animation-duration: 35s;
+    animation-direction: reverse;
+}
+
+.vault-ring--3 {
+    width: 44vw;
+    height: 44vw;
+    border-color: rgba(255, 80, 0, 0.20);
+    animation-duration: 50s;
+}
+
+.vault-ring--4 {
+    width: 62vw;
+    height: 62vw;
+    border-color: rgba(255, 60, 0, 0.15);
+    animation-duration: 70s;
+    animation-direction: reverse;
+}
+
+.vault-ring--5 {
+    width: 82vw;
+    height: 82vw;
+    border-color: rgba(255, 40, 0, 0.10);
+    animation-duration: 90s;
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* DEALS HEADER                                                        */
+/* ═══════════════════════════════════════════════════════════════════ */
+.deals-header {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0 8px;
+    flex-shrink: 0;
+}
+
+.deals-header__text {
+    font-family: 'Bebas Neue', var(--font-stat, monospace);
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    color: #FFD700;
+    letter-spacing: 0.2em;
+    text-shadow:
+        0 0 30px rgba(255, 200, 0, 0.6),
+        0 0 60px rgba(255, 100, 0, 0.4),
+        0 4px 12px rgba(0, 0, 0, 0.8);
+    line-height: 1;
+}
+
+.deals-header__flame {
+    font-size: clamp(1.6rem, 3.5vw, 3rem);
+    filter: drop-shadow(0 0 10px rgba(255, 100, 0, 0.8));
+    animation: ember-flicker 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes ember-flicker {
+    0% {
+        filter: drop-shadow(0 0 10px rgba(255, 100, 0, 0.8));
+        transform: scale(1);
+    }
+
+    50% {
+        filter: drop-shadow(0 0 18px rgba(255, 140, 0, 1.0));
+        transform: scale(1.05) rotate(-2deg);
+    }
+
+    100% {
+        filter: drop-shadow(0 0 8px rgba(255, 80, 0, 0.6));
+        transform: scale(0.97) rotate(1deg);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* CONTENT AREA                                                        */
+/* ═══════════════════════════════════════════════════════════════════ */
+.vault-content {
+    position: relative;
+    z-index: 2;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    padding: 8px 20px 16px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: stretch;
+}
+
+/* ── Layout containers ─────────────────────────────────────────── */
+
+/* 1 deal — Full Bleed Hero */
+.vault-layout--hero {
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+}
+
+/* 2-3 deals — Hero + Side Panel */
+.vault-layout--hero-side {
+    width: 100%;
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+}
+
+.vault-hero-pane {
+    flex: 0 0 60%;
+    display: flex;
+    min-height: 0;
+}
+
+.vault-side-pane {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+}
+
+.vault-side-pane .deal-card--side {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* 4-6 deals — Symmetrical Grid */
+.vault-layout--grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 14px;
+    align-items: stretch;
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* NO ACTIVE DEALS FALLBACK                                            */
+/* ═══════════════════════════════════════════════════════════════════ */
+.vault-no-deals {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    color: #fff5e6;
+    text-align: center;
+}
+
+.vault-no-deals__art {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes no-deals-ring-pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.9);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0;
+    }
+}
+
+.vault-no-deals__ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 100, 0, 0.4);
+    animation: no-deals-ring-pulse 2.5s ease-out infinite;
+}
+
+.vault-no-deals__ring--1 {
+    width: 80px;
+    height: 80px;
+    animation-delay: 0s;
+}
+
+.vault-no-deals__ring--2 {
+    width: 120px;
+    height: 120px;
+    animation-delay: 0.6s;
+}
+
+.vault-no-deals__ring--3 {
+    width: 160px;
+    height: 160px;
+    animation-delay: 1.2s;
+}
+
+.vault-no-deals__icon {
+    font-size: 3rem;
+    filter: grayscale(0.4) drop-shadow(0 0 12px rgba(255, 100, 0, 0.3));
+    position: relative;
+    z-index: 2;
+}
+
+.vault-no-deals__heading {
+    font-family: 'Bebas Neue', var(--font-stat, monospace);
+    font-size: clamp(1.6rem, 4vw, 3.5rem);
+    color: #cc9966;
+    letter-spacing: 0.12em;
+    margin: 0;
+    text-shadow: 0 0 20px rgba(200, 100, 0, 0.4);
+}
+
+.vault-no-deals__sub {
+    font-family: var(--font-body, sans-serif);
+    font-size: clamp(0.85rem, 1.8vw, 1.15rem);
+    color: #886655;
+    margin: 0;
+    max-width: 400px;
+    line-height: 1.5;
+}
+
+.vault-no-deals__loyalty {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 170, 0, 0.08);
+    border: 1px solid rgba(255, 170, 0, 0.2);
+    border-radius: 12px;
+    padding: 12px 24px;
+    max-width: 480px;
+}
+
+.vault-no-deals__loyalty-icon {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.vault-no-deals__loyalty-text {
+    font-family: var(--font-body, sans-serif);
+    font-size: clamp(0.8rem, 1.5vw, 1rem);
+    color: #cc9966;
+    line-height: 1.4;
+}

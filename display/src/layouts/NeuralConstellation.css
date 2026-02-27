@@ -1,0 +1,62 @@
+/* ── NeuralConstellation.css — "Neural Constellation" (Edibles) ─────────── */
+
+.neural-scene {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 40% 30%, #3a0a3f 0%, #1a0020 40%, #08000e 100%);
+}
+
+/* Node entry animation: starts at center, fades/scales in */
+.neural-node {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.1);
+    transition:
+        opacity 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+        transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+        left 0.4s ease-out,
+        top 0.4s ease-out;
+}
+
+.neural-node--in {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Pulsing halo around each node */
+.neural-node--in::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 4px;
+    border: 1px solid var(--accent, #e85c9e);
+    opacity: 0;
+    animation: neural-halo 3s ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+    pointer-events: none;
+}
+
+@keyframes neural-halo {
+
+    0%,
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.4;
+        transform: scale(1.12);
+    }
+}
+
+/* Nebula background glow spots */
+.neural-scene::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 60% 40% at 20% 70%, rgba(232, 92, 158, 0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 80% 30%, rgba(150, 30, 180, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}

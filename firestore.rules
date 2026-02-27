@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────
+    // PUBLIC READ — Display frontend (no auth needed)
+    // ─────────────────────────────────────────────
+
+    // Categories: display rotates through these
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Products: all items under any category slug
+    match /products/{categorySlug}/items/{itemId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Deals: shown on deals page
+    match /deals/{dealId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Settings: display rotation config / lastPushed
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ─────────────────────────────────────────────
+    // AUTH-ONLY — Admin panel internals
+    // ─────────────────────────────────────────────
+
+    // Audit log: admin actions
+    match /audit/{logId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Any other collection: require auth
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

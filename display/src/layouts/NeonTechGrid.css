@@ -1,0 +1,170 @@
+/* ── NeonTechGrid.css — "Neon Tech Grid" (Disposables / Vapes) ──────────── */
+
+.neon-grid-scene {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(160deg, #04041a 0%, #0a0a2e 50%, #060622 100%);
+}
+
+/* Scanline overlay effect */
+.neon-scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(to bottom,
+            transparent 0px,
+            transparent 3px,
+            rgba(94, 129, 244, 0.03) 3px,
+            rgba(94, 129, 244, 0.03) 4px);
+    pointer-events: none;
+    z-index: 0;
+    animation: scanline-drift 8s linear infinite;
+}
+
+@keyframes scanline-drift {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 0 40px;
+    }
+}
+
+/* Corner neon decorations */
+.neon-corner {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-color: var(--accent, #5e81f4);
+    border-style: solid;
+    opacity: 0.5;
+    animation: neon-corner-pulse 2.5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.neon-corner--tl {
+    top: 12px;
+    left: 12px;
+    border-width: 2px 0 0 2px;
+    box-shadow: -4px -4px 12px var(--accent, #5e81f4);
+}
+
+.neon-corner--br {
+    bottom: 12px;
+    right: 12px;
+    border-width: 0 2px 2px 0;
+    box-shadow: 4px 4px 12px var(--accent, #5e81f4);
+}
+
+@keyframes neon-corner-pulse {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Card wrapper — positioned absolutely, handles the stagger diagonal */
+.neon-card-wrapper {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+    animation: neon-entry 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: var(--delay, 0s);
+}
+
+@keyframes neon-entry {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Neon border glow frame */
+.neon-border-glow {
+    position: absolute;
+    inset: -2px;
+    border-radius: 14px;
+    border: 1.5px solid var(--accent, #5e81f4);
+    box-shadow:
+        0 0 8px var(--accent, #5e81f4),
+        0 0 20px var(--accent, #5e81f4),
+        inset 0 0 8px rgba(94, 129, 244, 0.15);
+    animation: neon-glow-pulse 2s ease-in-out infinite;
+    animation-delay: var(--spin-delay, 0s);
+    pointer-events: none;
+    z-index: 3;
+}
+
+@keyframes neon-glow-pulse {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+/* 3D Y-axis rotation stage */
+.neon-rotate-stage {
+    animation: neon-y-spin 8s ease-in-out infinite;
+    animation-delay: var(--spin-delay, 0s);
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes neon-y-spin {
+    0% {
+        transform: rotateY(0deg);
+    }
+
+    8% {
+        transform: rotateY(15deg);
+    }
+
+    16% {
+        transform: rotateY(0deg);
+    }
+
+    84% {
+        transform: rotateY(0deg);
+    }
+
+    92% {
+        transform: rotateY(-15deg);
+    }
+
+    100% {
+        transform: rotateY(0deg);
+    }
+}
+
+/* Electric blue ambient glow on scene floor */
+.neon-grid-scene::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30%;
+    background: linear-gradient(to top, rgba(94, 129, 244, 0.06) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+}

@@ -1,0 +1,243 @@
+/* DealCard.css — "The Vault" deal card styles */
+
+/* ── Shared base ──────────────────────────────────────────────────── */
+.deal-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-radius: 16px;
+    background: rgba(255, 40, 0, 0.05);
+    border: 1px solid rgba(255, 100, 0, 0.3);
+    box-shadow:
+        0 0 30px rgba(255, 60, 0, 0.15),
+        0 8px 24px rgba(0, 0, 0, 0.6),
+        inset 0 0 0 1px rgba(255, 80, 0, 0.08);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.deal-card:hover {
+    box-shadow:
+        0 0 50px rgba(255, 80, 0, 0.3),
+        0 12px 32px rgba(0, 0, 0, 0.7),
+        inset 0 0 0 1px rgba(255, 100, 0, 0.2);
+}
+
+/* ── Top row: badge + timer ───────────────────────────────────────── */
+.deal-card__top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 0;
+    flex-shrink: 0;
+}
+
+.deal-card__badge {
+    display: inline-block;
+    font-family: 'Bebas Neue', var(--font-stat, monospace);
+    font-size: clamp(0.8rem, 1.8vw, 1.2rem);
+    letter-spacing: 0.12em;
+    color: #fff;
+    padding: 3px 12px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.deal-card__timer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    flex-shrink: 0;
+}
+
+.deal-card__ends-label {
+    font-family: var(--font-body, sans-serif);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: #cc9966;
+    text-transform: uppercase;
+}
+
+/* ── Product image ────────────────────────────────────────────────── */
+.deal-card__img-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+}
+
+.deal-card__img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 16px rgba(255, 80, 0, 0.25));
+}
+
+/* ── Info block ───────────────────────────────────────────────────── */
+.deal-card__info {
+    padding: 4px 16px 14px;
+    flex-shrink: 0;
+}
+
+.deal-card__title {
+    font-family: var(--font-display, sans-serif);
+    font-weight: 900;
+    font-size: clamp(1rem, 2.5vw, 1.8rem);
+    color: #fff5e6;
+    line-height: 1.15;
+    margin: 0 0 4px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.deal-card__desc {
+    font-family: var(--font-body, sans-serif);
+    font-size: clamp(0.65rem, 1.2vw, 0.85rem);
+    color: #cc9966;
+    margin: 0 0 6px;
+    line-height: 1.4;
+}
+
+.deal-card__prices {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.deal-card__original {
+    font-family: 'Bebas Neue', var(--font-stat, monospace);
+    font-size: clamp(1rem, 2vw, 1.4rem);
+    color: #888888;
+    text-decoration: line-through;
+    opacity: 0.8;
+}
+
+.deal-card__price {
+    font-family: 'Bebas Neue', var(--font-stat, monospace);
+    font-size: clamp(1.6rem, 4vw, 3rem);
+    color: #FFD700;
+    text-shadow:
+        0 0 20px rgba(255, 215, 0, 0.5),
+        0 0 40px rgba(255, 170, 0, 0.3);
+    line-height: 1;
+}
+
+.deal-card__savings {
+    margin-top: 4px;
+    font-family: 'Bebas Neue', var(--font-stat, monospace);
+    font-size: clamp(0.85rem, 1.8vw, 1.3rem);
+    color: #ff6600;
+    letter-spacing: 0.06em;
+    text-shadow: 0 0 10px rgba(255, 100, 0, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* HERO VARIANT (1 deal, full bleed)                                  */
+/* ═══════════════════════════════════════════════════════════════════ */
+.deal-card--hero {
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    background: linear-gradient(145deg,
+            rgba(46, 8, 0, 0.95) 0%,
+            rgba(30, 0, 0, 0.98) 100%);
+    border-color: rgba(255, 80, 0, 0.4);
+    box-shadow:
+        0 0 80px rgba(255, 60, 0, 0.25),
+        0 16px 48px rgba(0, 0, 0, 0.8),
+        inset 0 0 0 1px rgba(255, 80, 0, 0.15);
+}
+
+.deal-card--hero .deal-card__top-row {
+    padding: 18px 24px 0;
+}
+
+.deal-card--hero .deal-card__badge {
+    font-size: clamp(1rem, 2.5vw, 1.6rem);
+    padding: 4px 18px;
+}
+
+.deal-card--hero .deal-card__img-wrap {
+    flex: 1 1 auto;
+    padding: 12px 32px;
+}
+
+.deal-card--hero .deal-card__info {
+    padding: 8px 32px 24px;
+    text-align: center;
+}
+
+.deal-card--hero .deal-card__title {
+    font-size: clamp(1.4rem, 4vw, 3.5rem);
+}
+
+.deal-card--hero .deal-card__prices {
+    justify-content: center;
+    gap: 20px;
+}
+
+.deal-card--hero .deal-card__price {
+    font-size: clamp(2.5rem, 6vw, 5.5rem);
+}
+
+.deal-card--hero .deal-card__savings {
+    font-size: clamp(1.1rem, 2.5vw, 2rem);
+    text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* SIDE VARIANT (2-3 deals — the non-hero ones)                       */
+/* ═══════════════════════════════════════════════════════════════════ */
+.deal-card--side {
+    border-radius: 12px;
+}
+
+.deal-card--side .deal-card__img-wrap {
+    max-height: 100px;
+    padding: 4px 12px;
+}
+
+.deal-card--side .deal-card__title {
+    font-size: clamp(0.85rem, 1.6vw, 1.2rem);
+}
+
+.deal-card--side .deal-card__price {
+    font-size: clamp(1.2rem, 2.5vw, 2rem);
+}
+
+.deal-card--side .deal-card__savings {
+    font-size: clamp(0.7rem, 1.2vw, 0.95rem);
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* GRID VARIANT (4-6 deals)                                           */
+/* ═══════════════════════════════════════════════════════════════════ */
+.deal-card--grid {
+    border-radius: 14px;
+}
+
+.deal-card--grid .deal-card__img-wrap {
+    max-height: 120px;
+    padding: 6px 14px;
+}
+
+.deal-card--grid .deal-card__title {
+    font-size: clamp(0.85rem, 1.5vw, 1.15rem);
+}
+
+.deal-card--grid .deal-card__price {
+    font-size: clamp(1.3rem, 2.5vw, 2.2rem);
+}
+
+.deal-card--grid .deal-card__prices {
+    gap: 8px;
+}
+
+.deal-card--grid .deal-card__savings {
+    font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+}
