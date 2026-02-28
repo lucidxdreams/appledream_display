@@ -5,18 +5,21 @@
  * Cycles through them using each category's displayDuration.
  * Restarts when settings.lastPushed changes.
  * 
- * Returns: { currentCategory, nextCategory, progress, jumpTo }
+ * Returns: { currentCategory, nextCategory, progress, jumpTo, categories, connectionError }
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { collection, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 
+const MAX_RETRIES = 3;
+
 export function useRotation() {
     const [categories, setCategories] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [progress, setProgress] = useState(0);
     const [lastPushed, setLastPushed] = useState(null);
+    const [connectionError, setConnectionError] = useState(false);
 
     // Refs so timer callbacks always see latest values without re-creating
     const categoriesRef = useRef([]);
@@ -24,12 +27,17 @@ export function useRotation() {
     const startTimeRef = useRef(Date.now());
     const rafRef = useRef(null);
     const resetFlagRef = useRef(false);
+    const catErrorCount = useRef(0);
+    const settingsErrorCount = useRef(0);
 
     // ── 1. Subscribe to categories collection ──────────────────────────────────
     useEffect(() => {
         const unsubCats = onSnapshot(
             collection(db, 'categories'),
             (snap) => {
+                catErrorCount.current = 0;
+                setConnectionError(settingsErrorCount.current >= MAX_RETRIES);
+
                 const cats = snap.docs
                     .map((d) => ({ id: d.id, ...d.data() }))
                     .filter((c) => c.active)
@@ -38,7 +46,13 @@ export function useRotation() {
                 categoriesRef.current = cats;
                 setCategories(cats);
             },
-            (err) => console.error('[useRotation] categories error:', err)
+            (err) => {
+                console.error('[useRotation] categories error:', err);
+                catErrorCount.current += 1;
+                if (catErrorCount.current >= MAX_RETRIES) {
+                    setConnectionError(true);
+                }
+            }
         );
 
         return () => unsubCats();
@@ -49,6 +63,9 @@ export function useRotation() {
         const unsubSettings = onSnapshot(
             doc(db, 'settings', 'display'),
             (snap) => {
+                settingsErrorCount.current = 0;
+                setConnectionError(catErrorCount.current >= MAX_RETRIES);
+
                 if (snap.exists()) {
                     const lp = snap.data().lastPushed;
                     setLastPushed((prev) => {
@@ -60,7 +77,13 @@ export function useRotation() {
                     });
                 }
             },
-            (err) => console.error('[useRotation] settings error:', err)
+            (err) => {
+                console.error('[useRotation] settings error:', err);
+                settingsErrorCount.current += 1;
+                if (settingsErrorCount.current >= MAX_RETRIES) {
+                    setConnectionError(true);
+                }
+            }
         );
 
         return () => unsubSettings();
@@ -130,5 +153,6 @@ export function useRotation() {
     const nextIndex = categories.length > 1 ? (safeIndex + 1) % categories.length : safeIndex;
     const nextCategory = categories[nextIndex] ?? null;
 
-    return { currentCategory, nextCategory, progress, jumpTo, categories };
+    return { currentCategory, nextCategory, progress, jumpTo, categories, connectionError };
 }
+

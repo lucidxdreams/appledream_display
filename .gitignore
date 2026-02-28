@@ -4,6 +4,9 @@ dist/
 dist-ssr/
 *.local
 
+# Firebase
+.firebase/
+
 # Env files — NEVER commit real Firebase config
 .env
 .env.local

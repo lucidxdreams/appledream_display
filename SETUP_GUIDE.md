@@ -121,7 +121,17 @@ firebase deploy --only storage
 
 ## Step 7 — Seed Initial Data (Optional)
 
-If you want to populate Firestore with sample products and categories:
+Populate Firestore with sample products, categories, deals, and settings.
+
+### 7a. Download your Firebase service account key
+
+1. Go to [Firebase Console](https://console.firebase.google.com) → **Project Settings** → **Service Accounts**
+2. Click **"Generate New Private Key"** → download the JSON file
+3. Save it as `scripts/serviceAccountKey.json`
+
+> ⚠️ This file contains admin credentials — **never commit it**. It is gitignored.
+
+### 7b. Run the seed script
 
 ```bash
 cd scripts
@@ -129,7 +139,13 @@ npm install
 node seed.js
 ```
 
-> This requires the `scripts/` directory to have a Firebase Admin SDK service account key. If you don't have sample data yet, you can add products manually through the admin panel after deploying it.
+This creates:
+- `/categories` — 6 category documents
+- `/products/{categorySlug}/items` — 18 sample products (3 per category)
+- `/deals` — 2 sample deals
+- `/settings/display` — default display configuration
+
+> If you prefer to skip seeding, you can add everything manually through the admin panel after deploying it.
 
 ---
 

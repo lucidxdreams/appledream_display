@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
+import ConnectionOverlay from './components/ConnectionOverlay';
 import { db } from './firebase';
 import { useRotation } from './hooks/useRotation';
 import ParticleCanvas from './components/ParticleCanvas';
@@ -90,8 +91,10 @@ function Clock() {
 
 /* ── Main App ────────────────────────────────────────────────────────── */
 export default function App() {
-  const { currentCategory, nextCategory, progress, jumpTo, categories } = useRotation();
+  const { currentCategory, nextCategory, progress, jumpTo, categories, connectionError } = useRotation();
   const [products, setProducts] = useState([]);
+  const [productConnError, setProductConnError] = useState(false);
+  const productErrorCount = useRef(0);
   const theme = getTheme(currentCategory);
 
   // ── Subscribe to products for current category ─────────────────────
@@ -102,11 +105,19 @@ export default function App() {
     }
     const ref = collection(db, 'products', currentCategory.id, 'items');
     const unsub = onSnapshot(ref, (snap) => {
+      productErrorCount.current = 0;
+      setProductConnError(false);
       const items = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
         .filter((p) => p.active !== false);
       setProducts(items);
-    }, (err) => console.error('[App] products error:', err));
+    }, (err) => {
+      console.error('[App] products error:', err);
+      productErrorCount.current += 1;
+      if (productErrorCount.current >= 3) {
+        setProductConnError(true);
+      }
+    });
 
     return () => unsub();
   }, [currentCategory?.id]);
@@ -119,8 +130,12 @@ export default function App() {
     root.style.setProperty('--category-particle', theme.particle);
   }, [theme]);
 
+  const showConnectionOverlay = connectionError || productConnError;
+
   return (
     <div className="app-root">
+      {/* Connection Lost Overlay */}
+      <ConnectionOverlay visible={showConnectionOverlay} />
       {/* Ambient background */}
       <div className="category-glow-bg" />
 

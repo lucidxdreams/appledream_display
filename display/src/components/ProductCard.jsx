@@ -247,15 +247,19 @@ export default function ProductCard({ product, size, variant = 'standard' }) {
     const timerRef = useRef(null);
 
     useEffect(() => {
+        let animTimeoutId = null;
         timerRef.current = setInterval(() => {
             setAnimating(true);
-            setTimeout(() => {
+            animTimeoutId = setTimeout(() => {
                 setLayerIndex((i) => (i + 1) % INFO_LAYERS.length);
                 setAnimating(false);
             }, 400);
         }, CYCLE_MS);
 
-        return () => clearInterval(timerRef.current);
+        return () => {
+            clearInterval(timerRef.current);
+            if (animTimeoutId) clearTimeout(animTimeoutId);
+        };
     }, []);
 
     const layer = INFO_LAYERS[layerIndex];

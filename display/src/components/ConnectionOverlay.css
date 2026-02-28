@@ -1,0 +1,81 @@
+/* ============================================
+   ConnectionOverlay — "Connection Lost" display
+   ============================================ */
+
+.connection-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+    pointer-events: none;
+    animation: conn-fade-in 0.6s ease-out both;
+}
+
+.connection-overlay__card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 32px;
+    background: rgba(232, 92, 43, 0.12);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(232, 92, 43, 0.25);
+    border-radius: 16px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.5),
+        0 0 40px rgba(232, 92, 43, 0.1);
+    animation: conn-pulse 3s ease-in-out infinite;
+}
+
+.connection-overlay__icon {
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.connection-overlay__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.connection-overlay__title {
+    font-family: var(--font-display, 'Outfit', sans-serif);
+    font-weight: 700;
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    color: #e85c2b;
+    margin: 0;
+}
+
+.connection-overlay__sub {
+    font-family: var(--font-body, 'Inter', sans-serif);
+    font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+    color: #9db89e;
+    margin: 0;
+}
+
+@keyframes conn-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes conn-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 40px rgba(232, 92, 43, 0.1);
+    }
+
+    50% {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 60px rgba(232, 92, 43, 0.2);
+    }
+}
