@@ -3,7 +3,7 @@
 .neural-scene {
     position: relative;
     overflow: hidden;
-    background: radial-gradient(ellipse at 40% 30%, #3a0a3f 0%, #1a0020 40%, #08000e 100%);
+    background: radial-gradient(ellipse at 40% 30%, #241020 0%, #140018 40%, #07050a 100%);
 }
 
 /* Node entry animation: starts at center, fades/scales in */
@@ -26,11 +26,11 @@
 .neural-node--in::before {
     content: '';
     position: absolute;
-    inset: -8px;
+    inset: -6px;
     border-radius: 4px;
-    border: 1px solid var(--accent, #e85c9e);
+    border: 1px solid var(--accent, #c06c84);
     opacity: 0;
-    animation: neural-halo 3s ease-in-out infinite;
+    animation: neural-halo 4s ease-in-out infinite;
     animation-delay: var(--delay, 0s);
     pointer-events: none;
 }
@@ -44,8 +44,8 @@
     }
 
     50% {
-        opacity: 0.4;
-        transform: scale(1.12);
+        opacity: 0.25;
+        transform: scale(1.08);
     }
 }
 
@@ -55,8 +55,8 @@
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse 60% 40% at 20% 70%, rgba(232, 92, 158, 0.06) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 60% at 80% 30%, rgba(150, 30, 180, 0.08) 0%, transparent 70%);
+        radial-gradient(ellipse 60% 40% at 20% 70%, rgba(192, 108, 132, 0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 80% 30%, rgba(120, 30, 140, 0.05) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
 }

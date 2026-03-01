@@ -1,41 +1,81 @@
 /**
  * BudUniverse.jsx — "The Bud Universe" (Exotic Flowers)
  *
- * Matter.js physics engine runs in a Web Worker to offload the main thread.
- * Central attractor force keeps orbs on-screen. Trichome sparkle overlay.
+ * Deterministic radial layout with gentle floating animation.
+ * Central hero product with satellite products arranged in rings.
+ * Trichome sparkle overlay.
  *
  * Props: { products, categoryTheme }
  */
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import ProductCard from '../components/ProductCard';
 import './BudUniverse.css';
 
 /* ── Radius formula ───────────────────────────────────────────────────── */
-function calcRadii(products, W, H) {
-    const count = Math.max(products.length, 1);
-    const screenArea = W * H;
-
-    if (count === 1) {
-        // Single hero fills ~35% of the shorter dimension
-        return [Math.min(W, H) * 0.35];
-    }
-
-    const baseRadius = Math.sqrt(screenArea / (count * Math.PI * 2));
-    // Tighter clamp for large counts so they fit
-    const maxR = count >= 12 ? 130 : 200;
-    const clamped = Math.min(Math.max(baseRadius, 50), maxR);
-
-    return products.map((_, i) => {
-        if (i === 0) return clamped * 1.6; // featured
-        return clamped * (0.7 + Math.sin(i * 2.4) * 0.2 + 0.25);
-    });
+function calcRadius(count, W, H) {
+    if (count <= 1) return Math.min(W, H) * 0.22;
+    if (count <= 3) return Math.min(W, H) * 0.14;
+    if (count <= 6) return Math.min(W, H) * 0.11;
+    if (count <= 10) return Math.min(W, H) * 0.09;
+    if (count <= 15) return Math.min(W, H) * 0.07;
+    // Smart scaling to fit 15+ continuously shrinking
+    return Math.max(Math.min(W, H) / (count * 0.8), 30);
 }
 
-/* ── Sparkle particle system (DPR-aware, capped at 80) ────────────────── */
-const MAX_SPARKLE_PARTICLES = 80;
+/* ── Deterministic positions in concentric rings ──────────────────────── */
+function calcPositions(products, W, H) {
+    const count = products.length;
+    if (count === 0) return [];
 
-function TrichomeSparkles({ accent = '#7CB518', W, H }) {
+    const cx = W / 2;
+    const cy = H / 2;
+    const baseR = calcRadius(count, W, H);
+
+    if (count === 1) {
+        return [{ x: cx, y: cy, r: baseR * 1.5 }];
+    }
+
+    const positions = [];
+
+    // Hero product at center — slightly larger
+    positions.push({ x: cx, y: cy, r: baseR * 1.3 });
+
+    // Remaining products in concentric rings
+    const remaining = count - 1;
+    const ringCapacity = [6, 12, 18, 24]; // Smartly increased max items per ring
+    let placed = 0;
+    let ring = 0;
+
+    while (placed < remaining) {
+        const capacity = ring < ringCapacity.length ? ringCapacity[ring] : 30;
+        const itemsInRing = Math.min(capacity, remaining - placed);
+        const ringRadius = (ring + 1) * (baseR * 2.5); // Tighter rings to fit screen
+        // Clamp ring radius to keep within bounds securely
+        const maxRingR = Math.min(cx - baseR - 10, cy - baseR - 10);
+        const clampedRingR = Math.min(ringRadius, maxRingR);
+
+        for (let i = 0; i < itemsInRing; i++) {
+            const angle = (i / itemsInRing) * Math.PI * 2 - Math.PI / 2;
+            const x = cx + Math.cos(angle) * clampedRingR;
+            const y = cy + Math.sin(angle) * clampedRingR;
+            positions.push({
+                x: Math.max(baseR + 5, Math.min(W - baseR - 5, x)),
+                y: Math.max(baseR + 5, Math.min(H - baseR - 5, y)),
+                r: baseR,
+            });
+            placed++;
+        }
+        ring++;
+    }
+
+    return positions;
+}
+
+/* ── Sparkle particle system (DPR-aware, capped at 40) ────────────────── */
+const MAX_SPARKLE_PARTICLES = 40;
+
+function TrichomeSparkles({ accent = '#6ab04c', W, H }) {
     const canvasRef = useRef(null);
     const rafRef = useRef(null);
 
@@ -43,20 +83,20 @@ function TrichomeSparkles({ accent = '#7CB518', W, H }) {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        const dpr = Math.min(window.devicePixelRatio || 1, 2); // cap at 2x for perf
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         canvas.width = W * dpr;
         canvas.height = H * dpr;
         ctx.scale(dpr, dpr);
 
-        const particles = Array.from({ length: Math.min(60, MAX_SPARKLE_PARTICLES) }, () => ({
+        const particles = Array.from({ length: Math.min(35, MAX_SPARKLE_PARTICLES) }, () => ({
             x: Math.random() * W,
             y: Math.random() * H,
-            r: Math.random() * 2 + 0.5,
-            vx: (Math.random() - 0.5) * 0.4,
-            vy: -Math.random() * 0.6 - 0.1,
+            r: Math.random() * 1.5 + 0.3,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: -Math.random() * 0.4 - 0.1,
             alpha: Math.random(),
             life: Math.random(),
-            speed: Math.random() * 0.005 + 0.002,
+            speed: Math.random() * 0.004 + 0.002,
         }));
 
         function draw() {
@@ -75,9 +115,9 @@ function TrichomeSparkles({ accent = '#7CB518', W, H }) {
                 p.alpha = Math.sin(p.life * Math.PI);
 
                 ctx.save();
-                ctx.globalAlpha = p.alpha * 0.7;
+                ctx.globalAlpha = p.alpha * 0.5;
                 ctx.fillStyle = accent;
-                ctx.shadowBlur = 6;
+                ctx.shadowBlur = 4;
                 ctx.shadowColor = accent;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
@@ -101,54 +141,11 @@ function TrichomeSparkles({ accent = '#7CB518', W, H }) {
 
 /* ── Main Component ───────────────────────────────────────────────────── */
 export default function BudUniverse({ products = [], categoryTheme }) {
-    const accent = categoryTheme?.accent || '#7CB518';
+    const accent = categoryTheme?.accent || '#6ab04c';
     const W = window.innerWidth;
     const H = Math.floor(window.innerHeight * 0.84);
 
-    // Body positions synced from Matter.js Worker
-    const [bodies, setBodies] = useState([]);
-    const workerRef = useRef(null);
-
-    const radii = useMemo(() => calcRadii(products, W, H), [products, W, H]);
-
-    // Spawn & manage Web Worker
-    useEffect(() => {
-        if (!products.length) {
-            setBodies([]);
-            return;
-        }
-
-        const worker = new Worker(
-            new URL('../workers/matterWorker.js', import.meta.url),
-            { type: 'module' }
-        );
-        workerRef.current = worker;
-
-        // Listen for position updates
-        worker.onmessage = (e) => {
-            if (e.data.type === 'positions') {
-                setBodies(e.data.bodies);
-            }
-        };
-
-        // Send init data to worker
-        worker.postMessage({
-            type: 'init',
-            products: products.map((p) => ({ id: p.id })),
-            W,
-            H,
-            radii,
-        });
-
-        return () => {
-            worker.postMessage({ type: 'destroy' });
-            // Give the worker a moment to clean up, then hard-terminate
-            setTimeout(() => {
-                try { worker.terminate(); } catch (_) { /* already closed */ }
-            }, 100);
-            workerRef.current = null;
-        };
-    }, [products, W, H, radii]);
+    const positions = useMemo(() => calcPositions(products, W, H), [products, W, H]);
 
     return (
         <div className="bud-universe" style={{ width: W, height: H }}>
@@ -161,51 +158,26 @@ export default function BudUniverse({ products = [], categoryTheme }) {
                 style={{ '--accent': accent }}
             />
 
-            {/* Physics-driven product orbs */}
-            {bodies.map((b, i) => {
-                const product = products[i];
-                if (!product) return null;
-                const diameter = b.r * 2;
+            {/* Product orbs in concentric rings */}
+            {products.map((product, i) => {
+                const pos = positions[i];
+                if (!pos) return null;
+                const diameter = pos.r * 2;
                 return (
                     <div
                         key={product.id}
                         className="bud-orb"
                         style={{
-                            left: b.x,
-                            top: b.y,
+                            left: pos.x,
+                            top: pos.y,
                             width: diameter,
                             height: diameter,
                             '--accent': accent,
-                            '--delay': `${i * 0.2}s`,
+                            '--delay': `${i * 0.15}s`,
+                            '--float-offset': `${(i % 3) * 2}px`,
                         }}
                     >
                         <ProductCard product={product} size={diameter} variant="circle" />
-                    </div>
-                );
-            })}
-
-            {/* Fallback static layout while Worker boots */}
-            {bodies.length === 0 && products.map((product, i) => {
-                const r = radii[i];
-                const angle = (i / products.length) * Math.PI * 2;
-                const ring = Math.floor(i / 6) + 1;
-                const dist = i === 0 ? 0 : Math.min(ring * r * 1.5, Math.min(W / 2, H / 2) * 0.75);
-                const x = W / 2 + Math.cos(angle) * dist;
-                const y = H / 2 + Math.sin(angle) * dist;
-                return (
-                    <div
-                        key={product.id}
-                        className="bud-orb"
-                        style={{
-                            left: x,
-                            top: y,
-                            width: r * 2,
-                            height: r * 2,
-                            '--accent': accent,
-                            '--delay': `${i * 0.2}s`,
-                        }}
-                    >
-                        <ProductCard product={product} size={r * 2} variant="circle" />
                     </div>
                 );
             })}

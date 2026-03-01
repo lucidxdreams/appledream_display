@@ -3,7 +3,7 @@
 .collection-scene {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 40%, #252525 100%);
+    background: linear-gradient(135deg, #141414 0%, #0a0a0a 40%, #1a1a1a 100%);
 }
 
 /* Metallic gradient sheen layer */
@@ -11,9 +11,9 @@
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192, 192, 192, 0.08) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(192, 192, 192, 0.04) 0%, transparent 60%),
-        linear-gradient(to bottom, transparent 60%, rgba(0, 0, 0, 0.6) 100%);
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(168, 168, 168, 0.05) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(168, 168, 168, 0.03) 0%, transparent 60%),
+        linear-gradient(to bottom, transparent 60%, rgba(0, 0, 0, 0.5) 100%);
     pointer-events: none;
     z-index: 0;
 }
@@ -25,9 +25,9 @@
     background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
     background-size: 200px;
     pointer-events: none;
-    animation: dust-drift 12s linear infinite;
+    animation: dust-drift 14s linear infinite;
     z-index: 0;
-    opacity: 0.4;
+    opacity: 0.3;
 }
 
 @keyframes dust-drift {
@@ -46,16 +46,16 @@
     top: 4%;
     left: 50%;
     translate: -50% 0;
-    font-family: 'Outfit', sans-serif;
-    font-weight: 900;
-    font-size: clamp(1.5rem, 3vw, 3rem);
-    color: var(--accent, #c0c0c0);
+    font-family: 'Poppins', 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.3rem, 2.5vw, 2.4rem);
+    color: var(--accent, #a8a8a8);
     text-transform: uppercase;
-    letter-spacing: 0.3em;
-    opacity: 0.18;
+    letter-spacing: 0.25em;
+    opacity: 0.12;
     z-index: 0;
     white-space: nowrap;
-    text-shadow: 0 0 30px var(--accent, #c0c0c0);
+    text-shadow: 0 0 20px color-mix(in srgb, var(--accent, #a8a8a8) 30%, transparent);
     pointer-events: none;
 }
 
@@ -71,35 +71,35 @@
     /* Initial hidden state is set by GSAP */
     position: absolute;
     cursor: default;
-    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.7));
+    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.6));
     transition: filter 0.3s ease;
 }
 
 .collection-card:hover {
-    filter: drop-shadow(0 12px 32px rgba(192, 192, 192, 0.3));
+    filter: drop-shadow(0 10px 24px rgba(168, 168, 168, 0.2));
     z-index: 100 !important;
 }
 
 /* Extract type badge */
 .collection-extract-badge {
     position: absolute;
-    top: -14px;
+    top: -12px;
     left: 50%;
     translate: -50% 0;
     z-index: 10;
-    background: linear-gradient(135deg, var(--accent, #c0c0c0) 0%, rgba(192, 192, 192, 0.7) 100%);
+    background: linear-gradient(135deg, var(--accent, #a8a8a8) 0%, rgba(168, 168, 168, 0.6) 100%);
     color: #0d0d0d;
-    font-family: 'Outfit', sans-serif;
-    font-weight: 800;
-    font-size: clamp(0.55rem, 1.1vw, 0.9rem);
+    font-family: 'Poppins', 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: clamp(0.5rem, 1vw, 0.8rem);
     text-transform: uppercase;
-    letter-spacing: 0.15em;
-    padding: 4px 12px;
+    letter-spacing: 0.12em;
+    padding: 3px 10px;
     border-radius: 20px;
     white-space: nowrap;
     box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.5),
-        0 0 12px var(--accent, #c0c0c0);
+        0 2px 6px rgba(0, 0, 0, 0.4),
+        0 0 8px color-mix(in srgb, var(--accent, #a8a8a8) 30%, transparent);
     pointer-events: none;
 }
 
@@ -110,9 +110,9 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 25%;
+    height: 20%;
     background: linear-gradient(to top,
-            rgba(192, 192, 192, 0.04) 0%,
+            rgba(168, 168, 168, 0.03) 0%,
             transparent 100%);
     pointer-events: none;
     z-index: 0;

@@ -35,24 +35,24 @@ function initWorld(products, W, H, radiiArr) {
     const cx = W / 2;
     const cy = H / 2;
 
-    // Create circular bodies — spiral placement
+    // Create circular bodies — spiral placement with wider spread
     physicsBodies = products.map((p, i) => {
         const r = radii[i];
         const angle = (i / products.length) * Math.PI * 2;
         const ring = Math.floor(i / 6) + 1;
-        const dist = i === 0 ? 0 : Math.min(ring * r * 1.5, Math.min(cx, cy) * 0.75);
+        const dist = i === 0 ? 0 : Math.min(ring * r * 2.0, Math.min(cx, cy) * 0.8);
         const x = i === 0 ? cx : cx + Math.cos(angle) * dist;
         const y = i === 0 ? cy : cy + Math.sin(angle) * dist;
 
         const body = Bodies.circle(x, y, r, {
-            restitution: 0.4,
-            friction: 0.01,
-            frictionAir: 0.04,
+            restitution: 0.3,
+            friction: 0.02,
+            frictionAir: 0.08,
             label: p.id,
         });
         Body.setVelocity(body, {
-            x: (Math.random() - 0.5) * 2,
-            y: (Math.random() - 0.5) * 2,
+            x: (Math.random() - 0.5) * 1.5,
+            y: (Math.random() - 0.5) * 1.5,
         });
         return body;
     });
@@ -64,26 +64,26 @@ function initWorld(products, W, H, radiiArr) {
         physicsBodies.forEach((body, i) => {
             const r = radii[i];
 
-            // Attractor toward center
+            // Weaker attractor toward center — lets orbs spread out more
             const dx = cx - body.position.x;
             const dy = cy - body.position.y;
             const dist = Math.max(Math.hypot(dx, dy), 1);
-            const strength = 0.0004 * body.mass;
+            const strength = 0.0002 * body.mass;
             Body.applyForce(body, body.position, {
                 x: (dx / dist) * strength,
                 y: (dy / dist) * strength,
             });
 
-            // Keep within bounds
-            const margin = r + 10;
+            // Keep within bounds — stronger wall repulsion
+            const margin = r + 20;
             if (body.position.x < margin)
-                Body.applyForce(body, body.position, { x: 0.003 * body.mass, y: 0 });
+                Body.applyForce(body, body.position, { x: 0.005 * body.mass, y: 0 });
             if (body.position.x > W - margin)
-                Body.applyForce(body, body.position, { x: -0.003 * body.mass, y: 0 });
+                Body.applyForce(body, body.position, { x: -0.005 * body.mass, y: 0 });
             if (body.position.y < margin)
-                Body.applyForce(body, body.position, { x: 0, y: 0.003 * body.mass });
+                Body.applyForce(body, body.position, { x: 0, y: 0.005 * body.mass });
             if (body.position.y > H - margin)
-                Body.applyForce(body, body.position, { x: 0, y: -0.003 * body.mass });
+                Body.applyForce(body, body.position, { x: 0, y: -0.005 * body.mass });
         });
     });
 

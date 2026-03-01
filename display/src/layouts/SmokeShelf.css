@@ -3,7 +3,7 @@
 .smoke-scene {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(180deg, #160a00 0%, #2e1a00 50%, #0e0700 100%);
+    background: linear-gradient(180deg, #120a02 0%, #1e1408 50%, #0a0600 100%);
 }
 
 /* Warm amber radial light source */
@@ -11,18 +11,18 @@
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(200, 169, 81, 0.12) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 30% at 50% 60%, rgba(200, 169, 81, 0.05) 0%, transparent 60%);
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(184, 148, 62, 0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 30% at 50% 60%, rgba(184, 148, 62, 0.04) 0%, transparent 60%);
     pointer-events: none;
     z-index: 0;
-    animation: smoke-ambient-pulse 5s ease-in-out infinite;
+    animation: smoke-ambient-pulse 6s ease-in-out infinite;
 }
 
 @keyframes smoke-ambient-pulse {
 
     0%,
     100% {
-        opacity: 0.8;
+        opacity: 0.7;
     }
 
     50% {
@@ -72,22 +72,22 @@
 .smoke-shelf--far {
     transform: rotateX(10deg) translateZ(-80px) translateY(-5%);
     transform-origin: center bottom;
-    opacity: 0.88;
+    opacity: 0.85;
 }
 
 /* Wooden plank */
 .smoke-shelf__plank {
     width: 100%;
-    height: 14px;
+    height: 12px;
     border-radius: 3px;
     background: linear-gradient(to bottom,
-            #5c3a1e 0%,
-            #3d2510 40%,
-            #2a1a0a 100%);
+            #4d3018 0%,
+            #35200e 40%,
+            #221408 100%);
     box-shadow:
-        0 4px 20px rgba(0, 0, 0, 0.8),
-        0 1px 0 rgba(200, 169, 81, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        0 3px 16px rgba(0, 0, 0, 0.7),
+        0 1px 0 rgba(184, 148, 62, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
     margin-top: 6px;
 }
 
@@ -96,8 +96,14 @@
     display: flex;
     flex-direction: row;
     align-items: flex-end;
-    gap: 18px;
-    padding: 12px 24px 0;
+    gap: 24px;
+    padding: 12px 32px 0;
+}
+
+/* Center products when they all fit within viewport */
+.smoke-shelf__products--centered {
+    justify-content: center;
+    width: 100%;
 }
 
 /* Individual product slot */
@@ -106,9 +112,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    transform: rotate(-3deg);
-    /* slight diagonal angle */
-    animation: smoke-slot-sway calc(4s + var(--slot-i, 0) * 0.4s) ease-in-out infinite;
+    transform: rotate(-2deg);
+    animation: smoke-slot-sway calc(5s + var(--slot-i, 0) * 0.4s) ease-in-out infinite;
     animation-delay: calc(var(--slot-i, 0) * 0.25s);
 }
 
@@ -116,11 +121,11 @@
 
     0%,
     100% {
-        transform: rotate(-3deg) translateY(0);
+        transform: rotate(-2deg) translateY(0);
     }
 
     50% {
-        transform: rotate(-2deg) translateY(-4px);
+        transform: rotate(-1.5deg) translateY(-3px);
     }
 }
 
@@ -130,14 +135,14 @@
     bottom: calc(100% + 4px);
     left: 50%;
     translate: calc(-50% + var(--x-drift, 0px)) 0;
-    width: 12px;
-    height: 40px;
+    width: 10px;
+    height: 35px;
     border-radius: 50%;
     background: radial-gradient(ellipse at center,
-            rgba(200, 169, 81, 0.25) 0%,
-            rgba(200, 169, 81, 0.05) 50%,
+            rgba(184, 148, 62, 0.15) 0%,
+            rgba(184, 148, 62, 0.04) 50%,
             transparent 100%);
-    animation: smoke-rise calc(2.5s + var(--delay, 0s)) ease-out infinite;
+    animation: smoke-rise calc(3s + var(--delay, 0s)) ease-out infinite;
     animation-delay: var(--delay, 0s);
     pointer-events: none;
     filter: blur(4px);
@@ -150,18 +155,18 @@
     }
 
     20% {
-        opacity: 0.7;
-        transform: translateY(-15px) scaleX(1.2);
+        opacity: 0.5;
+        transform: translateY(-12px) scaleX(1.2);
     }
 
     60% {
-        opacity: 0.4;
-        transform: translateY(-50px) scaleX(1.8);
+        opacity: 0.3;
+        transform: translateY(-40px) scaleX(1.6);
     }
 
     100% {
         opacity: 0;
-        transform: translateY(-90px) scaleX(2.5);
+        transform: translateY(-70px) scaleX(2);
     }
 }
 
@@ -177,15 +182,15 @@
 .smoke-atm-wisp {
     position: absolute;
     bottom: 0;
-    left: calc(var(--i, 0) * 12% + 2%);
-    width: calc(20px + var(--i, 0) * 4px);
-    height: calc(80px + var(--i, 0) * 30px);
+    left: calc(var(--i, 0) * 14% + 5%);
+    width: calc(16px + var(--i, 0) * 3px);
+    height: calc(60px + var(--i, 0) * 24px);
     background: radial-gradient(ellipse at bottom,
-            rgba(200, 169, 81, 0.12) 0%,
+            rgba(184, 148, 62, 0.08) 0%,
             transparent 70%);
     border-radius: 50%;
     filter: blur(8px);
-    animation: atm-drift calc(6s + var(--i, 0) * 1.2s) ease-in-out infinite;
+    animation: atm-drift calc(7s + var(--i, 0) * 1.2s) ease-in-out infinite;
     animation-delay: calc(var(--i, 0) * 0.8s);
 }
 
@@ -196,11 +201,11 @@
     }
 
     10% {
-        opacity: 1;
+        opacity: 0.7;
     }
 
     100% {
-        transform: translateY(-120px) scaleX(2.5);
+        transform: translateY(-100px) scaleX(2);
         opacity: 0;
     }
 }

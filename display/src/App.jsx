@@ -32,14 +32,14 @@ import './App.css';
 
 /* ── Category theme map ──────────────────────────────────────────────── */
 const CATEGORY_THEMES = {
-  flowers: { primary: '#1a472a', accent: '#7cb518', particle: '#7cb518' },
-  edibles: { primary: '#4a1a4f', accent: '#e85c9e', particle: '#e85c9e' },
-  vapes: { primary: '#0a0a2e', accent: '#5e81f4', particle: '#5e81f4' },
-  disposables: { primary: '#0a0a2e', accent: '#5e81f4', particle: '#5e81f4' },
-  cartridges: { primary: '#1a1a1a', accent: '#c0c0c0', particle: '#c0c0c0' },
-  prerolls: { primary: '#2e1a00', accent: '#c8a951', particle: '#c8a951' },
-  'pre-rolls': { primary: '#2e1a00', accent: '#c8a951', particle: '#c8a951' },
-  deals: { primary: '#2e0000', accent: '#ff3300', particle: '#ff3300' },
+  flowers: { primary: '#122418', accent: '#6ab04c', particle: '#6ab04c' },
+  edibles: { primary: '#2a1528', accent: '#c06c84', particle: '#c06c84' },
+  vapes: { primary: '#101428', accent: '#7c8cf8', particle: '#7c8cf8' },
+  disposables: { primary: '#101428', accent: '#7c8cf8', particle: '#7c8cf8' },
+  cartridges: { primary: '#161616', accent: '#a8a8a8', particle: '#a8a8a8' },
+  prerolls: { primary: '#1e1408', accent: '#b8943e', particle: '#b8943e' },
+  'pre-rolls': { primary: '#1e1408', accent: '#b8943e', particle: '#b8943e' },
+  deals: { primary: '#221010', accent: '#e55039', particle: '#e55039' },
 };
 
 function getTheme(category) {
@@ -49,7 +49,7 @@ function getTheme(category) {
   for (const [k, v] of Object.entries(CATEGORY_THEMES)) {
     if (key.includes(k) || k.includes(key)) return v;
   }
-  return { primary: '#1a472a', accent: '#7cb518', particle: '#7cb518' };
+  return { primary: '#122418', accent: '#6ab04c', particle: '#6ab04c' };
 }
 
 /* ── Layout selector ─────────────────────────────────────────────────── */
@@ -145,12 +145,7 @@ export default function App() {
       {/* ── HEADER ── */}
       <header className="app-header">
         <div className="app-logo">
-          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-            <circle cx="18" cy="18" r="18" fill={theme.primary} />
-            <path d="M18 6c0 0-8 6-8 12s8 12 8 12 8-6 8-12S18 6 18 6z" fill={theme.accent} opacity="0.9" />
-            <path d="M18 10v16M10 18h16" stroke={theme.primary} strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span className="app-logo__text">DispensaryAI</span>
+          <img src="/main_logo.webp" alt="Logo" style={{ height: '48px', objectFit: 'contain' }} />
         </div>
 
         <div className="app-category-name">

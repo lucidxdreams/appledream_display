@@ -49,14 +49,10 @@ export default function Layout() {
 
     return (
         <div className="app-shell">
-            {/* Sidebar */}
-            <aside className="sidebar">
+            {/* Sidebar with Glassmorphic polish */}
+            <aside className="sidebar glass-panel">
                 <div className="sidebar-logo">
-                    <div className="sidebar-logo-icon">🌿</div>
-                    <div>
-                        <div className="sidebar-logo-text">GreenCMS</div>
-                        <div className="sidebar-logo-sub">Admin Panel</div>
-                    </div>
+                    <img src="/main_logo.webp" alt="Logo" style={{ height: '32px', objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.4))' }} />
                 </div>
 
                 <nav className="sidebar-nav">

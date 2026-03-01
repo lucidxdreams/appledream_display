@@ -21,7 +21,7 @@ function SmokeWisp({ index, accent }) {
             className="smoke-wisp"
             style={{
                 '--delay': `${index * 0.7}s`,
-                '--x-drift': `${(Math.random() - 0.5) * 30}px`,
+                '--x-drift': `${(Math.random() - 0.5) * 25}px`,
                 '--accent': accent,
                 left: `${15 + (index % 5) * 18}%`,
             }}
@@ -31,7 +31,7 @@ function SmokeWisp({ index, accent }) {
 
 /* ── Main Component ────────────────────────────────────────────────────── */
 export default function SmokeShelf({ products = [], categoryTheme }) {
-    const accent = categoryTheme?.accent || '#c8a951';
+    const accent = categoryTheme?.accent || '#b8943e';
     const W = window.innerWidth;
     const H = Math.floor(window.innerHeight * 0.84);
 
@@ -43,32 +43,31 @@ export default function SmokeShelf({ products = [], categoryTheme }) {
     const shelf1 = products.slice(0, half);
     const shelf2 = products.slice(half);
 
-    // Card size: fit to wider shelf, clamped for extremes
+    // SMARTSCALING: Ensure maxPerShelf forces a card width that fits ALL items into ONE viewport width.
     const maxPerShelf = Math.max(half, 1);
     const count = products.length;
     let cardW;
+
+    // Fit to width without scrolling
+    const availableWidth = W * 0.95; // 95% of screen
+    const maxAllowedCardW = Math.max(availableWidth / maxPerShelf - 20, 50); // 20px gap
+
     if (count === 1) {
-        // Single hero: larger card
-        cardW = Math.min(Math.floor(W * 0.25), 220);
+        cardW = Math.min(Math.floor(W * 0.22), 200);
     } else if (count <= 3) {
-        cardW = Math.min(Math.floor((W * 1.2) / maxPerShelf) - 20, 190);
+        cardW = Math.min(maxAllowedCardW, 170);
     } else {
-        // Scale down for many products so they fit
-        cardW = Math.min(
-            Math.max(Math.floor((W * 1.6) / maxPerShelf) - 20, 80),
-            190
-        );
+        cardW = Math.min(maxAllowedCardW, 170);
     }
 
-    // Total shelf content width (wider than viewport to enable pan)
-    const contentW = Math.max(W * 1.2, maxPerShelf * (cardW + 24));
+    // Total shelf content width is forced to be W or less
+    const shelfContentW = maxPerShelf * (cardW + 20);
+    const contentW = W;
+    const needsPan = false; // We forced it to fit, so no panning needed
 
-    // GSAP horizontal camera pan — yoyo (stored in ref, killed on unmount)
+    // GSAP horizontal camera pan — disabled because we are smartly scaling to 1 page
     useEffect(() => {
-        if (!wrapperRef.current || !products.length) return;
-
-        const panDist = contentW - W;
-        if (panDist <= 0) return;
+        if (!wrapperRef.current) return;
 
         // Kill any prior tween before starting new one
         if (panTweenRef.current) {
@@ -76,20 +75,11 @@ export default function SmokeShelf({ products = [], categoryTheme }) {
             panTweenRef.current = null;
         }
 
-        panTweenRef.current = gsap.to(wrapperRef.current, {
-            x: -panDist,
-            duration: 22,
-            ease: 'none',
-            repeat: -1,
-            yoyo: true,
+        // Just center it
+        gsap.set(wrapperRef.current, {
+            x: 0,
         });
 
-        return () => {
-            if (panTweenRef.current) {
-                panTweenRef.current.kill();
-                panTweenRef.current = null;
-            }
-        };
     }, [products, W, contentW]);
 
     return (
@@ -107,7 +97,7 @@ export default function SmokeShelf({ products = [], categoryTheme }) {
                     {/* Shelf 1 — closer plane (lower on screen) */}
                     <div className="smoke-shelf smoke-shelf--near" style={{ '--accent': accent }}>
                         <div className="smoke-shelf__plank" />
-                        <div className="smoke-shelf__products">
+                        <div className={`smoke-shelf__products ${!needsPan ? 'smoke-shelf__products--centered' : ''}`}>
                             {shelf1.map((product, i) => (
                                 <div
                                     key={product.id}
@@ -125,7 +115,7 @@ export default function SmokeShelf({ products = [], categoryTheme }) {
                     {/* Shelf 2 — farther plane (higher on screen, smaller via perspective) */}
                     <div className="smoke-shelf smoke-shelf--far" style={{ '--accent': accent }}>
                         <div className="smoke-shelf__plank" />
-                        <div className="smoke-shelf__products">
+                        <div className={`smoke-shelf__products ${!needsPan ? 'smoke-shelf__products--centered' : ''}`}>
                             {shelf2.map((product, i) => (
                                 <div
                                     key={product.id}
@@ -143,7 +133,7 @@ export default function SmokeShelf({ products = [], categoryTheme }) {
 
             {/* Global smoke atmosphere (canvas-free rising wisps) */}
             <div className="smoke-atmosphere">
-                {Array.from({ length: 8 }).map((_, i) => (
+                {Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="smoke-atm-wisp" style={{ '--i': i, '--accent': accent }} />
                 ))}
             </div>

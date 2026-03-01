@@ -19,8 +19,8 @@ function fanLayout(count, W, H) {
 
     // Single product: centered hero
     if (count === 1) {
-        const cardW = Math.min(Math.floor(W * 0.2), 200);
-        const cardH = cardW * 1.45;
+        const cardW = Math.min(Math.floor(W * 0.18), 180);
+        const cardH = cardW * 1.4;
         return [{
             x: (W - cardW) / 2,
             y: (H - cardH) / 2,
@@ -31,36 +31,48 @@ function fanLayout(count, W, H) {
         }];
     }
 
-    const cardW = Math.min(Math.max(Math.floor(W * 0.13), 110), 200);
-    const cardH = cardW * 1.45;
+    const cardW = Math.min(Math.max(Math.floor(W * 0.11), 95), 165);
+    const cardH = cardW * 1.4;
 
     if (count <= 8) {
-        // Pure fan arc
-        const arcAngle = Math.min((count - 1) * 12, 80);
+        // Arc fan — wide spread with clear separation
+        const arcAngle = Math.min((count - 1) * 16, 100);
         const startAngle = -arcAngle / 2;
         const cx = W / 2;
-        const cy = H * 0.62;
+        const cy = H * 0.58;
+        const arcR = W * 0.38;
         return Array.from({ length: count }, (_, i) => {
-            const angle = startAngle + (arcAngle / (count - 1)) * i;
+            const angle = startAngle + (arcAngle / Math.max(count - 1, 1)) * i;
             const rad = angle * (Math.PI / 180);
-            const arcR = W * 0.28;
             return {
                 x: cx + Math.sin(rad) * arcR - cardW / 2,
-                y: cy - Math.cos(rad) * arcR * 0.3 - cardH / 2,
-                rotate: angle,
+                y: cy - Math.cos(rad) * arcR * 0.32 - cardH / 2,
+                rotate: angle * 0.5,
                 cardW,
                 cardH,
                 z: i,
             };
         });
     } else {
-        // Multi-row grid when many products — ensure fit
+        // Multi-row grid when many products — ensure fit via smart scaling
         const cols = Math.ceil(Math.sqrt(count * (W / H)));
         const rows = Math.ceil(count / cols);
-        const adjustedCardW = Math.min(cardW, Math.floor((W * 0.92) / cols - 16));
-        const adjustedCardH = Math.min(adjustedCardW * 1.45, Math.floor((H * 0.9) / rows - 16));
-        const colGap = (W - cols * adjustedCardW) / (cols + 1);
-        const rowGap = Math.max((H - rows * adjustedCardH) / (rows + 1), 12);
+
+        // Smart scaling logic: force it into the view height
+        const availableWidth = W * 0.95;
+        const availableHeight = H * 0.90;
+
+        let adjustedCardW = Math.min(cardW, Math.floor(availableWidth / cols - 15));
+        let adjustedCardH = adjustedCardW * 1.4;
+
+        if (adjustedCardH > (availableHeight / rows - 15)) {
+            adjustedCardH = Math.max((availableHeight / rows - 15), 60);
+            adjustedCardW = adjustedCardH / 1.4;
+        }
+
+        const colGap = Math.max((W - cols * adjustedCardW) / (cols + 1), 10);
+        const rowGap = Math.max((H - rows * adjustedCardH) / (rows + 1), 10);
+
         return Array.from({ length: count }, (_, i) => {
             const col = i % cols;
             const row = Math.floor(i / cols);
@@ -92,7 +104,7 @@ function ExtractBadge({ product, accent }) {
 
 /* ── Main Component ──────────────────────────────────────────────────── */
 export default function TheCollection({ products = [], categoryTheme }) {
-    const accent = categoryTheme?.accent || '#c0c0c0';
+    const accent = categoryTheme?.accent || '#a8a8a8';
     const W = window.innerWidth;
     const H = Math.floor(window.innerHeight * 0.84);
 

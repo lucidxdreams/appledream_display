@@ -3,7 +3,7 @@
 .neon-grid-scene {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(160deg, #04041a 0%, #0a0a2e 50%, #060622 100%);
+    background: linear-gradient(160deg, #050516 0%, #0a0a20 50%, #07071a 100%);
 }
 
 /* Scanline overlay effect */
@@ -12,12 +12,12 @@
     inset: 0;
     background: repeating-linear-gradient(to bottom,
             transparent 0px,
-            transparent 3px,
-            rgba(94, 129, 244, 0.03) 3px,
-            rgba(94, 129, 244, 0.03) 4px);
+            transparent 4px,
+            rgba(124, 140, 248, 0.015) 4px,
+            rgba(124, 140, 248, 0.015) 5px);
     pointer-events: none;
     z-index: 0;
-    animation: scanline-drift 8s linear infinite;
+    animation: scanline-drift 10s linear infinite;
 }
 
 @keyframes scanline-drift {
@@ -33,12 +33,12 @@
 /* Corner neon decorations */
 .neon-corner {
     position: absolute;
-    width: 80px;
-    height: 80px;
-    border-color: var(--accent, #5e81f4);
+    width: 60px;
+    height: 60px;
+    border-color: var(--accent, #7c8cf8);
     border-style: solid;
-    opacity: 0.5;
-    animation: neon-corner-pulse 2.5s ease-in-out infinite;
+    opacity: 0.3;
+    animation: neon-corner-pulse 3s ease-in-out infinite;
     pointer-events: none;
     z-index: 0;
 }
@@ -46,26 +46,26 @@
 .neon-corner--tl {
     top: 12px;
     left: 12px;
-    border-width: 2px 0 0 2px;
-    box-shadow: -4px -4px 12px var(--accent, #5e81f4);
+    border-width: 1.5px 0 0 1.5px;
+    box-shadow: -3px -3px 8px var(--accent, #7c8cf8);
 }
 
 .neon-corner--br {
     bottom: 12px;
     right: 12px;
-    border-width: 0 2px 2px 0;
-    box-shadow: 4px 4px 12px var(--accent, #5e81f4);
+    border-width: 0 1.5px 1.5px 0;
+    box-shadow: 3px 3px 8px var(--accent, #7c8cf8);
 }
 
 @keyframes neon-corner-pulse {
 
     0%,
     100% {
-        opacity: 0.4;
+        opacity: 0.25;
     }
 
     50% {
-        opacity: 0.8;
+        opacity: 0.5;
     }
 }
 
@@ -83,7 +83,7 @@
 @keyframes neon-entry {
     from {
         opacity: 0;
-        transform: translateY(40px) scale(0.8);
+        transform: translateY(30px) scale(0.85);
     }
 
     to {
@@ -92,17 +92,16 @@
     }
 }
 
-/* Neon border glow frame */
+/* Neon border glow frame — toned down */
 .neon-border-glow {
     position: absolute;
-    inset: -2px;
+    inset: -1px;
     border-radius: 14px;
-    border: 1.5px solid var(--accent, #5e81f4);
+    border: 1px solid var(--accent, #7c8cf8);
     box-shadow:
-        0 0 8px var(--accent, #5e81f4),
-        0 0 20px var(--accent, #5e81f4),
-        inset 0 0 8px rgba(94, 129, 244, 0.15);
-    animation: neon-glow-pulse 2s ease-in-out infinite;
+        0 0 6px color-mix(in srgb, var(--accent, #7c8cf8) 40%, transparent),
+        0 0 12px color-mix(in srgb, var(--accent, #7c8cf8) 20%, transparent);
+    animation: neon-glow-pulse 3s ease-in-out infinite;
     animation-delay: var(--spin-delay, 0s);
     pointer-events: none;
     z-index: 3;
@@ -112,17 +111,17 @@
 
     0%,
     100% {
-        opacity: 0.6;
+        opacity: 0.4;
     }
 
     50% {
-        opacity: 1;
+        opacity: 0.7;
     }
 }
 
-/* 3D Y-axis rotation stage */
+/* 3D Y-axis rotation stage — subtler rotation */
 .neon-rotate-stage {
-    animation: neon-y-spin 8s ease-in-out infinite;
+    animation: neon-y-spin 10s ease-in-out infinite;
     animation-delay: var(--spin-delay, 0s);
     transform-style: preserve-3d;
     backface-visibility: hidden;
@@ -136,7 +135,7 @@
     }
 
     8% {
-        transform: rotateY(15deg);
+        transform: rotateY(8deg);
     }
 
     16% {
@@ -148,7 +147,7 @@
     }
 
     92% {
-        transform: rotateY(-15deg);
+        transform: rotateY(-8deg);
     }
 
     100% {
@@ -163,8 +162,8 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 30%;
-    background: linear-gradient(to top, rgba(94, 129, 244, 0.06) 0%, transparent 100%);
+    height: 25%;
+    background: linear-gradient(to top, rgba(124, 140, 248, 0.04) 0%, transparent 100%);
     pointer-events: none;
     z-index: 0;
 }
