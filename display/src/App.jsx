@@ -145,7 +145,7 @@ export default function App() {
       {/* ── HEADER ── */}
       <header className="app-header">
         <div className="app-logo">
-          <img src="/main_logo.webp" alt="Logo" style={{ height: '48px', objectFit: 'contain' }} />
+          <img src={`${import.meta.env.BASE_URL}main_logo.webp`} alt="Logo" style={{ height: '48px', objectFit: 'contain' }} />
         </div>
 
         <div className="app-category-name">
