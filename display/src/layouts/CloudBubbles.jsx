@@ -128,19 +128,19 @@ export default function CloudBubbles({ products, categoryTheme }) {
                                 {/* SVG Background arcs for curved text badges */}
                                 <svg className="bubble-arcs" viewBox="0 0 100 100">
                                     <defs>
-                                        <path id={`leftArc-${b.product.id}`} d="M 50,96 A 46,46 0 0,1 50,4" fill="none" />
-                                        <path id={`rightArc-${b.product.id}`} d="M 50,4 A 46,46 0 0,1 50,96" fill="none" />
+                                        <path id={`leftArc-${b.product.id}`} d="M 50,98 A 48,48 0 0,1 50,2" fill="none" />
+                                        <path id={`rightArc-${b.product.id}`} d="M 50,2 A 48,48 0 0,1 50,98" fill="none" />
                                     </defs>
 
                                     {/* CBD Badge */}
                                     {b.product.cbd > 0 && (
                                         <>
-                                            <text stroke="#FFC107" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="#FFC107" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                            <text stroke="#FFC107" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="#FFC107" fontSize="5.5" fontWeight="900" style={{ fontFamily: 'var(--font-display)' }}>
                                                 <textPath href={`#leftArc-${b.product.id}`} startOffset="78%" textAnchor="middle">
                                                     CBD: {b.product.cbd}%
                                                 </textPath>
                                             </text>
-                                            <text fill="#ffffff" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                            <text fill="#ffffff" fontSize="5.5" fontWeight="900" style={{ fontFamily: 'var(--font-display)' }}>
                                                 <textPath href={`#leftArc-${b.product.id}`} startOffset="78%" textAnchor="middle">
                                                     CBD: {b.product.cbd}%
                                                 </textPath>
@@ -151,12 +151,12 @@ export default function CloudBubbles({ products, categoryTheme }) {
                                     {/* THC Badge */}
                                     {b.product.thc > 0 && (
                                         <>
-                                            <text stroke="#FF7043" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="#FF7043" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                            <text stroke="#FF7043" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="#FF7043" fontSize="5.5" fontWeight="900" style={{ fontFamily: 'var(--font-display)' }}>
                                                 <textPath href={`#leftArc-${b.product.id}`} startOffset="24%" textAnchor="middle">
                                                     THC: {b.product.thc}%
                                                 </textPath>
                                             </text>
-                                            <text fill="#ffffff" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                            <text fill="#ffffff" fontSize="5.5" fontWeight="900" style={{ fontFamily: 'var(--font-display)' }}>
                                                 <textPath href={`#leftArc-${b.product.id}`} startOffset="24%" textAnchor="middle">
                                                     THC: {b.product.thc}%
                                                 </textPath>
@@ -167,12 +167,12 @@ export default function CloudBubbles({ products, categoryTheme }) {
                                     {/* Strain Type Badge */}
                                     {b.product.type && b.product.type !== 'N/A' && (
                                         <>
-                                            <text stroke="#FF9800" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="#FF9800" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                            <text stroke="#FF9800" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="#FF9800" fontSize="5.5" fontWeight="900" style={{ fontFamily: 'var(--font-display)' }}>
                                                 <textPath href={`#rightArc-${b.product.id}`} startOffset="22%" textAnchor="middle">
                                                     {b.product.type}
                                                 </textPath>
                                             </text>
-                                            <text fill="#ffffff" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                            <text fill="#ffffff" fontSize="5.5" fontWeight="900" style={{ fontFamily: 'var(--font-display)' }}>
                                                 <textPath href={`#rightArc-${b.product.id}`} startOffset="22%" textAnchor="middle">
                                                     {b.product.type}
                                                 </textPath>
