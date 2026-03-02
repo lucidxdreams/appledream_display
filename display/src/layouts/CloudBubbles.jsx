@@ -125,14 +125,77 @@ export default function CloudBubbles({ products, categoryTheme }) {
                     >
                         <div className={`cloud-bubble ${isLimited ? 'cloud-bubble-limited' : ''}`}>
                             <div className="cloud-bubble-inner">
-                                {b.product.imageUrl ? (
-                                    <img src={b.product.imageUrl} alt={b.product.name} />
-                                ) : (
-                                    <div className="cloud-bubble-placeholder">🌿</div>
-                                )}
+                                {/* SVG Background arcs for curved text badges */}
+                                <svg className="bubble-arcs" viewBox="0 0 100 100">
+                                    <defs>
+                                        <path id={`leftArc-${b.product.id}`} d="M 50,96 A 46,46 0 0,1 50,4" fill="none" />
+                                        <path id={`rightArc-${b.product.id}`} d="M 50,4 A 46,46 0 0,1 50,96" fill="none" />
+                                    </defs>
+
+                                    {/* CBD Badge */}
+                                    {b.product.cbd > 0 && (
+                                        <>
+                                            <text stroke="#FFC107" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="#FFC107" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                                <textPath href={`#leftArc-${b.product.id}`} startOffset="78%" textAnchor="middle">
+                                                    CBD: {b.product.cbd}%
+                                                </textPath>
+                                            </text>
+                                            <text fill="#ffffff" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                                <textPath href={`#leftArc-${b.product.id}`} startOffset="78%" textAnchor="middle">
+                                                    CBD: {b.product.cbd}%
+                                                </textPath>
+                                            </text>
+                                        </>
+                                    )}
+
+                                    {/* THC Badge */}
+                                    {b.product.thc > 0 && (
+                                        <>
+                                            <text stroke="#FF7043" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="#FF7043" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                                <textPath href={`#leftArc-${b.product.id}`} startOffset="24%" textAnchor="middle">
+                                                    THC: {b.product.thc}%
+                                                </textPath>
+                                            </text>
+                                            <text fill="#ffffff" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                                <textPath href={`#leftArc-${b.product.id}`} startOffset="24%" textAnchor="middle">
+                                                    THC: {b.product.thc}%
+                                                </textPath>
+                                            </text>
+                                        </>
+                                    )}
+
+                                    {/* Strain Type Badge */}
+                                    {b.product.type && b.product.type !== 'N/A' && (
+                                        <>
+                                            <text stroke="#FF9800" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="#FF9800" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                                <textPath href={`#rightArc-${b.product.id}`} startOffset="22%" textAnchor="middle">
+                                                    {b.product.type}
+                                                </textPath>
+                                            </text>
+                                            <text fill="#ffffff" fontSize="5.5" fontWeight="900" fontFamily="Outfit">
+                                                <textPath href={`#rightArc-${b.product.id}`} startOffset="22%" textAnchor="middle">
+                                                    {b.product.type}
+                                                </textPath>
+                                            </text>
+                                        </>
+                                    )}
+                                </svg>
+
+                                <div className="product-image-container">
+                                    {b.product.imageUrl ? (
+                                        <img src={b.product.imageUrl} alt={b.product.name} />
+                                    ) : (
+                                        <div className="cloud-bubble-placeholder">🌿</div>
+                                    )}
+                                </div>
+
                                 <div className="cloud-bubble-info" style={{ fontSize: `${Math.max(0.7, fontScale)}rem` }}>
                                     <h3>{b.product.name}</h3>
-                                    <div className="price">${Number(b.product.price || 0).toFixed(2)}</div>
+                                    {b.product.notes && <div className="product-notes">{b.product.notes}</div>}
+                                    <div className="price">
+                                        ${Number(b.product.price || 0).toFixed(2)}
+                                        {b.product.sellType === 'Weighted' ? '/g' : ''}
+                                    </div>
                                 </div>
                             </div>
                             {b.product.badge && <div className="cloud-badge">{b.product.badge}</div>}

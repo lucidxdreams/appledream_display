@@ -9,7 +9,7 @@ import ImageUploader from './ImageUploader'
 import { X, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-const PRODUCT_TYPES = ['Indica', 'Sativa', 'Hybrid', 'CBD', 'N/A']
+const PRODUCT_TYPES = ['Indica', 'Sativa', 'Hybrid', 'CBD', 'Indica Dom.', 'Sativa Dom.', 'N/A']
 const BADGES = ['', 'New', 'Limited', 'Best Seller', 'Staff Pick']
 const WEIGHT_TIERS = ['1g', '3.5g', '7g', '14g', '28g']
 
@@ -53,6 +53,7 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
             thc: '',
             cbd: '',
             type: 'Hybrid',
+            sellType: 'Pre-packed',
             notes: '',
             badge: '',
             featured: false,
@@ -94,7 +95,7 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
                 thc: Number(data.thc) || 0,
                 cbd: Number(data.cbd) || 0,
                 terpenes,
-                priceByWeight,
+                priceByWeight: data.sellType === 'Weighted' ? priceByWeight : {},
                 imageUrl,
                 category: categorySlug,
             }
@@ -182,7 +183,7 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
                         <label className="form-label">THC % *</label>
                         <input
                             type="number"
-                            step="0.1"
+                            step="any"
                             min="0"
                             max="100"
                             className={`form-input ${errors.thc ? 'error' : ''}`}
@@ -195,7 +196,7 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
                         <label className="form-label">CBD %</label>
                         <input
                             type="number"
-                            step="0.1"
+                            step="any"
                             min="0"
                             max="100"
                             className={`form-input ${errors.cbd ? 'error' : ''}`}
@@ -206,33 +207,44 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
                     </div>
                 </div>
 
-                {/* Price by Weight (flower only) */}
+                {/* Sell Type Selection (Pre-packed vs Weighted) */}
                 <div className="form-group">
-                    <label className="form-label">Price by Weight (optional)</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
-                        {WEIGHT_TIERS.map((w) => (
-                            <div key={w} className="form-group">
-                                <label className="form-label" style={{ fontSize: 11 }}>{w}</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    className="form-input"
-                                    placeholder="—"
-                                    value={priceByWeight[w] || ''}
-                                    onChange={(e) => {
-                                        setPriceByWeight((prev) => ({
-                                            ...prev,
-                                            [w]: e.target.value ? Number(e.target.value) : undefined,
-                                        }))
-                                        setExtraDirty(true)
-                                    }}
-                                    style={{ padding: '8px 10px' }}
-                                />
-                            </div>
-                        ))}
-                    </div>
+                    <label className="form-label">Packaging Type *</label>
+                    <select className="form-select" {...register('sellType')}>
+                        <option value="Pre-packed">Pre-packed</option>
+                        <option value="Weighted">Weighted</option>
+                    </select>
                 </div>
+
+                {/* Price by Weight (flower only) */}
+                {watch('sellType') === 'Weighted' && (
+                    <div className="form-group">
+                        <label className="form-label">Price by Weight</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+                            {WEIGHT_TIERS.map((w) => (
+                                <div key={w} className="form-group">
+                                    <label className="form-label" style={{ fontSize: 11 }}>{w}</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        className="form-input"
+                                        placeholder="—"
+                                        value={priceByWeight[w] || ''}
+                                        onChange={(e) => {
+                                            setPriceByWeight((prev) => ({
+                                                ...prev,
+                                                [w]: e.target.value ? Number(e.target.value) : undefined,
+                                            }))
+                                            setExtraDirty(true)
+                                        }}
+                                        style={{ padding: '8px 10px' }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Notes */}
                 <div className="form-group">
