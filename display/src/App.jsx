@@ -23,6 +23,7 @@ import CartridgesLayout from './layouts/CartridgesLayout';
 import PreRollsLayout from './layouts/PreRollsLayout';
 import DealsLayout from './layouts/DealsLayout';
 // Phase 3 — Premium themed layouts
+import CloudBubbles from './layouts/CloudBubbles';
 import BudUniverse from './layouts/BudUniverse';
 import NeuralConstellation from './layouts/NeuralConstellation';
 import NeonTechGrid from './layouts/NeonTechGrid';
@@ -66,13 +67,13 @@ function CategoryLayout({ category, products, theme }) {
   const categoryTheme = theme;
 
   // Phase 3 premium layouts (preferred)
-  if (id.includes('flower')) return <BudUniverse products={products} categoryTheme={categoryTheme} />;
+  if (id.includes('flower')) return <CloudBubbles products={products} categoryTheme={categoryTheme} />;
   if (id.includes('edible')) return <NeuralConstellation products={products} categoryTheme={categoryTheme} />;
   if (id.includes('vape') || id.includes('disposable')) return <NeonTechGrid products={products} categoryTheme={categoryTheme} />;
   if (id.includes('cart')) return <TheCollection products={products} categoryTheme={categoryTheme} />;
   if (id.includes('pre')) return <SmokeShelf products={products} categoryTheme={categoryTheme} />;
   if (id.includes('deal')) return <DealsLayout products={products} />;
-  return <BudUniverse products={products} categoryTheme={categoryTheme} />;
+  return <CloudBubbles products={products} categoryTheme={categoryTheme} />;
 }
 
 /* ── Clock ───────────────────────────────────────────────────────────── */

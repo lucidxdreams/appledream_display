@@ -18,11 +18,11 @@ import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
 const CATEGORIES = [
-    { slug: 'flowers', label: 'Flowers' },
+    { slug: 'exotic-flowers', label: 'Flowers' },
     { slug: 'edibles', label: 'Edibles' },
-    { slug: 'vapes', label: 'Vapes' },
+    { slug: 'disposables', label: 'Vapes' },
     { slug: 'cartridges', label: 'Cartridges' },
-    { slug: 'pre-rolls', label: 'Pre-Rolls' },
+    { slug: 'prerolls', label: 'Pre-Rolls' },
     { slug: 'concentrates', label: 'Concentrates' },
     { slug: 'accessories', label: 'Accessories' },
 ]
