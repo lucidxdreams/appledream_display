@@ -155,18 +155,24 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
 
                 {/* Price + Type */}
                 <div className="form-grid">
-                    <div className="form-group">
-                        <label className="form-label">Base Price ($) *</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            className={`form-input ${errors.price ? 'error' : ''}`}
-                            placeholder="12.00"
-                            {...register('price')}
-                        />
-                        {errors.price && <span className="form-error">{errors.price.message}</span>}
-                    </div>
+                    {watch('sellType') === 'Pre-packed' ? (
+                        <div className="form-group">
+                            <label className="form-label">Base Price ($) *</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                className={`form-input ${errors.price ? 'error' : ''}`}
+                                placeholder="12.00"
+                                {...register('price')}
+                            />
+                            {errors.price && <span className="form-error">{errors.price.message}</span>}
+                        </div>
+                    ) : (
+                        <div className="form-group">
+                            {/* Empty space to keep grid alignment if Base Price is hidden */}
+                        </div>
+                    )}
                     <div className="form-group">
                         <label className="form-label">Strain Type *</label>
                         <select className="form-select" {...register('type')}>
@@ -183,7 +189,7 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
                         <label className="form-label">THC % *</label>
                         <input
                             type="number"
-                            step="any"
+                            step="0.01"
                             min="0"
                             max="100"
                             className={`form-input ${errors.thc ? 'error' : ''}`}
@@ -196,7 +202,7 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
                         <label className="form-label">CBD %</label>
                         <input
                             type="number"
-                            step="any"
+                            step="0.01"
                             min="0"
                             max="100"
                             className={`form-input ${errors.cbd ? 'error' : ''}`}
