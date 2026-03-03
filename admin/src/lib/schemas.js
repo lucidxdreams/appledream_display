@@ -4,7 +4,7 @@ import { z } from 'zod/v4'
 export const productSchema = z.object({
     name: z.string().min(1, 'Name is required').max(200),
     brand: z.string().max(200).optional().default(''),
-    price: z.coerce.number().min(0.01, 'Price must be > $0').max(10000, 'Price must be ≤ $10,000'),
+    price: z.coerce.number().min(0, 'Price must be ≥ $0').max(10000, 'Price must be ≤ $10,000'),
     thc: z.coerce.number().min(0, 'THC% must be ≥ 0').max(100, 'THC% must be ≤ 100'),
     cbd: z.coerce.number().min(0, 'CBD% must be ≥ 0').max(100, 'CBD% must be ≤ 100').optional().default(0),
     type: z.enum(['Indica', 'Sativa', 'Hybrid', 'CBD', 'Indica Dom.', 'Sativa Dom.', 'N/A']),
