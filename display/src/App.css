@@ -33,7 +33,7 @@
 .app-category-name {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(1.4rem, 3.8vw, 3rem);
+  font-size: clamp(0.85rem, 2.3vw, 1.8rem);
   text-transform: uppercase;
   color: var(--category-accent, #6ab04c);
   text-shadow:

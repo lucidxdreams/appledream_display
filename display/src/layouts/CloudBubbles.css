@@ -89,9 +89,9 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -58%);
-    width: 80%;
-    height: 60%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 90%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -113,14 +113,16 @@
 
 .cloud-bubble-info {
     position: absolute;
-    bottom: 8%;
-    width: 90%;
-    z-index: 4;
+    top: 104%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140%;
+    z-index: 10;
 }
 
 .cloud-bubble-info h3 {
     font-family: var(--font-display, 'Outfit', sans-serif);
-    font-size: 1.55em;
+    font-size: 1.15em;
     font-weight: 800;
     color: #ffffff;
     margin: 0 0 1% 0;
@@ -135,7 +137,7 @@
 
 .product-notes {
     font-family: var(--font-body, 'Inter', sans-serif);
-    font-size: 0.85em;
+    font-size: 0.75em;
     color: #bffff0;
     margin: 2% 0;
     line-height: 1.25;
@@ -149,11 +151,11 @@
 
 .cloud-bubble-info .price {
     font-family: var(--font-body, 'Inter', sans-serif);
-    font-size: 1.25em;
+    font-size: 1.05em;
     font-weight: 800;
     color: var(--theme-accent, #6ab04c);
     background: rgba(14, 18, 15, 0.95);
-    padding: 2.5% 15%;
+    padding: 2% 12%;
     border-radius: 30px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.8);
