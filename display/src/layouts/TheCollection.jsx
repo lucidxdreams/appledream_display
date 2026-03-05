@@ -31,23 +31,23 @@ function fanLayout(count, W, H) {
         }];
     }
 
-    const cardW = Math.min(Math.max(Math.floor(W * 0.11), 95), 165);
+    const cardW = Math.min(Math.max(Math.floor(W * 0.10), 90), 150);
     const cardH = cardW * 1.4;
 
     if (count <= 8) {
-        // Arc fan — wide spread with clear separation
-        const arcAngle = Math.min((count - 1) * 16, 100);
+        // Arc fan — generous spread to prevent any overlap
+        const arcAngle = Math.min((count - 1) * 20, 120);
         const startAngle = -arcAngle / 2;
         const cx = W / 2;
-        const cy = H * 0.58;
-        const arcR = W * 0.38;
+        const cy = H * 0.55;
+        const arcR = W * 0.42;
         return Array.from({ length: count }, (_, i) => {
             const angle = startAngle + (arcAngle / Math.max(count - 1, 1)) * i;
             const rad = angle * (Math.PI / 180);
             return {
                 x: cx + Math.sin(rad) * arcR - cardW / 2,
-                y: cy - Math.cos(rad) * arcR * 0.32 - cardH / 2,
-                rotate: angle * 0.5,
+                y: cy - Math.cos(rad) * arcR * 0.25 - cardH / 2,
+                rotate: angle * 0.4,
                 cardW,
                 cardH,
                 z: i,
