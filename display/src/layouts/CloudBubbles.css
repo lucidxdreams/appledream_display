@@ -151,45 +151,60 @@
 }
 
 /* ── Circle (image container) ───────────────────────────────────────── 
- *  Takes up the upper portion of cb-root.
  *  overflow:hidden clips the image to a perfect circle.
- *  The SVG arcs are a SIBLING, so they are NOT clipped.
- *  Width & height set inline from JS.                                  */
+ *  Strain profile colors applied via modifier classes.                 */
 .cb-circle {
     position: relative;
     border-radius: 50%;
     overflow: hidden;
-
-    background: radial-gradient(circle at 38% 35%,
-            rgba(55, 105, 65, 0.52) 0%,
-            rgba(12, 26, 18, 0.78) 100%);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-
-    border: 2px solid rgba(130, 220, 150, 0.25);
-    box-shadow:
-        0 16px 50px rgba(0, 0, 0, 0.65),
-        inset 0 1px 0 rgba(255, 255, 255, 0.10),
-        inset 0 0 40px rgba(100, 200, 120, 0.08);
-
-    /* Gentle glow pulse instead of aggressive scale breathing */
     animation: cbPulse 5s ease-in-out infinite alternate;
 }
 
-.cb-circle--gold {
-    border-color: rgba(255, 215, 0, 0.40);
+/* ── Strain: HYBRID (default — forest green) ───────────────────────── */
+.cb-strain--hybrid {
+    background: radial-gradient(circle at 38% 35%,
+            rgba(55, 105, 65, 0.55) 0%,
+            rgba(12, 30, 18, 0.80) 100%);
+    border: 2px solid rgba(106, 176, 76, 0.35);
     box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.75),
-        inset 0 0 50px rgba(255, 215, 0, 0.10);
+        0 16px 50px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        inset 0 0 40px rgba(106, 176, 76, 0.10);
+}
+
+/* ── Strain: INDICA (deep purple / violet) ─────────────────────────── */
+.cb-strain--indica {
+    background: radial-gradient(circle at 38% 35%,
+            rgba(75, 45, 110, 0.55) 0%,
+            rgba(22, 12, 38, 0.82) 100%);
+    border: 2px solid rgba(160, 100, 220, 0.35);
+    box-shadow:
+        0 16px 50px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        inset 0 0 40px rgba(140, 80, 200, 0.12);
+}
+
+/* ── Strain: SATIVA (warm amber / golden orange) ───────────────────── */
+.cb-strain--sativa {
+    background: radial-gradient(circle at 38% 35%,
+            rgba(120, 80, 30, 0.55) 0%,
+            rgba(35, 20, 8, 0.82) 100%);
+    border: 2px solid rgba(220, 165, 50, 0.35);
+    box-shadow:
+        0 16px 50px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        inset 0 0 40px rgba(220, 165, 50, 0.12);
 }
 
 @keyframes cbPulse {
     from {
-        box-shadow: 0 16px 50px rgba(0, 0, 0, .65), inset 0 0 40px rgba(100, 200, 120, .08);
+        filter: brightness(1);
     }
 
     to {
-        box-shadow: 0 22px 65px rgba(0, 0, 0, .72), inset 0 0 60px rgba(100, 200, 120, .14);
+        filter: brightness(1.08);
     }
 }
 
@@ -293,11 +308,23 @@
     font-family: var(--font-body, 'Inter', sans-serif);
     font-size: var(--price-sz, 16px);
     font-weight: 800;
-    color: var(--accent, #6ab04c);
     background: rgba(6, 12, 8, 0.92);
     padding: 2px 14px;
     border-radius: 30px;
     border: 1px solid rgba(255, 255, 255, 0.10);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8);
     white-space: nowrap;
+}
+
+/* Strain-specific price colors */
+.cb-price--hybrid {
+    color: #6ab04c;
+}
+
+.cb-price--indica {
+    color: #b388e8;
+}
+
+.cb-price--sativa {
+    color: #e5b95c;
 }

@@ -36,6 +36,21 @@ function useContainerSize(ref) {
     return size;
 }
 
+/* ── Strain profile detection ────────────────────────────────────── */
+function getStrainProfile(product) {
+    const type = (product.type || '').toLowerCase();
+    if (type.includes('indica')) return 'indica';
+    if (type.includes('sativa')) return 'sativa';
+    if (type.includes('hybrid')) return 'hybrid';
+    return 'hybrid'; // default
+}
+
+/* ── Badge size multiplier — badged products are bigger ────────────── */
+const BADGE_SCALE = 1.35;
+function hasBadge(product) {
+    return !!(product.badge && product.badge.trim());
+}
+
 /* ── Bubble radius — scaled to product count + available space ────── */
 function calcRadius(count, W, H) {
     if (count === 0) return 80;
@@ -46,7 +61,7 @@ function calcRadius(count, W, H) {
     const perArea = (area * coverage) / count;
     const r = Math.sqrt(perArea / Math.PI);
     // Clamp between reasonable bounds
-    return Math.max(45, Math.min(r, 130));
+    return Math.max(45, Math.min(r, 120));
 }
 
 /* ── D3 Force Simulation Layout Hook ─────────────────────────────── */
@@ -56,57 +71,56 @@ const COLLISION_PAD = 10;  // Extra padding between bubbles
 function useForceLayout(products, W, H) {
     return useMemo(() => {
         const count = products.length;
-        if (!count || !W || !H) return { positions: [], r: 80 };
+        if (!count || !W || !H) return { positions: [], radii: [], r: 80 };
 
-        const r = calcRadius(count, W, H);
+        const baseR = calcRadius(count, W, H);
         const centerX = W / 2;
         const centerY = H / 2;
 
-        // Collision radius includes circle radius + half the label area + padding
-        const collisionR = r + LABEL_HEIGHT / 2 + COLLISION_PAD;
+        // Per-product radii: badged products are bigger
+        const radii = products.map(p => hasBadge(p) ? baseR * BADGE_SCALE : baseR);
 
         // Strength constants
         const forceStrength = 0.03;
 
-        // Create nodes from products
-        const nodes = products.map((p, i) => ({
-            id: p.id,
-            index: i,
-            // Start positions: scatter in a wide rectangular region to help simulation
-            x: centerX + (Math.random() - 0.5) * W * 0.6,
-            y: centerY + (Math.random() - 0.5) * H * 0.4,
-        }));
+        // Create nodes with per-node collision radius
+        const nodes = products.map((p, i) => {
+            const nodeR = radii[i];
+            const collisionR = nodeR + LABEL_HEIGHT / 2 + COLLISION_PAD;
+            return {
+                id: p.id,
+                index: i,
+                radius: collisionR,
+                x: centerX + (Math.random() - 0.5) * W * 0.6,
+                y: centerY + (Math.random() - 0.5) * H * 0.4,
+            };
+        });
 
-        // Build simulation with forces from the bubble cloud architecture:
-        //   - forceCollide: HARD collision — quadtree-optimized, guarantees no overlap
-        //   - forceX: weak pull towards center X — allows horizontal spread
-        //   - forceY: stronger pull towards center Y — keeps vertically centered
-        //   - forceManyBody: negative charge — organic repulsion
+        // Build simulation: each node has its own collision radius
         const sim = forceSimulation(nodes)
             .velocityDecay(0.25)
-            .force('collide', forceCollide(collisionR).strength(1).iterations(4))
+            .force('collide', forceCollide(d => d.radius).strength(1).iterations(4))
             .force('x', forceX(centerX).strength(forceStrength * 0.8))
             .force('y', forceY(centerY).strength(forceStrength * 2.0))
-            .force('charge', forceManyBody().strength(d => -forceStrength * Math.pow(collisionR, 2.0)))
+            .force('charge', forceManyBody().strength(d => -forceStrength * Math.pow(d.radius, 2.0)))
             .stop();
 
-        // Run simulation to completion synchronously — instant stable layout
-        const numTicks = 300;
-        for (let i = 0; i < numTicks; i++) {
-            sim.tick();
-        }
+        // Run simulation to completion synchronously
+        for (let i = 0; i < 300; i++) sim.tick();
 
-        // Clamp final positions to keep bubbles within the visible area
-        const padX = r + 10;
-        const padTop = r + 10;
-        const padBottom = r + LABEL_HEIGHT + 10;
+        // Clamp final positions
+        const positions = nodes.map((n, i) => {
+            const nodeR = radii[i];
+            const padX = nodeR + 10;
+            const padTop = nodeR + 10;
+            const padBottom = nodeR + LABEL_HEIGHT + 10;
+            return {
+                x: Math.max(padX, Math.min(W - padX, n.x)),
+                y: Math.max(padTop, Math.min(H - padBottom, n.y)),
+            };
+        });
 
-        const positions = nodes.map(n => ({
-            x: Math.max(padX, Math.min(W - padX, n.x)),
-            y: Math.max(padTop, Math.min(H - padBottom, n.y)),
-        }));
-
-        return { positions, r };
+        return { positions, radii, r: baseR };
     }, [products, W, H]);
 }
 
@@ -189,9 +203,8 @@ function ArcBadges({ product, r }) {
 
 /* ── Single Bubble ───────────────────────────────────────────────────── */
 function Bubble({ product, pos, r, index }) {
-    const isFeatured = !!product.featured;
-    const isLimited = (product.badge || '').toLowerCase() === 'limited';
     const isNew = (product.badge || '').toLowerCase() === 'new';
+    const strain = getStrainProfile(product);
 
     const nameSize = Math.max(11, Math.min(r * 0.16, 18));
     const priceSize = Math.max(12, Math.min(r * 0.18, 20));
@@ -223,7 +236,7 @@ function Bubble({ product, pos, r, index }) {
 
             {/* Circle — overflow:hidden clips only the image */}
             <div
-                className={`cb-circle ${isLimited ? 'cb-circle--gold' : ''}`}
+                className={`cb-circle cb-strain--${strain}`}
                 style={{ width: r * 2, height: r * 2 }}
             >
                 <div className="cb-img-wrap">
@@ -241,7 +254,7 @@ function Bubble({ product, pos, r, index }) {
             <div className="cb-label"
                 style={{ '--name-sz': `${nameSize}px`, '--price-sz': `${priceSize}px` }}>
                 <p className="cb-name">{product.name}</p>
-                <span className="cb-price">
+                <span className={`cb-price cb-price--${strain}`}>
                     ${Number(product.price || 0).toFixed(2)}
                     {product.sellType === 'Weighted' ? '/g' : ''}
                 </span>
@@ -254,7 +267,7 @@ function Bubble({ product, pos, r, index }) {
 export default function CloudBubbles({ products = [], categoryTheme }) {
     const containerRef = useRef(null);
     const { w, h } = useContainerSize(containerRef);
-    const { positions, r } = useForceLayout(products, w, h);
+    const { positions, radii, r } = useForceLayout(products, w, h);
 
     return (
         <div className="cb-container" ref={containerRef}
@@ -266,7 +279,7 @@ export default function CloudBubbles({ products = [], categoryTheme }) {
                         key={product.id}
                         product={product}
                         pos={positions[i]}
-                        r={r}
+                        r={radii?.[i] || r}
                         index={i}
                     />
                 ) : null
