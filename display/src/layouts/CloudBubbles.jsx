@@ -1,12 +1,12 @@
 /**
  * CloudBubbles.jsx — Exotic Flowers Display (D3 Force-Directed Bubble Cloud)
  *
- * Architecture (based on vallandingham.me/building_a_bubble_cloud.html):
+ * Architecture:
  *   1. d3.forceSimulation with forceCollide guarantees zero overlap
- *   2. Asymmetric forceX / forceY — weak X (spread wide), stronger Y (center vertically)
- *   3. forceManyBody — organic repulsion proportional to radius²
- *   4. Simulation runs to completion synchronously — instant stable positions
- *   5. Each bubble: circle with product image, SVG arc badges, name+price below
+ *   2. Boundary forces keep ALL nodes within safe area (below header, above footer)
+ *   3. NO post-simulation clamping — simulation itself resolves boundaries
+ *   4. Strain-specific gradient colors on circles, arc text, names, and prices
+ *   5. Badged products are 1.35x bigger
  */
 
 import { useMemo, useEffect, useRef, useState } from 'react';
@@ -18,6 +18,52 @@ import {
     forceManyBody,
 } from 'd3-force';
 import './CloudBubbles.css';
+
+/* ── Strain profiles — colors for each strain ────────────────────────── */
+const STRAIN_COLORS = {
+    indica: {
+        grad1: '#9b59b6',    // rich orchid purple
+        grad2: '#3498db',    // cool blue
+        border: 'rgba(155, 89, 182, 0.45)',
+        bgFrom: 'rgba(88, 40, 130, 0.55)',
+        bgTo: 'rgba(20, 10, 40, 0.85)',
+        glow: 'rgba(155, 89, 182, 0.15)',
+        arcStroke1: '#9b59b6',
+        arcStroke2: '#8e44ad',
+        arcFill: '#d2b4de',
+    },
+    sativa: {
+        grad1: '#f39c12',    // vibrant orange
+        grad2: '#e74c3c',    // energetic red
+        border: 'rgba(243, 156, 18, 0.45)',
+        bgFrom: 'rgba(140, 90, 20, 0.55)',
+        bgTo: 'rgba(40, 22, 5, 0.85)',
+        glow: 'rgba(243, 156, 18, 0.15)',
+        arcStroke1: '#f39c12',
+        arcStroke2: '#e67e22',
+        arcFill: '#fdebd0',
+    },
+    hybrid: {
+        grad1: '#2ecc71',    // emerald green
+        grad2: '#1abc9c',    // teal
+        border: 'rgba(46, 204, 113, 0.45)',
+        bgFrom: 'rgba(30, 100, 55, 0.55)',
+        bgTo: 'rgba(8, 28, 18, 0.85)',
+        glow: 'rgba(46, 204, 113, 0.15)',
+        arcStroke1: '#2ecc71',
+        arcStroke2: '#27ae60',
+        arcFill: '#d5f5e3',
+    },
+};
+
+/* ── Strain profile detection ────────────────────────────────────── */
+function getStrainProfile(product) {
+    const type = (product.type || '').toLowerCase();
+    if (type.includes('indica')) return 'indica';
+    if (type.includes('sativa')) return 'sativa';
+    if (type.includes('hybrid')) return 'hybrid';
+    return 'hybrid';
+}
 
 /* ── Container size measurement ─────────────────────────────────────── */
 function useContainerSize(ref) {
@@ -36,15 +82,6 @@ function useContainerSize(ref) {
     return size;
 }
 
-/* ── Strain profile detection ────────────────────────────────────── */
-function getStrainProfile(product) {
-    const type = (product.type || '').toLowerCase();
-    if (type.includes('indica')) return 'indica';
-    if (type.includes('sativa')) return 'sativa';
-    if (type.includes('hybrid')) return 'hybrid';
-    return 'hybrid'; // default
-}
-
 /* ── Badge size multiplier — badged products are bigger ────────────── */
 const BADGE_SCALE = 1.35;
 function hasBadge(product) {
@@ -54,19 +91,17 @@ function hasBadge(product) {
 /* ── Bubble radius — scaled to product count + available space ────── */
 function calcRadius(count, W, H) {
     if (count === 0) return 80;
-    // Each bubble needs space for circle + label below
-    // Solve: count * PI * r² ≈ area * coverage
     const area = W * H;
-    const coverage = count <= 3 ? 0.18 : count <= 6 ? 0.22 : count <= 12 ? 0.26 : 0.30;
+    const coverage = count <= 3 ? 0.16 : count <= 6 ? 0.20 : count <= 12 ? 0.24 : 0.28;
     const perArea = (area * coverage) / count;
     const r = Math.sqrt(perArea / Math.PI);
-    // Clamp between reasonable bounds
-    return Math.max(45, Math.min(r, 120));
+    return Math.max(40, Math.min(r, 110));
 }
 
 /* ── D3 Force Simulation Layout Hook ─────────────────────────────── */
-const LABEL_HEIGHT = 50;   // Space reserved for name + price below circle
-const COLLISION_PAD = 10;  // Extra padding between bubbles
+const LABEL_HEIGHT = 52;
+const COLLISION_PAD = 16;
+const HEADER_RESERVED = 30;  // Extra top margin so bubbles stay clear of header
 
 function useForceLayout(products, W, H) {
     return useMemo(() => {
@@ -74,49 +109,77 @@ function useForceLayout(products, W, H) {
         if (!count || !W || !H) return { positions: [], radii: [], r: 80 };
 
         const baseR = calcRadius(count, W, H);
-        const centerX = W / 2;
-        const centerY = H / 2;
 
         // Per-product radii: badged products are bigger
         const radii = products.map(p => hasBadge(p) ? baseR * BADGE_SCALE : baseR);
 
-        // Strength constants
-        const forceStrength = 0.03;
+        // Safe bounds — where bubble CENTERS can live
+        // Account for: circle radius + label + header
+        const safeLeft = (r) => r + 8;
+        const safeRight = (r) => W - r - 8;
+        const safeTop = (r) => r + HEADER_RESERVED + 8;
+        const safeBottom = (r) => H - r - LABEL_HEIGHT - 8;
 
-        // Create nodes with per-node collision radius
+        const centerX = W / 2;
+        const centerY = (safeTop(baseR) + safeBottom(baseR)) / 2;
+
+        // Collision radius = circle radius + half-label-zone + padding
         const nodes = products.map((p, i) => {
             const nodeR = radii[i];
             const collisionR = nodeR + LABEL_HEIGHT / 2 + COLLISION_PAD;
             return {
                 id: p.id,
                 index: i,
+                nodeR,
                 radius: collisionR,
-                x: centerX + (Math.random() - 0.5) * W * 0.6,
-                y: centerY + (Math.random() - 0.5) * H * 0.4,
+                x: centerX + (Math.random() - 0.5) * W * 0.5,
+                y: centerY + (Math.random() - 0.5) * H * 0.3,
             };
         });
 
-        // Build simulation: each node has its own collision radius
+        const forceStrength = 0.03;
+
+        // Custom boundary force — pushes nodes away from edges during simulation
+        // This replaces post-simulation clamping so positions remain collision-free
+        function forceBoundary() {
+            let ns;
+            function force(alpha) {
+                for (const n of ns) {
+                    const r = n.nodeR;
+                    const minX = safeLeft(r);
+                    const maxX = safeRight(r);
+                    const minY = safeTop(r);
+                    const maxY = safeBottom(r);
+                    const strength = 0.5;
+
+                    if (n.x < minX) n.vx += (minX - n.x) * strength * alpha;
+                    else if (n.x > maxX) n.vx += (maxX - n.x) * strength * alpha;
+                    if (n.y < minY) n.vy += (minY - n.y) * strength * alpha;
+                    else if (n.y > maxY) n.vy += (maxY - n.y) * strength * alpha;
+                }
+            }
+            force.initialize = (nodes) => { ns = nodes; };
+            return force;
+        }
+
         const sim = forceSimulation(nodes)
-            .velocityDecay(0.25)
-            .force('collide', forceCollide(d => d.radius).strength(1).iterations(4))
-            .force('x', forceX(centerX).strength(forceStrength * 0.8))
-            .force('y', forceY(centerY).strength(forceStrength * 2.0))
+            .velocityDecay(0.3)
+            .force('collide', forceCollide(d => d.radius).strength(1).iterations(5))
+            .force('x', forceX(centerX).strength(forceStrength * 0.7))
+            .force('y', forceY(centerY).strength(forceStrength * 1.6))
             .force('charge', forceManyBody().strength(d => -forceStrength * Math.pow(d.radius, 2.0)))
+            .force('boundary', forceBoundary())
             .stop();
 
-        // Run simulation to completion synchronously
-        for (let i = 0; i < 300; i++) sim.tick();
+        // Run to completion
+        for (let i = 0; i < 400; i++) sim.tick();
 
-        // Clamp final positions
+        // Final hard clamp as safety net (should barely move anything)
         const positions = nodes.map((n, i) => {
-            const nodeR = radii[i];
-            const padX = nodeR + 10;
-            const padTop = nodeR + 10;
-            const padBottom = nodeR + LABEL_HEIGHT + 10;
+            const r = radii[i];
             return {
-                x: Math.max(padX, Math.min(W - padX, n.x)),
-                y: Math.max(padTop, Math.min(H - padBottom, n.y)),
+                x: Math.max(safeLeft(r), Math.min(safeRight(r), n.x)),
+                y: Math.max(safeTop(r), Math.min(safeBottom(r), n.y)),
             };
         });
 
@@ -124,12 +187,12 @@ function useForceLayout(products, W, H) {
     }, [products, W, H]);
 }
 
-/* ── SVG curved arc text for THC / CBD / Strain ─────────────────────
- *  Rendered as a SIBLING to the circle — never clipped by overflow:hidden */
-function ArcBadges({ product, r }) {
+/* ── SVG curved arc text — strain-colored ─────────────────────────── */
+function ArcBadges({ product, r, strain }) {
     const id = `arc_${product.id}`.replace(/[^a-zA-Z0-9_-]/g, '_');
     const d2 = r * 2;
     const arcR = 48;
+    const colors = STRAIN_COLORS[strain];
 
     return (
         <svg
@@ -142,19 +205,24 @@ function ArcBadges({ product, r }) {
             <defs>
                 <path id={`la-${id}`} d={`M 50,${50 + arcR} A ${arcR},${arcR} 0 0,1 50,${50 - arcR}`} fill="none" />
                 <path id={`ra-${id}`} d={`M 50,${50 - arcR} A ${arcR},${arcR} 0 0,1 50,${50 + arcR}`} fill="none" />
+                {/* Strain-specific gradient for text */}
+                <linearGradient id={`tg-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={colors.grad1} />
+                    <stop offset="100%" stopColor={colors.grad2} />
+                </linearGradient>
             </defs>
 
             {/* THC — left arc */}
             {product.thc > 0 && (<>
-                <text stroke="#FF7043" strokeWidth="6" strokeLinecap="round"
-                    strokeLinejoin="round" fill="#FF7043"
+                <text stroke={colors.arcStroke1} strokeWidth="6" strokeLinecap="round"
+                    strokeLinejoin="round" fill={colors.arcStroke1}
                     fontSize="5.5" fontWeight="900"
                     style={{ fontFamily: 'var(--font-display)' }}>
                     <textPath href={`#la-${id}`} startOffset="24%" textAnchor="middle">
                         THC: {product.thc}%
                     </textPath>
                 </text>
-                <text fill="#ffffff" fontSize="5.5" fontWeight="900"
+                <text fill={colors.arcFill} fontSize="5.5" fontWeight="900"
                     style={{ fontFamily: 'var(--font-display)' }}>
                     <textPath href={`#la-${id}`} startOffset="24%" textAnchor="middle">
                         THC: {product.thc}%
@@ -164,15 +232,15 @@ function ArcBadges({ product, r }) {
 
             {/* CBD — left arc, lower */}
             {product.cbd > 0 && (<>
-                <text stroke="#FFC107" strokeWidth="6" strokeLinecap="round"
-                    strokeLinejoin="round" fill="#FFC107"
+                <text stroke={colors.arcStroke2} strokeWidth="6" strokeLinecap="round"
+                    strokeLinejoin="round" fill={colors.arcStroke2}
                     fontSize="5.5" fontWeight="900"
                     style={{ fontFamily: 'var(--font-display)' }}>
                     <textPath href={`#la-${id}`} startOffset="78%" textAnchor="middle">
                         CBD: {product.cbd}%
                     </textPath>
                 </text>
-                <text fill="#ffffff" fontSize="5.5" fontWeight="900"
+                <text fill={colors.arcFill} fontSize="5.5" fontWeight="900"
                     style={{ fontFamily: 'var(--font-display)' }}>
                     <textPath href={`#la-${id}`} startOffset="78%" textAnchor="middle">
                         CBD: {product.cbd}%
@@ -182,15 +250,15 @@ function ArcBadges({ product, r }) {
 
             {/* Strain type — right arc */}
             {product.type && product.type !== 'N/A' && (<>
-                <text stroke="#FF9800" strokeWidth="6" strokeLinecap="round"
-                    strokeLinejoin="round" fill="#FF9800"
+                <text stroke={colors.arcStroke1} strokeWidth="6" strokeLinecap="round"
+                    strokeLinejoin="round" fill={colors.arcStroke1}
                     fontSize="5.5" fontWeight="900"
                     style={{ fontFamily: 'var(--font-display)' }}>
                     <textPath href={`#ra-${id}`} startOffset="22%" textAnchor="middle">
                         {product.type}
                     </textPath>
                 </text>
-                <text fill="#ffffff" fontSize="5.5" fontWeight="900"
+                <text fill={colors.arcFill} fontSize="5.5" fontWeight="900"
                     style={{ fontFamily: 'var(--font-display)' }}>
                     <textPath href={`#ra-${id}`} startOffset="22%" textAnchor="middle">
                         {product.type}
@@ -205,14 +273,14 @@ function ArcBadges({ product, r }) {
 function Bubble({ product, pos, r, index }) {
     const isNew = (product.badge || '').toLowerCase() === 'new';
     const strain = getStrainProfile(product);
+    const colors = STRAIN_COLORS[strain];
 
-    const nameSize = Math.max(11, Math.min(r * 0.16, 18));
+    const nameSize = Math.max(11, Math.min(r * 0.16, 17));
     const priceSize = Math.max(12, Math.min(r * 0.18, 20));
 
     const entranceDelay = index * 0.08;
     const floatVariant = (index % 4) + 1;
 
-    // Total height = circle (2r) + label area
     const totalHeight = r * 2 + LABEL_HEIGHT;
 
     return (
@@ -227,17 +295,23 @@ function Bubble({ product, pos, r, index }) {
                 '--float-delay': `${entranceDelay + 0.6}s`,
             }}
         >
-            {/* Badge at top edge (12 o'clock) */}
+            {/* Badge pill */}
             {product.badge && (
                 <div className={`cb-badge ${isNew ? 'cb-badge--new' : 'cb-badge--hot'}`}>
                     {product.badge}
                 </div>
             )}
 
-            {/* Circle — overflow:hidden clips only the image */}
+            {/* Circle — strain-colored via inline styles */}
             <div
-                className={`cb-circle cb-strain--${strain}`}
-                style={{ width: r * 2, height: r * 2 }}
+                className="cb-circle"
+                style={{
+                    width: r * 2,
+                    height: r * 2,
+                    background: `radial-gradient(circle at 38% 35%, ${colors.bgFrom} 0%, ${colors.bgTo} 100%)`,
+                    border: `2px solid ${colors.border}`,
+                    boxShadow: `0 16px 50px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 40px ${colors.glow}`,
+                }}
             >
                 <div className="cb-img-wrap">
                     {product.imageUrl
@@ -247,14 +321,19 @@ function Bubble({ product, pos, r, index }) {
                 </div>
             </div>
 
-            {/* SVG arc text — SIBLING to the circle, never clipped */}
-            <ArcBadges product={product} r={r} />
+            {/* SVG arc text — strain-colored */}
+            <ArcBadges product={product} r={r} strain={strain} />
 
-            {/* Product name + price BELOW the circle */}
+            {/* Product name + price BELOW the circle — gradient text */}
             <div className="cb-label"
-                style={{ '--name-sz': `${nameSize}px`, '--price-sz': `${priceSize}px` }}>
+                style={{
+                    '--name-sz': `${nameSize}px`,
+                    '--price-sz': `${priceSize}px`,
+                    '--strain-grad-1': colors.grad1,
+                    '--strain-grad-2': colors.grad2,
+                }}>
                 <p className="cb-name">{product.name}</p>
-                <span className={`cb-price cb-price--${strain}`}>
+                <span className="cb-price">
                     ${Number(product.price || 0).toFixed(2)}
                     {product.sellType === 'Weighted' ? '/g' : ''}
                 </span>
