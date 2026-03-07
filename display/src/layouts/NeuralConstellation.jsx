@@ -1,73 +1,77 @@
 /**
- * NeuralConstellation.jsx — "Candy Shelf" Edibles Display
+ * NeuralConstellation.jsx — "Candy Aurora" Edibles Display
  *
- * A premium card grid layout for edibles products. Features:
- *  - Strain-specific color palettes (Indica=violet, Sativa=amber, Hybrid=teal)
- *  - Floating candy sparkle particle canvas background
- *  - Per-card glow rings + ribbon in strain color
- *  - Shows: image, name, brand, mg THC badge, piece count, effects chips, price
- *  - Staggered slide-up entrance animations
- *  - Scales from 1–16+ products gracefully
+ * Premium glassmorphism showcase:
+ *  · Animated aurora borealis background (CSS, candy palette)
+ *  · Tall frosted-glass cards with strain-colored holographic glow
+ *  · Circular product image with animated halo ring
+ *  · Prominent THC mg dial badge + piece count
+ *  · Effects as slim frosted chips
+ *  · Staggered float-up entrance + continuous gentle levitation
+ *  · Scales 1–16 products gracefully (auto-cols)
  */
 
 import { useEffect, useRef, useState, useMemo } from 'react';
 import './NeuralConstellation.css';
 
-/* ── Strain Color Palettes ─────────────────────────────────────────── */
-const STRAIN_PALETTES = {
+/* ── Strain palettes ─────────────────────────────────────────────── */
+const PALETTES = {
     indica: {
-        ribbon: '#7c3aed',
-        glow: 'rgba(124, 58, 237, 0.35)',
-        glowSoft: 'rgba(124, 58, 237, 0.12)',
-        border: 'rgba(124, 58, 237, 0.5)',
-        mgBg: 'rgba(124, 58, 237, 0.2)',
-        mgColor: '#c4b5fd',
-        label: '#7c3aed',
-        grad1: '#7c3aed',
-        grad2: '#a78bfa',
-        chipBg: 'rgba(124, 58, 237, 0.15)',
-        chipColor: '#c4b5fd',
-        name: 'Indica',
+        halo: '#8b5cf6',
+        glow: 'rgba(139, 92, 246, 0.5)',
+        glowSm: 'rgba(139, 92, 246, 0.15)',
+        border: 'rgba(139, 92, 246, 0.45)',
+        mg: '#c4b5fd',
+        mgBg: 'rgba(139, 92, 246, 0.22)',
+        chip: 'rgba(139, 92, 246, 0.18)',
+        chipTxt: '#c4b5fd',
+        grad1: '#8b5cf6',
+        grad2: '#c084fc',
+        bar: 'linear-gradient(180deg, #7c3aed, #a855f7)',
+        label: 'Indica',
+        aurora: '#7c3aed',
     },
     sativa: {
-        ribbon: '#d97706',
-        glow: 'rgba(217, 119, 6, 0.35)',
-        glowSoft: 'rgba(217, 119, 6, 0.12)',
-        border: 'rgba(217, 119, 6, 0.5)',
-        mgBg: 'rgba(217, 119, 6, 0.2)',
-        mgColor: '#fcd34d',
-        label: '#d97706',
+        halo: '#f59e0b',
+        glow: 'rgba(245, 158, 11, 0.5)',
+        glowSm: 'rgba(245, 158, 11, 0.15)',
+        border: 'rgba(245, 158, 11, 0.45)',
+        mg: '#fde68a',
+        mgBg: 'rgba(245, 158, 11, 0.22)',
+        chip: 'rgba(245, 158, 11, 0.18)',
+        chipTxt: '#fde68a',
         grad1: '#f59e0b',
         grad2: '#fbbf24',
-        chipBg: 'rgba(217, 119, 6, 0.15)',
-        chipColor: '#fcd34d',
-        name: 'Sativa',
+        bar: 'linear-gradient(180deg, #d97706, #f59e0b)',
+        label: 'Sativa',
+        aurora: '#d97706',
     },
     hybrid: {
-        ribbon: '#059669',
-        glow: 'rgba(5, 150, 105, 0.35)',
-        glowSoft: 'rgba(5, 150, 105, 0.12)',
-        border: 'rgba(5, 150, 105, 0.5)',
-        mgBg: 'rgba(5, 150, 105, 0.2)',
-        mgColor: '#6ee7b7',
-        label: '#059669',
+        halo: '#10b981',
+        glow: 'rgba(16, 185, 129, 0.5)',
+        glowSm: 'rgba(16, 185, 129, 0.15)',
+        border: 'rgba(16, 185, 129, 0.45)',
+        mg: '#6ee7b7',
+        mgBg: 'rgba(16, 185, 129, 0.22)',
+        chip: 'rgba(16, 185, 129, 0.18)',
+        chipTxt: '#6ee7b7',
         grad1: '#10b981',
         grad2: '#34d399',
-        chipBg: 'rgba(5, 150, 105, 0.15)',
-        chipColor: '#6ee7b7',
-        name: 'Hybrid',
+        bar: 'linear-gradient(180deg, #059669, #10b981)',
+        label: 'Hybrid',
+        aurora: '#059669',
     },
 };
 
-function getStrain(product) {
-    const t = (product.type || '').toLowerCase();
+function getStrain(p) {
+    const t = (p.type || '').toLowerCase();
     if (t.includes('indica')) return 'indica';
     if (t.includes('sativa')) return 'sativa';
     return 'hybrid';
 }
 
-/* ── Candy Sparkle Particle Canvas ───────────────────────────────── */
-function CandyParticles({ W, H }) {
+/* ── Floating orb background (canvas) ───────────────────────────── */
+function AuroraOrbs({ W, H }) {
     const canvasRef = useRef(null);
     const rafRef = useRef(null);
 
@@ -80,163 +84,206 @@ function CandyParticles({ W, H }) {
         canvas.height = H * dpr;
         ctx.scale(dpr, dpr);
 
-        // Candy sparkle colors — pinks, purples, golds, mint
-        const COLORS = [
-            '#f472b6', '#a78bfa', '#34d399', '#fbbf24',
-            '#fb7185', '#60a5fa', '#c084fc', '#86efac',
+        const ORB_COLORS = [
+            ['#7c3aed', '#a855f7'],
+            ['#d97706', '#f59e0b'],
+            ['#059669', '#10b981'],
+            ['#db2777', '#f472b6'],
+            ['#0ea5e9', '#38bdf8'],
         ];
 
-        const particles = Array.from({ length: 55 }, () => ({
+        const orbs = ORB_COLORS.map(([c1, c2], i) => ({
+            x: (W / ORB_COLORS.length) * i + W / ORB_COLORS.length / 2,
+            y: H * (0.3 + Math.random() * 0.4),
+            r: Math.min(W, H) * (0.22 + Math.random() * 0.18),
+            c1, c2,
+            speed: 0.15 + Math.random() * 0.1,
+            offset: Math.random() * Math.PI * 2,
+        }));
+
+        let t = 0;
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+            for (const o of orbs) {
+                const dx = Math.sin(t * o.speed + o.offset) * W * 0.06;
+                const dy = Math.cos(t * o.speed * 0.7 + o.offset) * H * 0.06;
+                const grd = ctx.createRadialGradient(o.x + dx, o.y + dy, 0, o.x + dx, o.y + dy, o.r);
+                grd.addColorStop(0, o.c1 + '28');   // ~15% opacity
+                grd.addColorStop(1, o.c2 + '00');
+                ctx.fillStyle = grd;
+                ctx.beginPath();
+                ctx.arc(o.x + dx, o.y + dy, o.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            t += 0.008;
+            rafRef.current = requestAnimationFrame(draw);
+        }
+        draw();
+        return () => cancelAnimationFrame(rafRef.current);
+    }, [W, H]);
+
+    return (
+        <canvas ref={canvasRef}
+            style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, width: W, height: H }} />
+    );
+}
+
+/* ── Sparkle particles ────────────────────────────────────────── */
+function Sparkles({ W, H }) {
+    const canvasRef = useRef(null);
+    const rafRef = useRef(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas || !W || !H) return;
+        const ctx = canvas.getContext('2d');
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        ctx.scale(dpr, dpr);
+
+        const COLS = ['#f472b6', '#a78bfa', '#34d399', '#fbbf24', '#fff', '#60a5fa'];
+        const pts = Array.from({ length: 70 }, () => ({
             x: Math.random() * W,
             y: Math.random() * H,
-            r: Math.random() * 1.8 + 0.4,
-            color: COLORS[Math.floor(Math.random() * COLORS.length)],
-            alpha: Math.random(),
-            speed: Math.random() * 0.004 + 0.002,
-            vx: (Math.random() - 0.5) * 0.3,
-            vy: -Math.random() * 0.5 - 0.1,
-            // Some float up slowly, some drift sideways
-            drift: Math.random() > 0.6,
+            r: Math.random() * 1.5 + 0.3,
+            col: COLS[Math.floor(Math.random() * COLS.length)],
+            life: Math.random(),
+            spd: 0.003 + Math.random() * 0.004,
+            vx: (Math.random() - 0.5) * 0.25,
+            vy: -(Math.random() * 0.4 + 0.1),
         }));
 
         function draw() {
             ctx.clearRect(0, 0, W, H);
-            for (const p of particles) {
-                p.alpha += p.speed;
-                if (p.alpha > 1) {
-                    p.alpha = 0;
-                    p.x = Math.random() * W;
-                    p.y = H + 4;
-                }
-                p.x += p.vx;
-                p.y += p.vy;
-                const opacity = Math.sin(p.alpha * Math.PI) * 0.5;
-
+            for (const p of pts) {
+                p.life += p.spd;
+                if (p.life > 1) { p.life = 0; p.x = Math.random() * W; p.y = H + 4; }
+                p.x += p.vx; p.y += p.vy;
+                const a = Math.sin(p.life * Math.PI) * 0.55;
                 ctx.save();
-                ctx.globalAlpha = opacity;
-                ctx.shadowBlur = 6;
-                ctx.shadowColor = p.color;
-                ctx.fillStyle = p.color;
-
-                // Alternate between diamond and circle shapes
-                if (p.drift) {
-                    ctx.translate(p.x, p.y);
-                    ctx.rotate(Math.PI / 4);
-                    ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
-                } else {
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                ctx.globalAlpha = a;
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = p.col;
+                ctx.fillStyle = p.col;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
                 ctx.restore();
             }
             rafRef.current = requestAnimationFrame(draw);
         }
-
         draw();
-        return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+        return () => cancelAnimationFrame(rafRef.current);
     }, [W, H]);
 
     return (
-        <canvas
-            ref={canvasRef}
-            style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, width: W, height: H }}
-        />
+        <canvas ref={canvasRef}
+            style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1, width: W, height: H }} />
     );
 }
 
-/* ── Single Product Card ─────────────────────────────────────────── */
-function EdibleCard({ product, index, cardWidth }) {
+/* ── Single product card ─────────────────────────────────────── */
+function EdibleCard({ product, index, cardW, cardH }) {
     const strain = getStrain(product);
-    const palette = STRAIN_PALETTES[strain];
-    const effects = product.effects || [];
+    const pal = PALETTES[strain];
+    const effects = (product.effects || []).slice(0, 4);
     const thcMg = product.thcMg || product.thc || 0;
-    const pieceCount = product.pieceCount;
+    const pieces = product.pieceCount;
     const price = Number(product.price || 0).toFixed(2);
     const isNew = (product.badge || '').toLowerCase() === 'new';
-
-    const fontSize = cardWidth > 200 ? 14 : 12;
-    const imgSize = cardWidth > 200 ? Math.min(cardWidth * 0.55, 130) : Math.min(cardWidth * 0.55, 100);
+    const floatV = (index % 4) + 1;
+    const imgSize = Math.min(cardW * 0.62, 110);
 
     return (
         <div
-            className="ec-card ec-card--in"
+            className={`ca-card ca-float-${floatV} ca-card--in`}
             style={{
-                '--strain-ribbon': palette.ribbon,
-                '--strain-glow': palette.glow,
-                '--strain-glow-soft': palette.glowSoft,
-                '--strain-border': palette.border,
-                '--strain-grad1': palette.grad1,
-                '--strain-grad2': palette.grad2,
-                '--strain-mg-bg': palette.mgBg,
-                '--strain-mg-color': palette.mgColor,
-                '--strain-chip-bg': palette.chipBg,
-                '--strain-chip-color': palette.chipColor,
-                '--entrance-delay': `${index * 0.07}s`,
-                width: cardWidth,
-                fontSize,
+                '--pal-halo': pal.halo,
+                '--pal-glow': pal.glow,
+                '--pal-glow-sm': pal.glowSm,
+                '--pal-border': pal.border,
+                '--pal-mg': pal.mg,
+                '--pal-mg-bg': pal.mgBg,
+                '--pal-chip': pal.chip,
+                '--pal-chip-txt': pal.chipTxt,
+                '--pal-grad1': pal.grad1,
+                '--pal-grad2': pal.grad2,
+                '--pal-bar': pal.bar,
+                '--entrance-del': `${index * 0.07}s`,
+                '--float-del': `${index * 0.15}s`,
+                width: cardW,
+                minHeight: cardH,
             }}
         >
-            {/* Strain-colored top ribbon */}
-            <div className="ec-ribbon">
-                <span className="ec-ribbon-strain">{palette.name}</span>
-                {product.badge && (
-                    <span className={`ec-badge ${isNew ? 'ec-badge--new' : 'ec-badge--hot'}`}>
-                        {product.badge}
-                    </span>
-                )}
+            {/* Left strain bar */}
+            <div className="ca-bar" />
+
+            {/* Top section: badge + strain label */}
+            <div className="ca-top">
+                <span className="ca-strain-label">{pal.label}</span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                    {product.badge && (
+                        <span className={`ca-badge ${isNew ? 'ca-badge--new' : 'ca-badge--hot'}`}>
+                            {product.badge}
+                        </span>
+                    )}
+                    {product.featured && <span className="ca-badge ca-badge--feat">★</span>}
+                </div>
             </div>
 
-            {/* Product image with glow ring */}
-            <div className="ec-img-wrap" style={{ width: imgSize, height: imgSize }}>
-                <div className="ec-img-ring" />
-                {product.imageUrl
-                    ? <img src={product.imageUrl} alt={product.name} className="ec-img" />
-                    : <span className="ec-emoji">🍬</span>
-                }
+            {/* Product image — circular with halo */}
+            <div className="ca-img-outer" style={{ width: imgSize, height: imgSize }}>
+                <div className="ca-halo-ring" />
+                <div className="ca-halo-ring ca-halo-ring--2" />
+                <div className="ca-img-inner">
+                    {product.imageUrl
+                        ? <img src={product.imageUrl} alt={product.name} className="ca-img" />
+                        : <span className="ca-emoji">🍬</span>
+                    }
+                </div>
             </div>
 
-            {/* Name & brand */}
-            <div className="ec-name">{product.name}</div>
-            {product.brand && <div className="ec-brand">{product.brand}</div>}
+            {/* Name */}
+            <div className="ca-name">{product.name}</div>
+            {product.brand && <div className="ca-brand">{product.brand}</div>}
 
-            {/* mg THC + piece count row */}
-            <div className="ec-specs">
+            {/* THC mg + pieces row */}
+            <div className="ca-meta">
                 {thcMg > 0 && (
-                    <div className="ec-spec-pill ec-spec-mg">
-                        <span className="ec-spec-val">{thcMg}<span style={{ fontSize: '0.7em', opacity: 0.8 }}>mg</span></span>
-                        <span className="ec-spec-lbl">THC</span>
+                    <div className="ca-thc-badge">
+                        <span className="ca-thc-val">{thcMg}</span>
+                        <span className="ca-thc-unit">mg THC</span>
                     </div>
                 )}
-                {pieceCount && (
-                    <div className="ec-spec-pill ec-spec-count">
-                        <span className="ec-spec-val">{pieceCount}</span>
-                        <span className="ec-spec-lbl">pieces</span>
+                {pieces && (
+                    <div className="ca-pieces-badge">
+                        <span className="ca-pieces-val">{pieces}</span>
+                        <span className="ca-pieces-unit">pcs</span>
                     </div>
                 )}
             </div>
 
-            {/* Effects chips */}
+            {/* Effects */}
             {effects.length > 0 && (
-                <div className="ec-effects">
-                    {effects.slice(0, 4).map(e => (
-                        <span key={e} className="ec-chip">{e}</span>
-                    ))}
+                <div className="ca-effects">
+                    {effects.map(e => <span key={e} className="ca-chip">{e}</span>)}
                 </div>
             )}
 
-            {/* Flavor notes */}
+            {/* Notes */}
             {product.notes && (
-                <div className="ec-notes">{product.notes}</div>
+                <div className="ca-notes">{product.notes}</div>
             )}
 
             {/* Price */}
-            <div className="ec-price">${price}</div>
+            <div className="ca-price">${price}</div>
         </div>
     );
 }
 
-/* ── Main Component ────────────────────────────────────────────────── */
+/* ── Main ─────────────────────────────────────────────────────── */
 export default function NeuralConstellation({ products = [], categoryTheme }) {
     const containerRef = useRef(null);
     const [size, setSize] = useState({ W: 1280, H: 720 });
@@ -253,37 +300,44 @@ export default function NeuralConstellation({ products = [], categoryTheme }) {
 
     const { W, H } = size;
 
-    // Calculate ideal card width based on product count + available width
-    const cardWidth = useMemo(() => {
-        const count = products.length;
-        if (!count) return 200;
-        const cols = count <= 2 ? count : count <= 4 ? 2 : count <= 6 ? 3 : count <= 9 ? 3 : count <= 12 ? 4 : 5;
-        const gap = 16;
-        const sidePad = 40;
-        const available = W - sidePad * 2 - gap * (cols - 1);
-        return Math.max(140, Math.min(220, Math.floor(available / cols)));
-    }, [products.length, W]);
+    // Dynamic card dimensions
+    const { cardW, cardH, cols } = useMemo(() => {
+        const n = products.length || 1;
+        const cols = n <= 2 ? n : n <= 4 ? 2 : n <= 6 ? 3 : n <= 9 ? 3 : n <= 12 ? 4 : 5;
+        const gap = 18;
+        const padX = 36;
+        const padY = 20;
+        const avlW = W - padX * 2 - gap * (cols - 1);
+        const cardW = Math.max(130, Math.min(200, Math.floor(avlW / cols)));
+        const rows = Math.ceil(n / cols);
+        const avlH = H - padY * 2 - gap * (rows - 1);
+        const cardH = Math.max(280, Math.min(360, Math.floor(avlH / rows)));
+        return { cardW, cardH, cols };
+    }, [products.length, W, H]);
 
     return (
-        <div
-            ref={containerRef}
-            className="ec-scene"
-            style={{ width: '100%', height: '100%', '--accent': categoryTheme?.accent || '#c06c84' }}
-        >
-            {/* Ambient gradient bg */}
-            <div className="ec-ambient" />
+        <div ref={containerRef} className="ca-scene"
+            style={{ width: '100%', height: '100%', '--accent': categoryTheme?.accent || '#c06c84' }}>
 
-            {/* Candy sparkle particles */}
-            <CandyParticles W={W} H={H} />
+            {/* Deep plum bg */}
+            <div className="ca-bg" />
 
-            {/* Card grid */}
-            <div className="ec-grid" style={{ '--card-width': `${cardWidth}px` }}>
-                {products.map((product, i) => (
+            {/* Animated aurora orbs */}
+            <AuroraOrbs W={W} H={H} />
+
+            {/* Fine sparkle particles */}
+            <Sparkles W={W} H={H} />
+
+            {/* Grid */}
+            <div className="ca-grid"
+                style={{ '--cols': cols, '--gap': `${18}px`, '--pad': '36px 36px' }}>
+                {products.map((p, i) => (
                     <EdibleCard
-                        key={product.id}
-                        product={product}
+                        key={p.id}
+                        product={p}
                         index={i}
-                        cardWidth={cardWidth}
+                        cardW={cardW}
+                        cardH={cardH}
                     />
                 ))}
             </div>

@@ -1,78 +1,86 @@
 /* ═══════════════════════════════════════════════════════════════
-   NeuralConstellation.css  —  "Candy Shelf" Edibles Display
+   NeuralConstellation.css  —  "Candy Aurora" Edibles Display
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Scene wrapper ─────────────────────────────────────────────── */
-.ec-scene {
+/* ── Scene ─────────────────────────────────────────────────────── */
+.ca-scene {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: #0f0a1a;
 }
 
-/* Deep berry/plum ambient background glow */
-.ec-ambient {
+/* Deep dark plum base */
+.ca-bg {
     position: absolute;
     inset: 0;
-    background:
-        radial-gradient(ellipse 70% 50% at 20% 60%, rgba(124, 58, 237, 0.08) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 50% at 80% 40%, rgba(217, 119, 6, 0.07) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 60% at 50% 100%, rgba(5, 150, 105, 0.06) 0%, transparent 70%);
-    pointer-events: none;
+    background: radial-gradient(ellipse 100% 100% at 50% 50%,
+            #110820 0%,
+            #0a0514 55%,
+            #060310 100%);
     z-index: 0;
 }
 
-/* ── Card Grid ─────────────────────────────────────────────────── */
-.ec-grid {
+/* ── Grid ──────────────────────────────────────────────────────── */
+.ca-grid {
     position: relative;
     z-index: 2;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 3), auto);
+    gap: var(--gap, 18px);
+    padding: var(--pad, 24px 36px);
+    align-items: center;
     justify-content: center;
-    align-content: center;
-    padding: 16px 24px;
-    width: 100%;
+    justify-items: center;
+    max-width: 100%;
     max-height: 100%;
-    overflow: hidden;
     box-sizing: border-box;
 }
 
-/* ── Card ──────────────────────────────────────────────────────── */
-.ec-card {
+/* ═══════════════════════════════════════════════════════════════
+   CARD
+   ═══════════════════════════════════════════════════════════════ */
+.ca-card {
     position: relative;
-    width: var(--card-width, 190px);
-    background: rgba(18, 10, 35, 0.88);
-    border: 1px solid var(--strain-border, rgba(124, 58, 237, 0.4));
-    border-radius: 16px;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-bottom: 14px;
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 0 0 14px;
+    box-sizing: border-box;
+
+    /* Glassmorphism */
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid var(--pal-border, rgba(139, 92, 246, 0.4));
+
+    box-shadow:
+        0 8px 40px rgba(0, 0, 0, 0.65),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+        0 1px 0 rgba(255, 255, 255, 0.08) inset,
+        0 0 30px var(--pal-glow-sm, rgba(139, 92, 246, 0.1));
+
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: default;
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.55),
-        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-        0 0 24px var(--strain-glow-soft, rgba(124, 58, 237, 0.08));
-    transition: box-shadow 0.3s ease;
-    flex-shrink: 0;
+    will-change: transform;
 }
 
-.ec-card:hover {
+.ca-card:hover {
+    transform: translateY(-6px) scale(1.02);
     box-shadow:
-        0 12px 44px rgba(0, 0, 0, 0.7),
-        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
-        0 0 36px var(--strain-glow, rgba(124, 58, 237, 0.3));
+        0 16px 60px rgba(0, 0, 0, 0.75),
+        0 0 0 1px rgba(255, 255, 255, 0.07) inset,
+        0 0 50px var(--pal-glow, rgba(139, 92, 246, 0.35));
 }
 
-/* Entrance animation — staggered slide up + fade */
-@keyframes ec-enter {
+/* ── Card entrance & float animations ─────────────────────────── */
+@keyframes ca-enter {
     from {
         opacity: 0;
-        transform: translateY(28px) scale(0.94);
+        transform: translateY(40px) scale(0.9);
     }
 
     to {
@@ -81,205 +89,352 @@
     }
 }
 
-.ec-card--in {
-    animation: ec-enter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    animation-delay: var(--entrance-delay, 0s);
+@keyframes ca-float-1 {
+
+    0%,
+    100% {
+        transform: translateY(0px)
+    }
+
+    50% {
+        transform: translateY(-6px)
+    }
 }
 
-/* ── Strain Ribbon ─────────────────────────────────────────────── */
-.ec-ribbon {
-    width: 100%;
-    background: linear-gradient(90deg, var(--strain-ribbon), color-mix(in srgb, var(--strain-ribbon) 60%, transparent));
-    padding: 5px 10px;
+@keyframes ca-float-2 {
+
+    0%,
+    100% {
+        transform: translateY(-3px)
+    }
+
+    50% {
+        transform: translateY(4px)
+    }
+}
+
+@keyframes ca-float-3 {
+
+    0%,
+    100% {
+        transform: translateY(2px)
+    }
+
+    50% {
+        transform: translateY(-7px)
+    }
+}
+
+@keyframes ca-float-4 {
+
+    0%,
+    100% {
+        transform: translateY(-4px)
+    }
+
+    50% {
+        transform: translateY(3px)
+    }
+}
+
+.ca-card--in {
+    animation:
+        ca-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--entrance-del, 0s) both;
+}
+
+.ca-card.ca-float-1 {
+    animation: ca-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--entrance-del, 0s) both, ca-float-1 5.2s ease-in-out var(--float-del, 0s) infinite;
+}
+
+.ca-card.ca-float-2 {
+    animation: ca-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--entrance-del, 0s) both, ca-float-2 4.8s ease-in-out var(--float-del, 0s) infinite;
+}
+
+.ca-card.ca-float-3 {
+    animation: ca-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--entrance-del, 0s) both, ca-float-3 5.6s ease-in-out var(--float-del, 0s) infinite;
+}
+
+.ca-card.ca-float-4 {
+    animation: ca-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--entrance-del, 0s) both, ca-float-4 6.0s ease-in-out var(--float-del, 0s) infinite;
+}
+
+/* ── Left strain bar ───────────────────────────────────────────── */
+.ca-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--pal-bar, linear-gradient(180deg, #7c3aed, #a855f7));
+    box-shadow: 0 0 12px var(--pal-halo, #8b5cf6);
+    border-radius: 0;
+}
+
+/* ── Top row: strain label + badge ───────────────────────────── */
+.ca-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
-    flex-shrink: 0;
+    width: 100%;
+    padding: 10px 12px 6px 16px;
+    box-sizing: border-box;
 }
 
-.ec-ribbon-strain {
+.ca-strain-label {
     font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
+    font-weight: 800;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--pal-mg, #c4b5fd);
     font-family: var(--font-display, 'Inter', sans-serif);
+    opacity: 0.85;
 }
 
-/* ── Badge pills ───────────────────────────────────────────────── */
-.ec-badge {
+.ca-badge {
     font-size: 9px;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     padding: 2px 7px;
     border-radius: 20px;
+    line-height: 1.5;
 }
 
-.ec-badge--new {
+.ca-badge--new {
     background: #22c55e;
     color: #fff;
 }
 
-.ec-badge--hot {
+.ca-badge--hot {
     background: #ef4444;
     color: #fff;
 }
 
-/* ── Image ─────────────────────────────────────────────────────── */
-.ec-img-wrap {
+.ca-badge--feat {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fbbf24;
+}
+
+/* ── Image — circular halo ─────────────────────────────────────── */
+.ca-img-outer {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 12px auto 8px;
+    margin: 8px auto 12px;
     flex-shrink: 0;
 }
 
-/* Glowing ring behind image */
-.ec-img-ring {
-    position: absolute;
-    inset: -4px;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--strain-glow, rgba(124, 58, 237, 0.3)) 0%, transparent 70%);
-    pointer-events: none;
-    animation: ec-pulse 3s ease-in-out infinite;
+@keyframes ca-halo-spin {
+    from {
+        transform: rotate(0deg);
+        opacity: 0.7;
+    }
+
+    to {
+        transform: rotate(360deg);
+        opacity: 0.7;
+    }
 }
 
-@keyframes ec-pulse {
+@keyframes ca-halo-pulse {
 
     0%,
     100% {
-        opacity: 0.6;
         transform: scale(1);
+        opacity: 0.4;
     }
 
     50% {
-        opacity: 1;
-        transform: scale(1.08);
+        transform: scale(1.12);
+        opacity: 0.85;
     }
 }
 
-.ec-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 12px;
-    position: relative;
-    z-index: 1;
-    filter: drop-shadow(0 4px 12px var(--strain-glow, rgba(124, 58, 237, 0.3)));
+.ca-halo-ring {
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background:
+        linear-gradient(#000, #000) padding-box,
+        conic-gradient(var(--pal-halo, #8b5cf6), transparent 60%, var(--pal-grad2, #c084fc), transparent) border-box;
+    animation: ca-halo-spin 8s linear infinite;
+    pointer-events: none;
 }
 
-.ec-emoji {
-    font-size: 3em;
+.ca-halo-ring--2 {
+    inset: -10px;
+    border: 1px solid transparent;
+    background:
+        linear-gradient(#000 0 0) padding-box,
+        conic-gradient(transparent 30%, var(--pal-halo, #8b5cf6) 50%, transparent) border-box;
+    animation: ca-halo-pulse 3.5s ease-in-out infinite, ca-halo-spin 12s linear infinite reverse;
+    opacity: 0.5;
+}
+
+.ca-img-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    background: radial-gradient(circle at 40% 35%,
+            color-mix(in srgb, var(--pal-halo, #8b5cf6) 30%, transparent) 0%,
+            rgba(10, 5, 20, 0.7) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 0 0 1px var(--pal-border, rgba(139, 92, 246, 0.4)),
+        inset 0 0 20px var(--pal-glow-sm, rgba(139, 92, 246, 0.15)),
+        0 8px 24px rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+.ca-img {
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 16px var(--pal-glow, rgba(139, 92, 246, 0.55)));
+}
+
+.ca-emoji {
+    font-size: 2.8em;
     line-height: 1;
 }
 
 /* ── Name & Brand ──────────────────────────────────────────────── */
-.ec-name {
+.ca-name {
     font-family: var(--font-display, 'Inter', sans-serif);
-    font-size: 1em;
-    font-weight: 700;
+    font-weight: 800;
+    font-size: 0.95em;
     text-align: center;
-    background: linear-gradient(135deg, var(--strain-grad1), var(--strain-grad2));
+    padding: 0 12px;
+    line-height: 1.2;
+    background: linear-gradient(135deg, var(--pal-grad1, #8b5cf6), var(--pal-grad2, #c084fc), #fff 90%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    padding: 0 10px;
-    line-height: 1.25;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
 }
 
-.ec-brand {
-    font-size: 0.78em;
-    color: rgba(255, 255, 255, 0.4);
+.ca-brand {
+    font-size: 0.72em;
+    color: rgba(255, 255, 255, 0.35);
     text-align: center;
-    letter-spacing: 0.04em;
-    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
 }
 
-/* ── Spec Pills (mg THC + piece count) ─────────────────────────── */
-.ec-specs {
+/* ── THC badge + piece count ───────────────────────────────────── */
+.ca-meta {
     display: flex;
-    gap: 7px;
+    gap: 8px;
     justify-content: center;
     flex-wrap: wrap;
-    margin: 6px 10px;
+    margin: 0 10px 10px;
 }
 
-.ec-spec-pill {
+.ca-thc-badge {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 5px 10px;
-    border-radius: 10px;
-    min-width: 52px;
+    background: var(--pal-mg-bg, rgba(139, 92, 246, 0.22));
+    border: 1px solid var(--pal-border, rgba(139, 92, 246, 0.5));
+    border-radius: 12px;
+    padding: 6px 12px 5px;
+    min-width: 62px;
+    position: relative;
+    overflow: hidden;
 }
 
-.ec-spec-mg {
-    background: var(--strain-mg-bg, rgba(124, 58, 237, 0.18));
-    border: 1px solid var(--strain-border, rgba(124, 58, 237, 0.4));
+/* Soft inner glow */
+.ca-thc-badge::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, var(--pal-glow-sm, rgba(139, 92, 246, .2)) 0%, transparent 70%);
+    pointer-events: none;
 }
 
-.ec-spec-count {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.ec-spec-val {
-    font-size: 1.1em;
-    font-weight: 800;
-    color: var(--strain-mg-color, #c4b5fd);
+.ca-thc-val {
     font-family: var(--font-display, 'Inter', sans-serif);
+    font-size: 1.3em;
+    font-weight: 900;
+    color: var(--pal-mg, #c4b5fd);
     line-height: 1;
+    text-shadow: 0 0 14px var(--pal-glow, rgba(139, 92, 246, 0.6));
 }
 
-.ec-spec-count .ec-spec-val {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.ec-spec-lbl {
-    font-size: 0.68em;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+.ca-thc-unit {
+    font-size: 0.62em;
+    font-weight: 700;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.45);
     margin-top: 2px;
 }
 
-/* ── Effects Chips ─────────────────────────────────────────────── */
-.ec-effects {
+.ca-pieces-badge {
     display: flex;
-    gap: 5px;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 6px 10px 5px;
+    min-width: 46px;
+}
+
+.ca-pieces-val {
+    font-family: var(--font-display, 'Inter', sans-serif);
+    font-size: 1.3em;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1;
+}
+
+.ca-pieces-unit {
+    font-size: 0.62em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    margin-top: 2px;
+}
+
+/* ── Effects chips ─────────────────────────────────────────────── */
+.ca-effects {
+    display: flex;
     flex-wrap: wrap;
+    gap: 5px;
     justify-content: center;
     padding: 0 10px;
-    margin: 7px 0 5px;
+    margin-bottom: 8px;
 }
 
-.ec-chip {
-    font-size: 0.7em;
+.ca-chip {
+    font-size: 0.67em;
     font-weight: 600;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     padding: 3px 9px;
     border-radius: 20px;
-    background: var(--strain-chip-bg, rgba(124, 58, 237, 0.15));
-    color: var(--strain-chip-color, #c4b5fd);
-    border: 1px solid color-mix(in srgb, var(--strain-chip-color, #c4b5fd) 25%, transparent);
+    background: var(--pal-chip, rgba(139, 92, 246, 0.18));
+    color: var(--pal-chip-txt, #c4b5fd);
+    border: 1px solid color-mix(in srgb, var(--pal-chip-txt, #c4b5fd) 30%, transparent);
+    backdrop-filter: blur(4px);
 }
 
-/* ── Flavor Notes ──────────────────────────────────────────────── */
-.ec-notes {
-    font-size: 0.72em;
-    color: rgba(255, 255, 255, 0.35);
+/* ── Notes ─────────────────────────────────────────────────────── */
+.ca-notes {
+    font-size: 0.69em;
+    color: rgba(255, 255, 255, 0.32);
     text-align: center;
     padding: 0 12px;
-    margin: 5px 0;
-    line-height: 1.4;
+    margin-bottom: 8px;
+    line-height: 1.35;
     font-style: italic;
-
-    /* Clamp to 2 lines */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -287,12 +442,14 @@
 }
 
 /* ── Price ─────────────────────────────────────────────────────── */
-.ec-price {
+.ca-price {
     font-family: var(--font-display, 'Inter', sans-serif);
-    font-size: 1.35em;
+    font-size: 1.5em;
     font-weight: 900;
-    color: #fff;
-    margin-top: 8px;
-    text-shadow: 0 0 20px var(--strain-glow, rgba(124, 58, 237, 0.5));
     letter-spacing: -0.02em;
+    color: #fff;
+    margin-top: auto;
+    text-shadow:
+        0 0 24px var(--pal-glow, rgba(139, 92, 246, 0.6)),
+        0 0 48px var(--pal-glow-sm, rgba(139, 92, 246, 0.3));
 }
