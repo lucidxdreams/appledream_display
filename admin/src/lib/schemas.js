@@ -15,6 +15,19 @@ export const productSchema = z.object({
     inStock: z.boolean().optional().default(true),
 })
 
+export const ediblesSchema = z.object({
+    name: z.string().min(1, 'Name is required').max(200),
+    brand: z.string().max(200).optional().default(''),
+    price: z.coerce.number().min(0, 'Price must be ≥ $0').max(10000, 'Price must be ≤ $10,000'),
+    thcMg: z.coerce.number().min(0, 'THC mg must be ≥ 0').max(10000, 'THC mg must be ≤ 10,000'),
+    pieceCount: z.coerce.number().int().min(1, 'Piece count must be ≥ 1').max(1000).optional().default(10),
+    type: z.enum(['Indica', 'Sativa', 'Hybrid', 'CBD', 'Indica Dom.', 'Sativa Dom.', 'N/A']),
+    notes: z.string().max(200).optional().default(''),
+    badge: z.string().optional().default(''),
+    featured: z.boolean().optional().default(false),
+    inStock: z.boolean().optional().default(true),
+})
+
 export const dealSchema = z.object({
     title: z.string().min(1, 'Title is required').max(200),
     description: z.string().min(1, 'Description is required').max(1000),

@@ -1,62 +1,298 @@
-/* ── NeuralConstellation.css — "Neural Constellation" (Edibles) ─────────── */
+/* ═══════════════════════════════════════════════════════════════
+   NeuralConstellation.css  —  "Candy Shelf" Edibles Display
+   ═══════════════════════════════════════════════════════════════ */
 
-.neural-scene {
+/* ── Scene wrapper ─────────────────────────────────────────────── */
+.ec-scene {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
-    background: radial-gradient(ellipse at 40% 30%, #241020 0%, #140018 40%, #07050a 100%);
+    background: #0f0a1a;
 }
 
-/* Node entry animation: starts at center, fades/scales in */
-.neural-node {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.1);
-    transition:
-        opacity 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
-        transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
-        left 0.4s ease-out,
-        top 0.4s ease-out;
-}
-
-.neural-node--in {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-}
-
-/* Pulsing halo around each node */
-.neural-node--in::before {
-    content: '';
+/* Deep berry/plum ambient background glow */
+.ec-ambient {
     position: absolute;
-    inset: -6px;
-    border-radius: 4px;
-    border: 1px solid var(--accent, #c06c84);
-    opacity: 0;
-    animation: neural-halo 4s ease-in-out infinite;
-    animation-delay: var(--delay, 0s);
+    inset: 0;
+    background:
+        radial-gradient(ellipse 70% 50% at 20% 60%, rgba(124, 58, 237, 0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 50% at 80% 40%, rgba(217, 119, 6, 0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 50% 100%, rgba(5, 150, 105, 0.06) 0%, transparent 70%);
     pointer-events: none;
+    z-index: 0;
 }
 
-@keyframes neural-halo {
+/* ── Card Grid ─────────────────────────────────────────────────── */
+.ec-grid {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    align-content: center;
+    padding: 16px 24px;
+    width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* ── Card ──────────────────────────────────────────────────────── */
+.ec-card {
+    position: relative;
+    width: var(--card-width, 190px);
+    background: rgba(18, 10, 35, 0.88);
+    border: 1px solid var(--strain-border, rgba(124, 58, 237, 0.4));
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 14px;
+    cursor: default;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 0 24px var(--strain-glow-soft, rgba(124, 58, 237, 0.08));
+    transition: box-shadow 0.3s ease;
+    flex-shrink: 0;
+}
+
+.ec-card:hover {
+    box-shadow:
+        0 12px 44px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 0 36px var(--strain-glow, rgba(124, 58, 237, 0.3));
+}
+
+/* Entrance animation — staggered slide up + fade */
+@keyframes ec-enter {
+    from {
+        opacity: 0;
+        transform: translateY(28px) scale(0.94);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.ec-card--in {
+    animation: ec-enter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: var(--entrance-delay, 0s);
+}
+
+/* ── Strain Ribbon ─────────────────────────────────────────────── */
+.ec-ribbon {
+    width: 100%;
+    background: linear-gradient(90deg, var(--strain-ribbon), color-mix(in srgb, var(--strain-ribbon) 60%, transparent));
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.ec-ribbon-strain {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: var(--font-display, 'Inter', sans-serif);
+}
+
+/* ── Badge pills ───────────────────────────────────────────────── */
+.ec-badge {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 20px;
+}
+
+.ec-badge--new {
+    background: #22c55e;
+    color: #fff;
+}
+
+.ec-badge--hot {
+    background: #ef4444;
+    color: #fff;
+}
+
+/* ── Image ─────────────────────────────────────────────────────── */
+.ec-img-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 12px auto 8px;
+    flex-shrink: 0;
+}
+
+/* Glowing ring behind image */
+.ec-img-ring {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--strain-glow, rgba(124, 58, 237, 0.3)) 0%, transparent 70%);
+    pointer-events: none;
+    animation: ec-pulse 3s ease-in-out infinite;
+}
+
+@keyframes ec-pulse {
 
     0%,
     100% {
-        opacity: 0;
+        opacity: 0.6;
         transform: scale(1);
     }
 
     50% {
-        opacity: 0.25;
+        opacity: 1;
         transform: scale(1.08);
     }
 }
 
-/* Nebula background glow spots */
-.neural-scene::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(ellipse 60% 40% at 20% 70%, rgba(192, 108, 132, 0.04) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 60% at 80% 30%, rgba(120, 30, 140, 0.05) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
+.ec-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 4px 12px var(--strain-glow, rgba(124, 58, 237, 0.3)));
+}
+
+.ec-emoji {
+    font-size: 3em;
+    line-height: 1;
+}
+
+/* ── Name & Brand ──────────────────────────────────────────────── */
+.ec-name {
+    font-family: var(--font-display, 'Inter', sans-serif);
+    font-size: 1em;
+    font-weight: 700;
+    text-align: center;
+    background: linear-gradient(135deg, var(--strain-grad1), var(--strain-grad2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding: 0 10px;
+    line-height: 1.25;
+    margin-bottom: 2px;
+}
+
+.ec-brand {
+    font-size: 0.78em;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+}
+
+/* ── Spec Pills (mg THC + piece count) ─────────────────────────── */
+.ec-specs {
+    display: flex;
+    gap: 7px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 6px 10px;
+}
+
+.ec-spec-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 10px;
+    min-width: 52px;
+}
+
+.ec-spec-mg {
+    background: var(--strain-mg-bg, rgba(124, 58, 237, 0.18));
+    border: 1px solid var(--strain-border, rgba(124, 58, 237, 0.4));
+}
+
+.ec-spec-count {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ec-spec-val {
+    font-size: 1.1em;
+    font-weight: 800;
+    color: var(--strain-mg-color, #c4b5fd);
+    font-family: var(--font-display, 'Inter', sans-serif);
+    line-height: 1;
+}
+
+.ec-spec-count .ec-spec-val {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.ec-spec-lbl {
+    font-size: 0.68em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    margin-top: 2px;
+}
+
+/* ── Effects Chips ─────────────────────────────────────────────── */
+.ec-effects {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 10px;
+    margin: 7px 0 5px;
+}
+
+.ec-chip {
+    font-size: 0.7em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: var(--strain-chip-bg, rgba(124, 58, 237, 0.15));
+    color: var(--strain-chip-color, #c4b5fd);
+    border: 1px solid color-mix(in srgb, var(--strain-chip-color, #c4b5fd) 25%, transparent);
+}
+
+/* ── Flavor Notes ──────────────────────────────────────────────── */
+.ec-notes {
+    font-size: 0.72em;
+    color: rgba(255, 255, 255, 0.35);
+    text-align: center;
+    padding: 0 12px;
+    margin: 5px 0;
+    line-height: 1.4;
+    font-style: italic;
+
+    /* Clamp to 2 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ── Price ─────────────────────────────────────────────────────── */
+.ec-price {
+    font-family: var(--font-display, 'Inter', sans-serif);
+    font-size: 1.35em;
+    font-weight: 900;
+    color: #fff;
+    margin-top: 8px;
+    text-shadow: 0 0 20px var(--strain-glow, rgba(124, 58, 237, 0.5));
+    letter-spacing: -0.02em;
 }

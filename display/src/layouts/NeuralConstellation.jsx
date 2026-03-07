@@ -1,151 +1,141 @@
 /**
- * NeuralConstellation.jsx — "Neural Constellation" (Edibles)
+ * NeuralConstellation.jsx — "Candy Shelf" Edibles Display
  *
- * Hexagonal cards arranged in a deterministic honeycomb grid
- * connected by glowing SVG lines.
- * Candy shimmer particle background.
- * Cards materialize with staggered scale animation.
- *
- * Props: { products, categoryTheme }
+ * A premium card grid layout for edibles products. Features:
+ *  - Strain-specific color palettes (Indica=violet, Sativa=amber, Hybrid=teal)
+ *  - Floating candy sparkle particle canvas background
+ *  - Per-card glow rings + ribbon in strain color
+ *  - Shows: image, name, brand, mg THC badge, piece count, effects chips, price
+ *  - Staggered slide-up entrance animations
+ *  - Scales from 1–16+ products gracefully
  */
 
-import { useEffect, useRef, useMemo } from 'react';
-import ProductCard from '../components/ProductCard';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import './NeuralConstellation.css';
 
-/* ── Hex size helper ─────────────────────────────────────────────────── */
-function calcHexSize(count, W, H) {
-    if (count <= 1) return Math.min(W, H) * 0.28;
-    if (count <= 3) return Math.min(W, H) / 3.5;
-    if (count <= 6) return Math.min(W, H) / 4.5;
-    return Math.min(W, H) / Math.max(Math.sqrt(count) * 1.8, 3.0);
+/* ── Strain Color Palettes ─────────────────────────────────────────── */
+const STRAIN_PALETTES = {
+    indica: {
+        ribbon: '#7c3aed',
+        glow: 'rgba(124, 58, 237, 0.35)',
+        glowSoft: 'rgba(124, 58, 237, 0.12)',
+        border: 'rgba(124, 58, 237, 0.5)',
+        mgBg: 'rgba(124, 58, 237, 0.2)',
+        mgColor: '#c4b5fd',
+        label: '#7c3aed',
+        grad1: '#7c3aed',
+        grad2: '#a78bfa',
+        chipBg: 'rgba(124, 58, 237, 0.15)',
+        chipColor: '#c4b5fd',
+        name: 'Indica',
+    },
+    sativa: {
+        ribbon: '#d97706',
+        glow: 'rgba(217, 119, 6, 0.35)',
+        glowSoft: 'rgba(217, 119, 6, 0.12)',
+        border: 'rgba(217, 119, 6, 0.5)',
+        mgBg: 'rgba(217, 119, 6, 0.2)',
+        mgColor: '#fcd34d',
+        label: '#d97706',
+        grad1: '#f59e0b',
+        grad2: '#fbbf24',
+        chipBg: 'rgba(217, 119, 6, 0.15)',
+        chipColor: '#fcd34d',
+        name: 'Sativa',
+    },
+    hybrid: {
+        ribbon: '#059669',
+        glow: 'rgba(5, 150, 105, 0.35)',
+        glowSoft: 'rgba(5, 150, 105, 0.12)',
+        border: 'rgba(5, 150, 105, 0.5)',
+        mgBg: 'rgba(5, 150, 105, 0.2)',
+        mgColor: '#6ee7b7',
+        label: '#059669',
+        grad1: '#10b981',
+        grad2: '#34d399',
+        chipBg: 'rgba(5, 150, 105, 0.15)',
+        chipColor: '#6ee7b7',
+        name: 'Hybrid',
+    },
+};
+
+function getStrain(product) {
+    const t = (product.type || '').toLowerCase();
+    if (t.includes('indica')) return 'indica';
+    if (t.includes('sativa')) return 'sativa';
+    return 'hybrid';
 }
 
-/* ── Deterministic honeycomb grid positions ───────────────────────────── */
-function calcHoneycombPositions(count, W, H) {
-    if (count === 0) return [];
-
-    const hexSize = calcHexSize(count, W, H);
-    const clampedSize = Math.min(Math.max(hexSize, 80), 160);
-    const cx = W / 2;
-    const cy = H / 2;
-
-    if (count === 1) {
-        return [{ x: cx, y: cy }];
-    }
-
-    // Calculate grid dimensions
-    const spacingX = clampedSize * 1.5;
-    const spacingY = clampedSize * 1.6;
-
-    const positions = [];
-
-    if (count <= 4) {
-        // 2x2 centered grid
-        const cols = 2;
-        const rows = Math.ceil(count / cols);
-        const totalW = (cols - 1) * spacingX;
-        const totalH = (rows - 1) * spacingY;
-        for (let i = 0; i < count; i++) {
-            const col = i % cols;
-            const row = Math.floor(i / cols);
-            positions.push({
-                x: cx - totalW / 2 + col * spacingX,
-                y: cy - totalH / 2 + row * spacingY,
-            });
-        }
-    } else {
-        // Honeycomb spiral: center + concentric hex rings
-        positions.push({ x: cx, y: cy }); // center
-
-        const ringDist = clampedSize * 2.2;
-        let placed = 1;
-        let ring = 1;
-
-        while (placed < count) {
-            const itemsInRing = ring * 6;
-            const actualItems = Math.min(itemsInRing, count - placed);
-            const r = ring * ringDist;
-            // Clamp radius to fit within viewport
-            const maxR = Math.min(cx - clampedSize, cy - clampedSize) * 0.85;
-            const clampedR = Math.min(r, maxR);
-
-            for (let i = 0; i < actualItems; i++) {
-                const angle = (i / actualItems) * Math.PI * 2 - Math.PI / 6;
-                const x = cx + Math.cos(angle) * clampedR;
-                const y = cy + Math.sin(angle) * clampedR;
-                positions.push({
-                    x: Math.max(clampedSize, Math.min(W - clampedSize, x)),
-                    y: Math.max(clampedSize, Math.min(H - clampedSize, y)),
-                });
-                placed++;
-            }
-            ring++;
-        }
-    }
-
-    return positions;
-}
-
-/* ── Candy shimmer particle canvas (DPR-aware, capped at 40) ────────── */
-const MAX_SHIMMER_PARTICLES = 40;
-
-function CandyShimmer({ accent, W, H }) {
+/* ── Candy Sparkle Particle Canvas ───────────────────────────────── */
+function CandyParticles({ W, H }) {
     const canvasRef = useRef(null);
     const rafRef = useRef(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas || !W || !H) return;
         const ctx = canvas.getContext('2d');
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         canvas.width = W * dpr;
         canvas.height = H * dpr;
         ctx.scale(dpr, dpr);
 
-        const colors = [accent, '#e8a0b8', '#fff', '#c06c84', '#d4a0c0'];
-        const particles = Array.from({ length: Math.min(30, MAX_SHIMMER_PARTICLES) }, () => ({
+        // Candy sparkle colors — pinks, purples, golds, mint
+        const COLORS = [
+            '#f472b6', '#a78bfa', '#34d399', '#fbbf24',
+            '#fb7185', '#60a5fa', '#c084fc', '#86efac',
+        ];
+
+        const particles = Array.from({ length: 55 }, () => ({
             x: Math.random() * W,
             y: Math.random() * H,
-            r: Math.random() * 2 + 0.8,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            life: Math.random(),
-            speed: Math.random() * 0.003 + 0.002,
-            vx: (Math.random() - 0.5) * 0.4,
-            vy: -Math.random() * 0.4 - 0.15,
+            r: Math.random() * 1.8 + 0.4,
+            color: COLORS[Math.floor(Math.random() * COLORS.length)],
+            alpha: Math.random(),
+            speed: Math.random() * 0.004 + 0.002,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: -Math.random() * 0.5 - 0.1,
+            // Some float up slowly, some drift sideways
+            drift: Math.random() > 0.6,
         }));
 
         function draw() {
             ctx.clearRect(0, 0, W, H);
-            for (let k = 0; k < particles.length; k++) {
-                const p = particles[k];
-                p.life += p.speed;
-                if (p.life > 1) {
-                    p.life = 0;
+            for (const p of particles) {
+                p.alpha += p.speed;
+                if (p.alpha > 1) {
+                    p.alpha = 0;
                     p.x = Math.random() * W;
-                    p.y = H + 5;
+                    p.y = H + 4;
                 }
                 p.x += p.vx;
                 p.y += p.vy;
-                const alpha = Math.sin(p.life * Math.PI) * 0.35;
+                const opacity = Math.sin(p.alpha * Math.PI) * 0.5;
 
                 ctx.save();
-                ctx.globalAlpha = alpha;
-                ctx.fillStyle = p.color;
-                ctx.shadowBlur = 4;
+                ctx.globalAlpha = opacity;
+                ctx.shadowBlur = 6;
                 ctx.shadowColor = p.color;
-                ctx.save();
-                ctx.translate(p.x, p.y);
-                ctx.rotate(Math.PI / 4);
-                ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
-                ctx.restore();
+                ctx.fillStyle = p.color;
+
+                // Alternate between diamond and circle shapes
+                if (p.drift) {
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(Math.PI / 4);
+                    ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 ctx.restore();
             }
             rafRef.current = requestAnimationFrame(draw);
         }
+
         draw();
-        return () => cancelAnimationFrame(rafRef.current);
-    }, [accent, W, H]);
+        return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    }, [W, H]);
 
     return (
         <canvas
@@ -155,105 +145,148 @@ function CandyShimmer({ accent, W, H }) {
     );
 }
 
-/* ── Main Component ───────────────────────────────────────────────────── */
-export default function NeuralConstellation({ products = [], categoryTheme }) {
-    const accent = categoryTheme?.accent || '#c06c84';
-    const W = window.innerWidth;
-    const H = Math.floor(window.innerHeight * 0.84);
+/* ── Single Product Card ─────────────────────────────────────────── */
+function EdibleCard({ product, index, cardWidth }) {
+    const strain = getStrain(product);
+    const palette = STRAIN_PALETTES[strain];
+    const effects = product.effects || [];
+    const thcMg = product.thcMg || product.thc || 0;
+    const pieceCount = product.pieceCount;
+    const price = Number(product.price || 0).toFixed(2);
+    const isNew = (product.badge || '').toLowerCase() === 'new';
 
-    const positions = useMemo(() => calcHoneycombPositions(products.length, W, H), [products.length, W, H]);
-
-    const hexSize = calcHexSize(products.length, W, H);
-    const clampedSize = Math.min(Math.max(hexSize, 80), 160);
-
-    // Build connection lines between nearby nodes
-    const lines = [];
-    if (products.length >= 2) {
-        products.forEach((_, i) => {
-            const p1 = positions[i];
-            if (!p1) return;
-            const sorted = products
-                .map((_, j) => ({ j, dist: Math.hypot((positions[j]?.x ?? 0) - p1.x, (positions[j]?.y ?? 0) - p1.y) }))
-                .filter(({ j }) => j !== i)
-                .sort((a, b) => a.dist - b.dist)
-                .slice(0, 2);
-            sorted.forEach(({ j }) => {
-                if (j > i) lines.push({ x1: p1.x, y1: p1.y, x2: positions[j]?.x ?? 0, y2: positions[j]?.y ?? 0, key: `${i}-${j}` });
-            });
-        });
-    }
+    const fontSize = cardWidth > 200 ? 14 : 12;
+    const imgSize = cardWidth > 200 ? Math.min(cardWidth * 0.55, 130) : Math.min(cardWidth * 0.55, 100);
 
     return (
-        <div className="neural-scene" style={{ width: W, height: H, '--accent': accent }}>
-            {/* Candy shimmer background */}
-            <CandyShimmer accent={accent} W={W} H={H} />
+        <div
+            className="ec-card ec-card--in"
+            style={{
+                '--strain-ribbon': palette.ribbon,
+                '--strain-glow': palette.glow,
+                '--strain-glow-soft': palette.glowSoft,
+                '--strain-border': palette.border,
+                '--strain-grad1': palette.grad1,
+                '--strain-grad2': palette.grad2,
+                '--strain-mg-bg': palette.mgBg,
+                '--strain-mg-color': palette.mgColor,
+                '--strain-chip-bg': palette.chipBg,
+                '--strain-chip-color': palette.chipColor,
+                '--entrance-delay': `${index * 0.07}s`,
+                width: cardWidth,
+                fontSize,
+            }}
+        >
+            {/* Strain-colored top ribbon */}
+            <div className="ec-ribbon">
+                <span className="ec-ribbon-strain">{palette.name}</span>
+                {product.badge && (
+                    <span className={`ec-badge ${isNew ? 'ec-badge--new' : 'ec-badge--hot'}`}>
+                        {product.badge}
+                    </span>
+                )}
+            </div>
 
-            {/* SVG constellation lines */}
-            <svg
-                className="neural-svg"
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}
-                viewBox={`0 0 ${W} ${H}`}
-            >
-                <defs>
-                    <filter id="neural-glow">
-                        <feGaussianBlur stdDeviation="1.5" result="blur" />
-                        <feMerge>
-                            <feMergeNode in="blur" />
-                            <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                    </filter>
-                </defs>
-                {lines.map((l, i) => (
-                    <line
-                        key={l.key}
-                        x1={l.x1} y1={l.y1}
-                        x2={l.x2} y2={l.y2}
-                        stroke={accent}
-                        strokeWidth="1"
-                        strokeOpacity="0.15"
-                        filter="url(#neural-glow)"
-                    >
-                        <animate
-                            attributeName="stroke-opacity"
-                            values="0.08;0.3;0.08"
-                            dur={`${2.5 + (i % 5) * 0.7}s`}
-                            repeatCount="indefinite"
-                        />
-                    </line>
-                ))}
+            {/* Product image with glow ring */}
+            <div className="ec-img-wrap" style={{ width: imgSize, height: imgSize }}>
+                <div className="ec-img-ring" />
+                {product.imageUrl
+                    ? <img src={product.imageUrl} alt={product.name} className="ec-img" />
+                    : <span className="ec-emoji">🍬</span>
+                }
+            </div>
 
-                {lines.slice(0, 5).map((l, i) => (
-                    <circle key={`dot-${l.key}`} r="2" fill={accent} opacity="0.5" filter="url(#neural-glow)">
-                        <animateMotion
-                            dur={`${3.5 + i * 0.5}s`}
-                            repeatCount="indefinite"
-                            path={`M${l.x1},${l.y1} L${l.x2},${l.y2}`}
-                        />
-                    </circle>
-                ))}
-            </svg>
+            {/* Name & brand */}
+            <div className="ec-name">{product.name}</div>
+            {product.brand && <div className="ec-brand">{product.brand}</div>}
 
-            {/* Hex product cards */}
-            {products.map((product, i) => {
-                const pos = positions[i];
-                if (!pos) return null;
-                return (
-                    <div
-                        key={product.id}
-                        className="neural-node neural-node--in"
-                        style={{
-                            position: 'absolute',
-                            left: pos.x,
-                            top: pos.y,
-                            transform: 'translate(-50%, -50%)',
-                            zIndex: 2,
-                            animationDelay: `${i * 0.1}s`,
-                        }}
-                    >
-                        <ProductCard product={product} size={clampedSize} variant="hex" />
+            {/* mg THC + piece count row */}
+            <div className="ec-specs">
+                {thcMg > 0 && (
+                    <div className="ec-spec-pill ec-spec-mg">
+                        <span className="ec-spec-val">{thcMg}<span style={{ fontSize: '0.7em', opacity: 0.8 }}>mg</span></span>
+                        <span className="ec-spec-lbl">THC</span>
                     </div>
-                );
-            })}
+                )}
+                {pieceCount && (
+                    <div className="ec-spec-pill ec-spec-count">
+                        <span className="ec-spec-val">{pieceCount}</span>
+                        <span className="ec-spec-lbl">pieces</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Effects chips */}
+            {effects.length > 0 && (
+                <div className="ec-effects">
+                    {effects.slice(0, 4).map(e => (
+                        <span key={e} className="ec-chip">{e}</span>
+                    ))}
+                </div>
+            )}
+
+            {/* Flavor notes */}
+            {product.notes && (
+                <div className="ec-notes">{product.notes}</div>
+            )}
+
+            {/* Price */}
+            <div className="ec-price">${price}</div>
+        </div>
+    );
+}
+
+/* ── Main Component ────────────────────────────────────────────────── */
+export default function NeuralConstellation({ products = [], categoryTheme }) {
+    const containerRef = useRef(null);
+    const [size, setSize] = useState({ W: 1280, H: 720 });
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const measure = () => setSize({ W: el.clientWidth || 1280, H: el.clientHeight || 720 });
+        measure();
+        const ro = new ResizeObserver(measure);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
+
+    const { W, H } = size;
+
+    // Calculate ideal card width based on product count + available width
+    const cardWidth = useMemo(() => {
+        const count = products.length;
+        if (!count) return 200;
+        const cols = count <= 2 ? count : count <= 4 ? 2 : count <= 6 ? 3 : count <= 9 ? 3 : count <= 12 ? 4 : 5;
+        const gap = 16;
+        const sidePad = 40;
+        const available = W - sidePad * 2 - gap * (cols - 1);
+        return Math.max(140, Math.min(220, Math.floor(available / cols)));
+    }, [products.length, W]);
+
+    return (
+        <div
+            ref={containerRef}
+            className="ec-scene"
+            style={{ width: '100%', height: '100%', '--accent': categoryTheme?.accent || '#c06c84' }}
+        >
+            {/* Ambient gradient bg */}
+            <div className="ec-ambient" />
+
+            {/* Candy sparkle particles */}
+            <CandyParticles W={W} H={H} />
+
+            {/* Card grid */}
+            <div className="ec-grid" style={{ '--card-width': `${cardWidth}px` }}>
+                {products.map((product, i) => (
+                    <EdibleCard
+                        key={product.id}
+                        product={product}
+                        index={i}
+                        cardWidth={cardWidth}
+                    />
+                ))}
+            </div>
         </div>
     );
 }
