@@ -5,6 +5,7 @@ import {
     serverTimestamp, onSnapshot,
 } from 'firebase/firestore'
 import { db, auth } from '../firebase'
+import { useLocation } from '../contexts/LocationContext'
 import toast from 'react-hot-toast'
 import {
     Layers, Package, Tag, Clock, Radio,
@@ -17,6 +18,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 export default function Dashboard() {
+    const { selectedLocation } = useLocation()
     const [stats, setStats] = useState({
         totalCategories: 0,
         activeCategories: 0,
@@ -33,20 +35,23 @@ export default function Dashboard() {
     useEffect(() => {
         loadData()
 
-        // Listen for lastPushed updates
-        const unsub = onSnapshot(doc(db, 'settings', 'display'), (snap) => {
+        // Listen for lastPushed updates — scoped to selected location
+        const unsub = onSnapshot(doc(db, 'locations', selectedLocation, 'settings', 'display'), (snap) => {
             if (snap.exists()) {
                 const data = snap.data()
                 setLastPushed(data.lastPushed?.toDate?.() || null)
+            } else {
+                setLastPushed(null)
             }
         })
         return unsub
-    }, [])
+    }, [selectedLocation])
 
     const loadData = async () => {
+        setLoading(true)
         try {
-            // Load categories
-            const catSnap = await getDocs(collection(db, 'categories'))
+            // Load categories for this location
+            const catSnap = await getDocs(collection(db, 'locations', selectedLocation, 'categories'))
             const cats = catSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
             cats.sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
             setCategories(cats)
@@ -61,7 +66,7 @@ export default function Dashboard() {
 
             for (const cat of cats) {
                 const prodSnap = await getDocs(
-                    collection(db, 'products', cat.slug || cat.id, 'items')
+                    collection(db, 'locations', selectedLocation, 'products', cat.slug || cat.id, 'items')
                 )
                 const prods = prodSnap.docs.map((d) => d.data())
                 counts[cat.slug || cat.id] = prods.length
@@ -72,7 +77,7 @@ export default function Dashboard() {
             setProductCounts(counts)
 
             // Load deals
-            const dealSnap = await getDocs(collection(db, 'deals'))
+            const dealSnap = await getDocs(collection(db, 'locations', selectedLocation, 'deals'))
             const deals = dealSnap.docs.map((d) => d.data())
             const now = new Date()
             const activeDeals = deals.filter((deal) => {
@@ -93,25 +98,19 @@ export default function Dashboard() {
     const pushToDisplay = async () => {
         setPushing(true)
         try {
-            await updateDoc(doc(db, 'settings', 'display'), {
-                lastPushed: serverTimestamp(),
-                pushedBy: auth.currentUser?.email || 'admin',
-            })
-            toast.success('Display updated! Changes are now live.', { duration: 4000 })
-            logAuditEvent({ action: 'display.pushed', entity: 'display', entityId: 'display' })
-        } catch (err) {
-            console.error(err)
-            // If doc doesn't exist, create it instead
-            try {
-                await setDoc(doc(db, 'settings', 'display'), {
+            await setDoc(
+                doc(db, 'locations', selectedLocation, 'settings', 'display'),
+                {
                     lastPushed: serverTimestamp(),
                     pushedBy: auth.currentUser?.email || 'admin',
-                })
-                toast.success('Display updated! Changes are now live.')
-                logAuditEvent({ action: 'display.pushed', entity: 'display', entityId: 'display' })
-            } catch (err2) {
-                toast.error('Failed to push to display')
-            }
+                },
+                { merge: true }
+            )
+            toast.success('Display updated! Changes are now live.', { duration: 4000 })
+            logAuditEvent({ action: 'display.pushed', entity: 'display', entityId: selectedLocation })
+        } catch (err) {
+            console.error(err)
+            toast.error('Failed to push to display')
         } finally {
             setPushing(false)
         }
@@ -228,8 +227,7 @@ export default function Dashboard() {
                 </button>
                 {lastPushed && (
                     <div style={{ marginTop: 14, color: 'var(--text-muted)', fontSize: 12 }}>
-                        Last pushed {dayjs(lastPushed).fromNow()} by{' '}
-                        {lastPushed.pushedBy || 'admin'}
+                        Last pushed {dayjs(lastPushed).fromNow()}
                     </div>
                 )}
             </div>

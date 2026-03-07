@@ -6,26 +6,52 @@ service cloud.firestore {
     // PUBLIC READ — Display frontend (no auth needed)
     // ─────────────────────────────────────────────
 
-    // Categories: display rotates through these
+    // Legacy root-level collections (kept for backward compatibility)
     match /categories/{categoryId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // Products: all items under any category slug
     match /products/{categorySlug}/items/{itemId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // Deals: shown on deals page
     match /deals/{dealId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // Settings: display rotation config / lastPushed
     match /settings/{settingId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ─────────────────────────────────────────────
+    // LOCATIONS — Scoped per-location data
+    // Display reads publicly; admin writes require auth
+    // ─────────────────────────────────────────────
+
+    // Location categories
+    match /locations/{locationId}/categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Location products
+    match /locations/{locationId}/products/{categorySlug}/items/{itemId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Location deals
+    match /locations/{locationId}/deals/{dealId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Location settings (lastPushed etc.)
+    match /locations/{locationId}/settings/{settingId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
@@ -34,7 +60,6 @@ service cloud.firestore {
     // AUTH-ONLY — Admin panel internals
     // ─────────────────────────────────────────────
 
-    // Audit log: admin actions
     match /audit/{logId} {
       allow read, write: if request.auth != null;
     }

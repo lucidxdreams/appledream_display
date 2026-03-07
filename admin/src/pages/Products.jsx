@@ -5,9 +5,10 @@ import {
 } from 'firebase/firestore'
 import { ref, deleteObject } from 'firebase/storage'
 import { db, storage } from '../firebase'
+import { useLocation } from '../contexts/LocationContext'
 import { logAuditEvent } from '../lib/auditLog'
 import toast from 'react-hot-toast'
-import { Plus, Pencil, Trash2, ChevronLeft, Star, Package } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronLeft, Package } from 'lucide-react'
 import ProductForm from '../components/ProductForm'
 import ConfirmDialog from '../components/ConfirmDialog'
 
@@ -23,22 +24,23 @@ function Toggle({ checked, onChange }) {
 
 export default function Products() {
     const { categorySlug } = useParams()
+    const { selectedLocation } = useLocation()
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
     const [panelOpen, setPanelOpen] = useState(false)
     const [editingProduct, setEditingProduct] = useState(null)
     const [deleteTarget, setDeleteTarget] = useState(null)
 
-    const collectionPath = `products/${categorySlug}/items`
-
     useEffect(() => {
         loadProducts()
-    }, [categorySlug])
+    }, [categorySlug, selectedLocation])
 
     const loadProducts = async () => {
         setLoading(true)
         try {
-            const snap = await getDocs(collection(db, 'products', categorySlug, 'items'))
+            const snap = await getDocs(
+                collection(db, 'locations', selectedLocation, 'products', categorySlug, 'items')
+            )
             const prods = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
             prods.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
             setProducts(prods)
@@ -67,8 +69,10 @@ export default function Products() {
     const handleSave = async (data, existingId) => {
         try {
             if (existingId) {
-                // Optimistic locking: check if doc was modified since we loaded it
-                const currentDoc = await getDoc(doc(db, 'products', categorySlug, 'items', existingId))
+                // Optimistic locking
+                const currentDoc = await getDoc(
+                    doc(db, 'locations', selectedLocation, 'products', categorySlug, 'items', existingId)
+                )
                 if (currentDoc.exists()) {
                     const currentUpdatedAt = currentDoc.data().updatedAt?.toMillis?.() || 0
                     const loadedUpdatedAt = editingProduct?.updatedAt?.toMillis?.() || editingProduct?.updatedAt?.seconds * 1000 || 0
@@ -78,20 +82,19 @@ export default function Products() {
                     }
                 }
 
-                await updateDoc(doc(db, 'products', categorySlug, 'items', existingId), {
-                    ...data,
-                    updatedAt: serverTimestamp(),
-                })
+                await updateDoc(
+                    doc(db, 'locations', selectedLocation, 'products', categorySlug, 'items', existingId),
+                    { ...data, updatedAt: serverTimestamp() }
+                )
                 toast.success('Product updated!')
-                logAuditEvent({ action: 'product.updated', entity: 'product', entityId: existingId, details: { name: data.name, category: categorySlug } })
+                logAuditEvent({ action: 'product.updated', entity: 'product', entityId: existingId, details: { name: data.name, category: categorySlug, location: selectedLocation } })
             } else {
-                const docRef = await addDoc(collection(db, 'products', categorySlug, 'items'), {
-                    ...data,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp(),
-                })
+                const docRef = await addDoc(
+                    collection(db, 'locations', selectedLocation, 'products', categorySlug, 'items'),
+                    { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }
+                )
                 toast.success('Product added!')
-                logAuditEvent({ action: 'product.created', entity: 'product', entityId: docRef.id, details: { name: data.name, category: categorySlug } })
+                logAuditEvent({ action: 'product.created', entity: 'product', entityId: docRef.id, details: { name: data.name, category: categorySlug, location: selectedLocation } })
             }
             closePanel()
             loadProducts()
@@ -107,10 +110,10 @@ export default function Products() {
             prev.map((p) => (p.id === product.id ? { ...p, [field]: newVal } : p))
         )
         try {
-            await updateDoc(doc(db, 'products', categorySlug, 'items', product.id), {
-                [field]: newVal,
-                updatedAt: serverTimestamp(),
-            })
+            await updateDoc(
+                doc(db, 'locations', selectedLocation, 'products', categorySlug, 'items', product.id),
+                { [field]: newVal, updatedAt: serverTimestamp() }
+            )
         } catch {
             toast.error('Failed to update')
             loadProducts()
@@ -128,10 +131,12 @@ export default function Products() {
                 // Image may not exist — that's fine
             }
 
-            await deleteDoc(doc(db, 'products', categorySlug, 'items', deleteTarget.id))
+            await deleteDoc(
+                doc(db, 'locations', selectedLocation, 'products', categorySlug, 'items', deleteTarget.id)
+            )
             toast.success('Product deleted')
             setProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id))
-            logAuditEvent({ action: 'product.deleted', entity: 'product', entityId: deleteTarget.id, details: { name: deleteTarget.name, category: categorySlug } })
+            logAuditEvent({ action: 'product.deleted', entity: 'product', entityId: deleteTarget.id, details: { name: deleteTarget.name, category: categorySlug, location: selectedLocation } })
         } catch {
             toast.error('Failed to delete')
         } finally {

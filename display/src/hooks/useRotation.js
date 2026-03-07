@@ -1,10 +1,10 @@
 /**
  * useRotation.js
- * 
- * Reads active categories from Firestore in real time.
+ *
+ * Reads active categories from Firestore in real time for a given location.
  * Cycles through them using each category's displayDuration.
  * Restarts when settings.lastPushed changes.
- * 
+ *
  * Returns: { currentCategory, nextCategory, progress, jumpTo, categories, connectionError }
  */
 
@@ -14,14 +14,13 @@ import { db } from '../firebase';
 
 const MAX_RETRIES = 3;
 
-export function useRotation() {
+export function useRotation(locationId) {
     const [categories, setCategories] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [progress, setProgress] = useState(0);
     const [lastPushed, setLastPushed] = useState(null);
     const [connectionError, setConnectionError] = useState(false);
 
-    // Refs so timer callbacks always see latest values without re-creating
     const categoriesRef = useRef([]);
     const currentIndexRef = useRef(0);
     const startTimeRef = useRef(Date.now());
@@ -30,10 +29,16 @@ export function useRotation() {
     const catErrorCount = useRef(0);
     const settingsErrorCount = useRef(0);
 
-    // ── 1. Subscribe to categories collection ──────────────────────────────────
+    // ── 1. Subscribe to categories for this location ───────────────────────────
     useEffect(() => {
+        if (!locationId) return;
+
+        catErrorCount.current = 0;
+        setCategories([]);
+        categoriesRef.current = [];
+
         const unsubCats = onSnapshot(
-            collection(db, 'categories'),
+            collection(db, 'locations', locationId, 'categories'),
             (snap) => {
                 catErrorCount.current = 0;
                 setConnectionError(settingsErrorCount.current >= MAX_RETRIES);
@@ -49,19 +54,19 @@ export function useRotation() {
             (err) => {
                 console.error('[useRotation] categories error:', err);
                 catErrorCount.current += 1;
-                if (catErrorCount.current >= MAX_RETRIES) {
-                    setConnectionError(true);
-                }
+                if (catErrorCount.current >= MAX_RETRIES) setConnectionError(true);
             }
         );
 
         return () => unsubCats();
-    }, []);
+    }, [locationId]);
 
-    // ── 2. Subscribe to settings.lastPushed ───────────────────────────────────
+    // ── 2. Subscribe to settings.lastPushed for this location ─────────────────
     useEffect(() => {
+        if (!locationId) return;
+
         const unsubSettings = onSnapshot(
-            doc(db, 'settings', 'display'),
+            doc(db, 'locations', locationId, 'settings', 'display'),
             (snap) => {
                 settingsErrorCount.current = 0;
                 setConnectionError(catErrorCount.current >= MAX_RETRIES);
@@ -70,7 +75,6 @@ export function useRotation() {
                     const lp = snap.data().lastPushed;
                     setLastPushed((prev) => {
                         if (prev !== null && lp !== prev) {
-                            // Signal reset
                             resetFlagRef.current = true;
                         }
                         return lp;
@@ -80,14 +84,12 @@ export function useRotation() {
             (err) => {
                 console.error('[useRotation] settings error:', err);
                 settingsErrorCount.current += 1;
-                if (settingsErrorCount.current >= MAX_RETRIES) {
-                    setConnectionError(true);
-                }
+                if (settingsErrorCount.current >= MAX_RETRIES) setConnectionError(true);
             }
         );
 
         return () => unsubSettings();
-    }, []);
+    }, [locationId]);
 
     // ── 3. RAF-based rotation loop ─────────────────────────────────────────────
     const tick = useCallback(() => {
@@ -98,7 +100,6 @@ export function useRotation() {
             return;
         }
 
-        // Handle reset triggered by lastPushed change
         if (resetFlagRef.current) {
             resetFlagRef.current = false;
             currentIndexRef.current = 0;
@@ -110,7 +111,7 @@ export function useRotation() {
         }
 
         const current = cats[currentIndexRef.current % cats.length];
-        const duration = (current?.displayDuration ?? 15) * 1000; // ms
+        const duration = (current?.displayDuration ?? 15) * 1000;
         const elapsed = Date.now() - startTimeRef.current;
         const prog = Math.min(elapsed / duration, 1);
 
@@ -128,9 +129,7 @@ export function useRotation() {
 
     useEffect(() => {
         rafRef.current = requestAnimationFrame(tick);
-        return () => {
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        };
+        return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
     }, [tick]);
 
     // ── 4. jumpTo helper ───────────────────────────────────────────────────────
@@ -139,7 +138,6 @@ export function useRotation() {
         let idx = typeof indexOrId === 'number'
             ? indexOrId
             : cats.findIndex((c) => c.id === indexOrId);
-
         if (idx < 0) idx = 0;
         currentIndexRef.current = idx;
         setCurrentIndex(idx);
@@ -155,4 +153,3 @@ export function useRotation() {
 
     return { currentCategory, nextCategory, progress, jumpTo, categories, connectionError };
 }
-

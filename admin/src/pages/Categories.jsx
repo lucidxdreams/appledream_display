@@ -4,6 +4,7 @@ import {
     collection, getDocs, doc, updateDoc, writeBatch
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import { useLocation } from '../contexts/LocationContext'
 import toast from 'react-hot-toast'
 import {
     DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors
@@ -66,7 +67,7 @@ function Toggle({ checked, onChange, label }) {
     )
 }
 
-function SortableCategoryCard({ cat, onUpdate }) {
+function SortableCategoryCard({ cat, locationId, onUpdate }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id })
     const [expanded, setExpanded] = useState(false)
     const [saving, setSaving] = useState(false)
@@ -86,9 +87,9 @@ function SortableCategoryCard({ cat, onUpdate }) {
         updateTimer.current = setTimeout(async () => {
             setSaving(true)
             try {
-                await updateDoc(doc(db, 'categories', cat.id), { [field]: value })
+                await updateDoc(doc(db, 'locations', locationId, 'categories', cat.id), { [field]: value })
                 if (field === 'active') {
-                    logAuditEvent({ action: 'category.toggled', entity: 'category', entityId: cat.id, details: { name: cat.name, active: value } })
+                    logAuditEvent({ action: 'category.toggled', entity: 'category', entityId: cat.id, details: { name: cat.name, active: value, location: locationId } })
                 }
             } catch (err) {
                 toast.error(`Failed to update ${field}`)
@@ -202,6 +203,7 @@ function SortableCategoryCard({ cat, onUpdate }) {
 }
 
 export default function Categories() {
+    const { selectedLocation } = useLocation()
     const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -213,12 +215,12 @@ export default function Categories() {
 
     useEffect(() => {
         loadCategories()
-    }, [])
+    }, [selectedLocation])
 
     const loadCategories = async () => {
         setLoading(true)
         try {
-            const snap = await getDocs(collection(db, 'categories'))
+            const snap = await getDocs(collection(db, 'locations', selectedLocation, 'categories'))
             const cats = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
             cats.sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
             setCategories(cats)
@@ -244,7 +246,7 @@ export default function Categories() {
         try {
             const batch = writeBatch(db)
             reordered.forEach((cat, idx) => {
-                batch.update(doc(db, 'categories', cat.id), { order: idx })
+                batch.update(doc(db, 'locations', selectedLocation, 'categories', cat.id), { order: idx })
             })
             await batch.commit()
             toast.success('Order saved')
@@ -296,7 +298,7 @@ export default function Categories() {
                 <div className="empty-state">
                     <div className="empty-state-icon"><Package size={28} /></div>
                     <div className="empty-state-title">No categories found</div>
-                    <div className="empty-state-desc">Run the seed script to populate categories</div>
+                    <div className="empty-state-desc">Run the seed script to populate categories, then migrate to this location</div>
                 </div>
             ) : (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -305,6 +307,7 @@ export default function Categories() {
                             <SortableCategoryCard
                                 key={cat.id}
                                 cat={cat}
+                                locationId={selectedLocation}
                                 onUpdate={handleFieldUpdate}
                             />
                         ))}

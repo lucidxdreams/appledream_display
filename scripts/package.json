@@ -4,7 +4,8 @@
     "type": "module",
     "description": "Seed and utility scripts for the Cannabis Advertising Display System",
     "scripts": {
-        "seed": "node seed.js"
+        "seed": "node seed.js",
+        "migrate": "node migrate-to-locations.js"
     },
     "dependencies": {
         "firebase-admin": "^13.0.0"
