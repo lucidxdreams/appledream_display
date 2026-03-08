@@ -21,7 +21,7 @@ import { useLocation as useRouterLocation } from 'react-router-dom'
 const CATEGORIES = [
     { slug: 'exotic-flowers', label: 'Flowers' },
     { slug: 'edibles', label: 'Edibles' },
-    { slug: 'disposables', label: 'Vapes' },
+    { slug: 'disposables-vapes', label: 'Vapes' },
     { slug: 'cartridges', label: 'Cartridges' },
     { slug: 'prerolls', label: 'Pre-Rolls' },
     { slug: 'concentrates', label: 'Concentrates' },

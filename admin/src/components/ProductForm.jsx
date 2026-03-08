@@ -298,7 +298,7 @@ function VapesFields({ register, errors, flavors, setFlavors, setExtraDirty }) {
 /* ── Main Form ────────────────────────────────────────────────────── */
 export default function ProductForm({ defaultValues, categorySlug, onSave, onCancel }) {
     const isEdibles = categorySlug === 'edibles'
-    const isVapes = categorySlug === 'vapes' || categorySlug === 'disposables'
+    const isVapes = categorySlug === 'vapes' || categorySlug === 'disposables' || categorySlug === 'disposables-vapes'
     const isEdit = !!defaultValues?.id
 
     const [imageFile, setImageFile] = useState(null)
