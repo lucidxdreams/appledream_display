@@ -28,6 +28,21 @@ export const ediblesSchema = z.object({
     inStock: z.boolean().optional().default(true),
 })
 
+export const vapesSchema = z.object({
+    name: z.string().min(1, 'Name is required').max(200),
+    brand: z.string().max(200).optional().default(''),
+    price: z.coerce.number().min(0, 'Price must be ≥ $0').max(10000, 'Price must be ≤ $10,000'),
+    thc: z.coerce.number().min(0, 'THC% must be ≥ 0').max(100, 'THC% must be ≤ 100'),
+    cbd: z.coerce.number().min(0, 'CBD% must be ≥ 0').max(100, 'CBD% must be ≤ 100').optional().default(0),
+    type: z.enum(['Indica', 'Sativa', 'Hybrid', 'CBD', 'Indica Dom.', 'Sativa Dom.', 'N/A']),
+    cartSize: z.enum(['0.5g', '1g', '2g']).optional().default('1g'),
+    vapeType: z.enum(['Classic THC', 'CBD Ratio', 'CBN Blend', 'Live Resin', 'Distillate']).optional().default('Classic THC'),
+    notes: z.string().max(200).optional().default(''),
+    badge: z.string().optional().default(''),
+    featured: z.boolean().optional().default(false),
+    inStock: z.boolean().optional().default(true),
+})
+
 export const dealSchema = z.object({
     title: z.string().min(1, 'Title is required').max(200),
     description: z.string().min(1, 'Description is required').max(1000),
