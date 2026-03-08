@@ -175,7 +175,7 @@ function Display() {
       setProductConnError(false);
       const items = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
-        .filter((p) => p.active !== false);
+        .filter((p) => p.active !== false && p.inStock !== false);
       setProducts(items);
     }, (err) => {
       console.error('[Display] products error:', err);

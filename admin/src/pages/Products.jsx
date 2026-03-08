@@ -91,7 +91,7 @@ export default function Products() {
             } else {
                 const docRef = await addDoc(
                     collection(db, 'locations', selectedLocation, 'products', categorySlug, 'items'),
-                    { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }
+                    { ...data, active: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }
                 )
                 toast.success('Product added!')
                 logAuditEvent({ action: 'product.created', entity: 'product', entityId: docRef.id, details: { name: data.name, category: categorySlug, location: selectedLocation } })
