@@ -262,12 +262,13 @@ export default function VapesLayout({ products = [], categoryTheme }) {
     const { cardW, cardH, cols } = useMemo(() => {
         const n = products.length || 1;
         const cols = n <= 2 ? n : n <= 4 ? 2 : n <= 6 ? 3 : n <= 9 ? 3 : n <= 12 ? 4 : 5;
-        const GAP = 20, PAD = 32;
-        const avlW = W - PAD * 2 - GAP * (cols - 1);
-        const cardW = Math.max(140, Math.min(210, Math.floor(avlW / cols)));
+        const GAP = 14, PAD_X = 24, PAD_Y = 14;
+        const avlW = W - PAD_X * 2 - GAP * (cols - 1);
+        const cardW = Math.max(130, Math.min(200, Math.floor(avlW / cols)));
         const rows = Math.ceil(n / cols);
-        const avlH = H - PAD * 2 - GAP * (rows - 1) - 20;
-        const cardH = Math.max(340, Math.min(440, Math.floor(avlH / rows)));
+        // Subtract padding + gaps from available height, then divide
+        const avlH = H - PAD_Y * 2 - GAP * (rows - 1);
+        const cardH = Math.max(240, Math.min(420, Math.floor(avlH / rows)));
         return { cardW, cardH, cols };
     }, [products.length, W, H]);
 
@@ -288,7 +289,7 @@ export default function VapesLayout({ products = [], categoryTheme }) {
 
             {/* Card grid */}
             <div className="vp-grid"
-                style={{ '--cols': cols, '--gap': '20px', '--pad': '24px 32px' }}>
+                style={{ '--cols': cols, '--gap': '14px', '--pad': '14px 24px' }}>
                 {products.map((p, i) => (
                     <VapeCard key={p.id} product={p} index={i} cardW={cardW} cardH={cardH} />
                 ))}
