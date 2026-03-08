@@ -1,15 +1,15 @@
 /**
  * VapesLayout.jsx — "Neon Prism" Vapes Display
  *
- * Premium showcase for vape cartridges/pens:
- *  · Deep dark background with tech-grid overlay and neon bloom
- *  · Tall vertical "pen silhouette" cards — looks like a lit-up vape cart
- *  · Strain-colored neon glow (Indica=violet, Sativa=amber, Hybrid=teal)
- *  · Large product image (bigger than edibles)
- *  · Prominent THC% meter bar + cart size badge
- *  · Flavor tags as slim neon chips
- *  · Staggered slide-in from bottom + continuous subtle shimmer
- *  · Scales 1–14 products gracefully
+ * Follows the exact same container/grid/card pattern as NeuralConstellation.
+ * Products come from Firestore via the `products` prop — no hardcoding.
+ *
+ *  · Dark background with animated tech-circuit canvas + neon bloom lights
+ *  · Glassmorphism cards (same sizing logic as edibles)
+ *  · Larger portrait image per card (bigger than edibles)
+ *  · Strain-colored neon: Indica=violet, Sativa=amber, Hybrid=teal
+ *  · THC% meter bar + cart size badge + flavor chips
+ *  · Top neon accent line, staggered float animation
  */
 
 import { useEffect, useRef, useState, useMemo } from 'react';
@@ -28,7 +28,6 @@ const PALETTES = {
         chipBg: 'rgba(168,85,247,0.15)',
         chipTxt: '#d8b4fe',
         label: 'Indica',
-        barColor: '#a855f7',
     },
     sativa: {
         neon: '#f59e0b',
@@ -41,7 +40,6 @@ const PALETTES = {
         chipBg: 'rgba(245,158,11,0.15)',
         chipTxt: '#fde68a',
         label: 'Sativa',
-        barColor: '#f59e0b',
     },
     hybrid: {
         neon: '#10b981',
@@ -54,7 +52,6 @@ const PALETTES = {
         chipBg: 'rgba(16,185,129,0.15)',
         chipTxt: '#6ee7b7',
         label: 'Hybrid',
-        barColor: '#10b981',
     },
 };
 
@@ -65,7 +62,7 @@ function getStrain(p) {
     return 'hybrid';
 }
 
-/* ── Grid particle canvas (tech circuit dots) ────────────────── */
+/* ── Animated circuit canvas ─────────────────────────────────── */
 function CircuitCanvas({ W, H }) {
     const ref = useRef(null);
     const raf = useRef(null);
@@ -78,12 +75,10 @@ function CircuitCanvas({ W, H }) {
         c.width = W * dpr; c.height = H * dpr;
         ctx.scale(dpr, dpr);
 
-        // Static grid dots
         const CELL = 48;
         const cols = Math.ceil(W / CELL);
         const rows = Math.ceil(H / CELL);
 
-        // Animated neon streaks
         const STREAK_COLORS = ['#a855f7', '#10b981', '#f59e0b', '#38bdf8'];
         const streaks = Array.from({ length: 8 }, (_, i) => ({
             x: Math.random() * W,
@@ -99,8 +94,7 @@ function CircuitCanvas({ W, H }) {
         function draw() {
             ctx.clearRect(0, 0, W, H);
 
-            // Grid dots
-            ctx.fillStyle = 'rgba(255,255,255,0.045)';
+            ctx.fillStyle = 'rgba(255,255,255,0.04)';
             for (let col = 0; col <= cols; col++) {
                 for (let row = 0; row <= rows; row++) {
                     ctx.beginPath();
@@ -109,7 +103,6 @@ function CircuitCanvas({ W, H }) {
                 }
             }
 
-            // Animated streaks
             for (const s of streaks) {
                 s.alpha += s.alphaDelta;
                 if (s.alpha > 1 || s.alpha < 0) s.alphaDelta *= -1;
@@ -146,14 +139,14 @@ function VapeCard({ product, index, cardW, cardH }) {
     const cbd = Number(product.cbd || 0);
     const flavors = (product.flavors || product.terpenes || []).slice(0, 4);
     const price = Number(product.price || 0).toFixed(2);
-    const cartSize = product.cartSize || product.sellType?.replace('Pre-packed', '') || '1g';
-    const vapeType = product.vapeType || 'Classic THC';
+    const cartSize = product.cartSize || '';
+    const vapeType = product.vapeType || '';
     const isNew = (product.badge || '').toLowerCase() === 'new';
     const floatV = (index % 4) + 1;
 
-    // Image is intentionally larger for vapes — tall cart photo
-    const imgH = Math.min(cardH * 0.52, 200);
-    const imgW = imgH * 0.55; // portrait ratio for a vape pen
+    // Image larger than edibles — portrait proportion
+    const imgH = Math.min(cardH * 0.48, 180);
+    const imgW = imgH * 0.6;
 
     return (
         <div
@@ -174,13 +167,13 @@ function VapeCard({ product, index, cardW, cardH }) {
                 minHeight: cardH,
             }}
         >
-            {/* Top neon line accent */}
+            {/* Top neon line */}
             <div className="vp-top-line" />
 
-            {/* Header row: strain badge + vape type + cart size */}
+            {/* Header: strain + cart size + badge */}
             <div className="vp-header">
                 <span className="vp-strain-label">{pal.label}</span>
-                <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 4 }}>
                     {cartSize && <span className="vp-size-badge">{cartSize}</span>}
                     {product.badge && (
                         <span className={`vp-badge ${isNew ? 'vp-badge--new' : 'vp-badge--hot'}`}>
@@ -190,7 +183,7 @@ function VapeCard({ product, index, cardW, cardH }) {
                 </div>
             </div>
 
-            {/* Product Image — tall portrait, bigger than edibles */}
+            {/* Product image — portrait, intentionally larger than edibles */}
             <div className="vp-img-wrap" style={{ height: imgH, width: imgW }}>
                 <div className="vp-img-glow" />
                 {product.imageUrl
@@ -199,16 +192,16 @@ function VapeCard({ product, index, cardW, cardH }) {
                 }
             </div>
 
-            {/* Name */}
+            {/* Name + brand */}
             <div className="vp-name">{product.name}</div>
             {product.brand && <div className="vp-brand">{product.brand}</div>}
 
-            {/* Vape type tag */}
+            {/* Vape type (only if non-default) */}
             {vapeType && vapeType !== 'Classic THC' && (
                 <div className="vp-type-tag">{vapeType}</div>
             )}
 
-            {/* THC meter */}
+            {/* THC meter bar */}
             {thc > 0 && (
                 <div className="vp-thc-wrap">
                     <div className="vp-thc-label-row">
@@ -235,14 +228,11 @@ function VapeCard({ product, index, cardW, cardH }) {
 
             {/* Price */}
             <div className="vp-price">${price}</div>
-
-            {/* Bottom neon line */}
-            <div className="vp-bottom-glow" />
         </div>
     );
 }
 
-/* ── Main ─────────────────────────────────────────────────────── */
+/* ── Main — same pattern as NeuralConstellation ──────────────── */
 export default function VapesLayout({ products = [], categoryTheme }) {
     const containerRef = useRef(null);
     const [size, setSize] = useState({ W: 1280, H: 720 });
@@ -259,16 +249,18 @@ export default function VapesLayout({ products = [], categoryTheme }) {
 
     const { W, H } = size;
 
+    // Same sizing logic as NeuralConstellation
     const { cardW, cardH, cols } = useMemo(() => {
         const n = products.length || 1;
         const cols = n <= 2 ? n : n <= 4 ? 2 : n <= 6 ? 3 : n <= 9 ? 3 : n <= 12 ? 4 : 5;
-        const GAP = 14, PAD_X = 24, PAD_Y = 14;
-        const avlW = W - PAD_X * 2 - GAP * (cols - 1);
-        const cardW = Math.max(130, Math.min(200, Math.floor(avlW / cols)));
+        const gap = 18;
+        const padX = 36;
+        const padY = 20;
+        const avlW = W - padX * 2 - gap * (cols - 1);
+        const cardW = Math.max(130, Math.min(210, Math.floor(avlW / cols)));
         const rows = Math.ceil(n / cols);
-        // Subtract padding + gaps from available height, then divide
-        const avlH = H - PAD_Y * 2 - GAP * (rows - 1);
-        const cardH = Math.max(240, Math.min(420, Math.floor(avlH / rows)));
+        const avlH = H - padY * 2 - gap * (rows - 1);
+        const cardH = Math.max(280, Math.min(400, Math.floor(avlH / rows)));
         return { cardW, cardH, cols };
     }, [products.length, W, H]);
 
@@ -276,20 +268,18 @@ export default function VapesLayout({ products = [], categoryTheme }) {
         <div ref={containerRef} className="vp-scene"
             style={{ width: '100%', height: '100%', '--accent': categoryTheme?.accent || '#7c8cf8' }}>
 
-            {/* Dark tech base */}
+            {/* Background */}
             <div className="vp-bg" />
-
-            {/* Animated circuit grid */}
             <CircuitCanvas W={W} H={H} />
 
-            {/* Ambient neon bloom centers */}
+            {/* Ambient bloom lights */}
             <div className="vp-bloom vp-bloom--1" />
             <div className="vp-bloom vp-bloom--2" />
             <div className="vp-bloom vp-bloom--3" />
 
-            {/* Card grid */}
+            {/* Card grid — same CSS pattern as ca-grid */}
             <div className="vp-grid"
-                style={{ '--cols': cols, '--gap': '14px', '--pad': '14px 24px' }}>
+                style={{ '--cols': cols, '--gap': '18px', '--pad': '20px 36px' }}>
                 {products.map((p, i) => (
                     <VapeCard key={p.id} product={p} index={i} cardW={cardW} cardH={cardH} />
                 ))}
