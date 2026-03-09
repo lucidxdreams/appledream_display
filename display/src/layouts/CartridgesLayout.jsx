@@ -111,9 +111,9 @@ function CartridgeCard({ product, index, cardW, cardH }) {
     // Vary the float animation slightly so they don't sync
     const floatV = (index % 3) + 1;
 
-    // Scale image area dynamically
-    const imgH = Math.min(cardH * 0.40, 180);
-    const imgW = imgH * 0.65;
+    // Scale image area dynamically - significantly larger as requested
+    const imgH = cardH * 0.50;
+    const imgW = cardW * 0.85;
 
     return (
         <div
@@ -146,15 +146,16 @@ function CartridgeCard({ product, index, cardW, cardH }) {
                 )}
             </div>
 
+            <div style={{ flex: 1, minHeight: 4 }} />
+
             <div className="cg-brand">{product.brand || 'Premium Extract'}</div>
             <div className="cg-name" style={{
                 fontSize: cardW < 240 ? '1em' : '1.1em',
-                WebkitLineClamp: cardH < 280 ? 1 : 2
+                WebkitLineClamp: cardH < 280 ? 1 : 2,
+                marginBottom: 12
             }}>
                 {product.name}
             </div>
-
-            <div style={{ flex: 1, minHeight: 4 }} />
 
             {/* Cannabinoid Bars */}
             <div className="cg-c-bars">
