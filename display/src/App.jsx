@@ -65,7 +65,7 @@ function CategoryLayout({ category, products, theme }) {
   if (id.includes('flower')) return <CloudBubbles products={products} categoryTheme={theme} />;
   if (id.includes('edible')) return <NeuralConstellation products={products} categoryTheme={theme} />;
   if (id.includes('vape') || id.includes('disposable')) return <VapesLayout products={products} categoryTheme={theme} />;
-  if (id.includes('cart')) return <TheCollection products={products} categoryTheme={theme} />;
+  if (id.includes('cart')) return <CartridgesLayout products={products} categoryTheme={theme} />;
   if (id.includes('pre')) return <SmokeShelf products={products} categoryTheme={theme} />;
   if (id.includes('deal')) return <DealsLayout products={products} />;
   return <CloudBubbles products={products} categoryTheme={theme} />;

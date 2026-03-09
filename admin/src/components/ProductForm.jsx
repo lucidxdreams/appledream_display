@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import imageCompression from 'browser-image-compression'
 import { storage } from '../firebase'
-import { productSchema, ediblesSchema, vapesSchema } from '../lib/schemas'
+import { productSchema, ediblesSchema, vapesSchema, cartridgesSchema } from '../lib/schemas'
 import ImageUploader from './ImageUploader'
 import { X, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -21,12 +21,15 @@ const EFFECT_PRESETS = [
 const THC_MG_PRESETS = [25, 50, 100, 150, 200, 300, 500]
 const PIECE_COUNT_PRESETS = [2, 5, 10, 15, 20, 25, 30]
 
-const CART_SIZES = ['0.5g', '1g', '2g']
+const CART_SIZES_VAPE = ['0.5g', '1g', '2g']
+const CART_SIZES_CART = ['0.5g', '1g']
 const VAPE_TYPES = ['Classic THC', 'CBD Ratio', 'CBN Blend', 'Live Resin', 'Distillate']
+const EXTRACT_TYPES = ['Cured Resin', 'Live Resin', 'Distillate', 'Rosin', 'HTFSE', 'Badder', 'Sugar']
 const FLAVOR_PRESETS = [
     'Citrus', 'Berry', 'Vanilla', 'Lavender', 'Mint', 'Tropical',
     'Earthy', 'Pine', 'Grape', 'Peach', 'Lemon', 'Diesel',
 ]
+const CART_EFFECT_PRESETS = ['Calm', 'Happy', 'Relaxed', 'Energetic', 'Creative', 'Focused', 'Euphoric', 'Sleepy', 'Uplifted', 'Giggly']
 
 async function uploadProductImage(file, productId) {
     const compressed = await imageCompression(file, {
@@ -295,10 +298,116 @@ function VapesFields({ register, errors, flavors, setFlavors, setExtraDirty }) {
     )
 }
 
+/* ── Cartridges-specific Fields ──────────────────────────────────── */
+function CartridgesFields({ register, errors, effects, setEffects, setExtraDirty }) {
+    const [effectInput, setEffectInput] = useState('')
+
+    const addEffect = (val) => {
+        const t = (val || effectInput).trim()
+        if (t && !effects.includes(t)) { setEffects(prev => [...prev, t]); setExtraDirty(true) }
+        setEffectInput('')
+    }
+    const removeEffect = (e) => { setEffects(prev => prev.filter(x => x !== e)); setExtraDirty(true) }
+
+    return (
+        <>
+            {/* THC% + CBD% */}
+            <div className="form-grid">
+                <div className="form-group">
+                    <label className="form-label">THC % *</label>
+                    <input type="number" step="0.01" min="0" max="100"
+                        className={`form-input ${errors.thc ? 'error' : ''}`}
+                        placeholder="80.9" {...register('thc')} />
+                    {errors.thc && <span className="form-error">{errors.thc.message}</span>}
+                </div>
+                <div className="form-group">
+                    <label className="form-label">CBD %</label>
+                    <input type="number" step="0.01" min="0" max="100"
+                        className="form-input" placeholder="0.47" {...register('cbd')} />
+                </div>
+            </div>
+
+            {/* CBG% + CBN% */}
+            <div className="form-grid">
+                <div className="form-group">
+                    <label className="form-label">CBG %</label>
+                    <input type="number" step="0.01" min="0" max="100"
+                        className="form-input" placeholder="1.00" {...register('cbg')} />
+                </div>
+                <div className="form-group">
+                    <label className="form-label">CBN %</label>
+                    <input type="number" step="0.01" min="0" max="100"
+                        className="form-input" placeholder="0.25" {...register('cbn')} />
+                </div>
+            </div>
+
+            {/* Extract Type + Cart Size */}
+            <div className="form-grid">
+                <div className="form-group">
+                    <label className="form-label">Extract Type *</label>
+                    <select className="form-select" {...register('extractType')}>
+                        {EXTRACT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Size *</label>
+                    <select className="form-select" {...register('cartSize')}>
+                        {CART_SIZES_CART.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                </div>
+            </div>
+
+            {/* Effects */}
+            <div className="form-group">
+                <label className="form-label">Effects</label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                    {CART_EFFECT_PRESETS.map(e => {
+                        const active = effects.includes(e)
+                        return (
+                            <button key={e} type="button"
+                                onClick={() => active ? removeEffect(e) : addEffect(e)}
+                                style={{
+                                    padding: '4px 12px', borderRadius: 20,
+                                    border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                                    background: active ? 'var(--accent-dim)' : 'var(--surface-2)',
+                                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                                    fontSize: 12, fontWeight: active ? 600 : 400, cursor: 'pointer', transition: 'all 0.15s',
+                                }}>
+                                {active ? '✓ ' : ''}{e}
+                            </button>
+                        )
+                    })}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <input type="text" className="form-input" placeholder="Add custom effect..."
+                        value={effectInput}
+                        onChange={e => setEffectInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addEffect() } }}
+                    />
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => addEffect()}>
+                        <Plus size={14} />
+                    </button>
+                </div>
+                {effects.length > 0 && (
+                    <div className="tag-list" style={{ marginTop: 8 }}>
+                        {effects.map(e => (
+                            <span className="tag" key={e}>
+                                {e}
+                                <span className="tag-remove" onClick={() => removeEffect(e)}><X size={11} /></span>
+                            </span>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </>
+    )
+}
+
 /* ── Main Form ────────────────────────────────────────────────────── */
 export default function ProductForm({ defaultValues, categorySlug, onSave, onCancel }) {
     const isEdibles = categorySlug === 'edibles'
     const isVapes = categorySlug === 'vapes' || categorySlug === 'disposables' || categorySlug === 'disposables-vapes'
+    const isCartridges = categorySlug === 'cartridges'
     const isEdit = !!defaultValues?.id
 
     const [imageFile, setImageFile] = useState(null)
@@ -314,8 +423,10 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
     const [effects, setEffects] = useState(defaultValues?.effects || [])
     // Vapes-only
     const [flavors, setFlavors] = useState(defaultValues?.flavors || [])
+    // Cartridges-only
+    const [cartEffects, setCartEffects] = useState(defaultValues?.effects || [])
 
-    const schema = isEdibles ? ediblesSchema : isVapes ? vapesSchema : productSchema
+    const schema = isEdibles ? ediblesSchema : isVapes ? vapesSchema : isCartridges ? cartridgesSchema : productSchema
     const { register, handleSubmit, control, watch, formState: { errors, isSubmitting, isDirty } } = useForm({
         resolver: zodResolver(schema),
         defaultValues: isEdibles
@@ -327,16 +438,23 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
             : isVapes
                 ? {
                     name: '', brand: '', price: '', thc: '', cbd: '',
-                    type: 'Hybrid', cartSize: '1g', vapeType: 'Classic THC',
+                    type: 'Hybrid', cartSize: '1g', vapeType: 'Classic THC', flavors: [],
                     notes: '', badge: '', featured: false, inStock: true,
                     ...defaultValues,
                 }
-                : {
-                    name: '', brand: '', price: '', thc: '', cbd: '',
-                    type: 'Hybrid', sellType: 'Pre-packed', notes: '', badge: '',
-                    featured: false, inStock: true,
-                    ...defaultValues,
-                },
+                : isCartridges
+                    ? {
+                        name: '', brand: '', price: '', thc: '', cbd: '', cbg: '', cbn: '',
+                        type: 'Hybrid', extractType: 'Cured Resin', cartSize: '1g', effects: [],
+                        notes: '', badge: '', featured: false, inStock: true,
+                        ...defaultValues,
+                    }
+                    : {
+                        name: '', brand: '', price: '', thc: '', cbd: '',
+                        type: 'Hybrid', sellType: 'Pre-packed', notes: '', badge: '',
+                        featured: false, inStock: true,
+                        ...defaultValues,
+                    },
     })
 
     const hasUnsavedChanges = isDirty || extraDirty || !!imageFile
@@ -384,16 +502,29 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
                         imageUrl,
                         category: categorySlug,
                     }
-                    : {
-                        ...data,
-                        price: Number(data.price) || 0,
-                        thc: Number(data.thc) || 0,
-                        cbd: Number(data.cbd) || 0,
-                        terpenes,
-                        priceByWeight: data.sellType === 'Weighted' ? priceByWeight : {},
-                        imageUrl,
-                        category: categorySlug,
-                    }
+                    : isCartridges
+                        ? {
+                            ...data,
+                            price: Number(data.price) || 0,
+                            thc: Number(data.thc) || 0,
+                            cbd: Number(data.cbd) || 0,
+                            cbg: Number(data.cbg) || 0,
+                            cbn: Number(data.cbn) || 0,
+                            effects: cartEffects,
+                            sellType: 'Pre-packed',
+                            imageUrl,
+                            category: categorySlug,
+                        }
+                        : {
+                            ...data,
+                            price: Number(data.price) || 0,
+                            thc: Number(data.thc) || 0,
+                            cbd: Number(data.cbd) || 0,
+                            terpenes,
+                            priceByWeight: data.sellType === 'Weighted' ? priceByWeight : {},
+                            imageUrl,
+                            category: categorySlug,
+                        }
 
             await onSave(productData, defaultValues?.id)
         } catch (err) {
@@ -481,8 +612,19 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
                     />
                 )}
 
+                {/* ── CARTRIDGES-SPECIFIC fields ── */}
+                {isCartridges && (
+                    <CartridgesFields
+                        register={register}
+                        errors={errors}
+                        effects={cartEffects}
+                        setEffects={setCartEffects}
+                        setExtraDirty={setExtraDirty}
+                    />
+                )}
+
                 {/* ── FLOWER/OTHER fields ── */}
-                {!isEdibles && !isVapes && (<>
+                {!isEdibles && !isVapes && !isCartridges && (<>
                     {/* THC + CBD */}
                     <div className="form-grid">
                         <div className="form-group">

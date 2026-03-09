@@ -1,0 +1,337 @@
+/**
+ * CartridgesLayout.css
+ * 
+ * Premium "Liquid Gold" aesthetic.
+ * Dark charcoal glassmorphism with amber/gold accents to represent high-quality extracts.
+ * Layout structure matches the proven auto-scaling grid of NeuralConstellation/VapesLayout.
+ */
+
+/* ── Scene & Background ── */
+.cg-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #050505;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ambient oil glow */
+.cg-ambient-glow {
+    position: absolute;
+    inset: -20%;
+    background: radial-gradient(circle at 50% 120%, rgba(200, 150, 20, 0.15), transparent 60%),
+        radial-gradient(circle at 10% -10%, rgba(220, 180, 50, 0.1), transparent 50%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Oil bubbles canvas container */
+.cg-canvas-container {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0.6;
+}
+
+/* ── Grid Constraint (Proven Pattern) ── */
+.cg-grid {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: start;
+    gap: var(--cg-gap, 16px);
+    /* We use max-width and max-height so it naturally fits and centers */
+    max-width: 100%;
+    max-height: 100%;
+    padding: var(--cg-pad, 20px) 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+    /* absolutely prevent scrollbars */
+}
+
+/* ── Card (Glassmorphism & Gold accents) ── */
+.cg-card {
+    position: relative;
+    border-radius: 12px;
+    background: rgba(18, 18, 18, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(220, 160, 40, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.3s ease, border-color 0.3s ease;
+
+    /* Animation initial state */
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    animation: cg-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: var(--delay, 0s);
+}
+
+@keyframes cg-enter {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Card inner layout container */
+.cg-card-inner {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* Gradient top border */
+.cg-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(220, 160, 40, 0.8), transparent);
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.cg-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(220, 160, 40, 0.4);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6),
+        0 0 20px rgba(220, 160, 40, 0.1);
+}
+
+.cg-card:hover::before {
+    opacity: 1;
+}
+
+/* ── Top Section: Image & Header Info ── */
+.cg-top-row {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    /* border-bottom: 1px solid rgba(255, 255, 255, 0.05); */
+}
+
+.cg-image-wrap {
+    flex-shrink: 0;
+    width: 35%;
+    /* Fixed ratio for the tall skinny cart box */
+    height: 100%;
+    min-height: 140px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.cg-img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+.cg-header {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.cg-brand {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 2px;
+}
+
+.cg-name {
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cg-type-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #e0b040;
+    background: rgba(224, 176, 64, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    align-self: flex-start;
+    margin-bottom: 8px;
+}
+
+.cg-price {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #f1c40f, #d35400);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ── Middle Section: Spec Pills ── */
+.cg-specs-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 12px 10px;
+}
+
+.cg-pill {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #bbb;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cg-pill-highlight {
+    color: #fff;
+    font-weight: 700;
+}
+
+/* ── Lower Section: Cannabinoids & Effects ── */
+.cg-body {
+    padding: 0 12px 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cg-section-title {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.cg-cannabinoids {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+}
+
+.cg-c-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cg-c-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    font-weight: 600;
+}
+
+.cg-c-name {
+    color: #999;
+}
+
+.cg-c-val {
+    color: #ddd;
+}
+
+.cg-c-bar-bg {
+    height: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.cg-c-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: #e0b040;
+    box-shadow: 0 0 6px rgba(224, 176, 64, 0.8);
+}
+
+.cg-c-bar-fill.minor {
+    background: #4a90e2;
+    box-shadow: 0 0 6px rgba(74, 144, 226, 0.8);
+}
+
+/* ── Effects Chips ── */
+.cg-effects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.cg-effect-chip {
+    font-size: 0.55rem;
+    font-weight: 600;
+    padding: 3px 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    color: #aaa;
+}
+
+/* ── Notes (Description) ── */
+.cg-notes {
+    font-size: 0.65rem;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: auto;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-style: italic;
+}
+
+/* ── Responsive Adjustments ── */
+.cg-grid.dense .cg-name {
+    font-size: 0.9rem;
+}
+
+.cg-grid.dense .cg-top-row {
+    padding: 8px;
+}
+
+.cg-grid.dense .cg-body {
+    padding: 0 8px 8px;
+}
+
+.cg-grid.dense .cg-image-wrap {
+    min-height: 100px;
+}
+
+.cg-grid.dense .cg-notes {
+    display: none;
+    /* hide notes if too dense */
+}
