@@ -62,6 +62,20 @@ export const cartridgesSchema = z.object({
     inStock: z.boolean().optional().default(true),
 })
 
+export const prerollsSchema = z.object({
+    name: z.string().min(1, 'Name is required').max(200),
+    brand: z.string().max(200).optional().default(''),
+    price: z.coerce.number().min(0, 'Price must be ≥ $0').max(10000, 'Price must be ≤ $10,000'),
+    thc: z.coerce.number().min(0, 'THC% must be ≥ 0').max(100, 'THC% must be ≤ 100'),
+    cbd: z.coerce.number().min(0, 'CBD% must be ≥ 0').max(100, 'CBD% must be ≤ 100').optional().default(0),
+    weight: z.enum(['0.5g', '0.7g', '1g', '1.5g', '2g', '2.5g', '3g', 'Custom']).optional().default('1g'),
+    type: z.enum(['Indica', 'Sativa', 'Hybrid', 'CBD', 'Indica Dom.', 'Sativa Dom.', 'N/A']),
+    notes: z.string().max(200).optional().default(''),
+    badge: z.string().optional().default(''),
+    featured: z.boolean().optional().default(false),
+    inStock: z.boolean().optional().default(true),
+})
+
 export const dealSchema = z.object({
     title: z.string().min(1, 'Title is required').max(200),
     description: z.string().min(1, 'Description is required').max(1000),

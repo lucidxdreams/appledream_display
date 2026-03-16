@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import imageCompression from 'browser-image-compression'
 import { storage } from '../firebase'
-import { productSchema, ediblesSchema, vapesSchema, cartridgesSchema } from '../lib/schemas'
+import { productSchema, ediblesSchema, vapesSchema, cartridgesSchema, prerollsSchema } from '../lib/schemas'
 import ImageUploader from './ImageUploader'
 import { X, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -396,83 +396,125 @@ function CartridgesFields({ register, errors, effects, setEffects, setExtraDirty
                                 <span className="tag-remove" onClick={() => removeEffect(e)}><X size={11} /></span>
                             </span>
                         ))}
-                    </div>
                 )}
-            </div>
+                    </div>
         </>
-    )
+            )
 }
 
-/* ── Main Form ────────────────────────────────────────────────────── */
-export default function ProductForm({ defaultValues, categorySlug, onSave, onCancel }) {
+            /* ── Pre-Rolls Fields ────────────────────────────────────────────────── */
+            function PrerollsFields({register, errors}) {
+    return (
+            <>
+                <div className="section-title">Pre-Roll Details</div>
+                <div className="form-grid">
+                    <div className="form-group">
+                        <label className="form-label">Weight</label>
+                        <select className="form-input" {...register('weight')}>
+                            {['0.5g', '0.7g', '1g', '1.5g', '2g', '2.5g', '3g', 'Custom'].map(w => (
+                                <option key={w} value={w}>{w}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="form-grid">
+                    <div className="form-group">
+                        <label className="form-label">THC % *</label>
+                        <input
+                            type="number" step="0.01" min="0" max="100"
+                            className={`form-input ${errors.thc ? 'error' : ''}`}
+                            placeholder="22.5"
+                            {...register('thc')}
+                        />
+                        {errors.thc && <span className="form-error">{errors.thc.message}</span>}
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">CBD %</label>
+                        <input
+                            type="number" step="0.01" min="0" max="100"
+                            className={`form-input ${errors.cbd ? 'error' : ''}`}
+                            placeholder="0.0"
+                            {...register('cbd')}
+                        />
+                        {errors.cbd && <span className="form-error">{errors.cbd.message}</span>}
+                    </div>
+                </div>
+            </>
+            )
+}
+
+            /* ── Main Form ────────────────────────────────────────────────────── */
+            export default function ProductForm({defaultValues, categorySlug, onSave, onCancel}) {
     const isEdibles = categorySlug === 'edibles'
-    const isVapes = categorySlug === 'vapes' || categorySlug === 'disposables' || categorySlug === 'disposables-vapes'
-    const isCartridges = categorySlug === 'cartridges'
-    const isEdit = !!defaultValues?.id
+            const isVapes = categorySlug === 'vapes' || categorySlug === 'disposables' || categorySlug === 'disposables-vapes'
+            const isCartridges = categorySlug === 'cartridges'
+            const isPrerolls = categorySlug === 'pre-rolls'
+            const isEdit = !!defaultValues?.id
 
-    const [imageFile, setImageFile] = useState(null)
-    const [uploading, setUploading] = useState(false)
-    const [extraDirty, setExtraDirty] = useState(false)
+            const [imageFile, setImageFile] = useState(null)
+            const [uploading, setUploading] = useState(false)
+            const [extraDirty, setExtraDirty] = useState(false)
 
-    // Flower-only extras
-    const [terpeneInput, setTerpeneInput] = useState('')
-    const [terpenes, setTerpenes] = useState(defaultValues?.terpenes || [])
-    const [priceByWeight, setPriceByWeight] = useState(defaultValues?.priceByWeight || {})
+            // Flower-only extras
+            const [terpeneInput, setTerpeneInput] = useState('')
+            const [terpenes, setTerpenes] = useState(defaultValues?.terpenes || [])
+            const [priceByWeight, setPriceByWeight] = useState(defaultValues?.priceByWeight || { })
 
-    // Edibles-only
-    const [effects, setEffects] = useState(defaultValues?.effects || [])
-    // Vapes-only
-    const [flavors, setFlavors] = useState(defaultValues?.flavors || [])
-    // Cartridges-only
-    const [cartEffects, setCartEffects] = useState(defaultValues?.effects || [])
+            // Edibles-only
+            const [effects, setEffects] = useState(defaultValues?.effects || [])
+            // Vapes-only
+            const [flavors, setFlavors] = useState(defaultValues?.flavors || [])
+            // Cartridges-only
+            const [cartEffects, setCartEffects] = useState(defaultValues?.effects || [])
 
-    const schema = isEdibles ? ediblesSchema : isVapes ? vapesSchema : isCartridges ? cartridgesSchema : productSchema
-    const { register, handleSubmit, control, watch, formState: { errors, isSubmitting, isDirty } } = useForm({
-        resolver: zodResolver(schema),
-        defaultValues: isEdibles
+            const schema = isEdibles ? ediblesSchema : isVapes ? vapesSchema : isCartridges ? cartridgesSchema : isPrerolls ? prerollsSchema : productSchema
+            const {register, handleSubmit, control, watch, formState: {errors, isSubmitting, isDirty} } = useForm({
+                resolver: zodResolver(schema),
+            defaultValues: isEdibles
             ? {
                 name: '', brand: '', price: '', thcMg: '', pieceCount: 10,
-                type: 'Hybrid', notes: '', badge: '', featured: false, inStock: true,
-                ...defaultValues,
+            type: 'Hybrid', notes: '', badge: '', featured: false, inStock: true,
+            ...defaultValues,
             }
             : isVapes
-                ? {
-                    name: '', brand: '', price: '', thc: '', cbd: '',
-                    type: 'Hybrid', cartSize: '1g', vapeType: 'Classic THC', flavors: [],
-                    notes: '', badge: '', featured: false, inStock: true,
-                    ...defaultValues,
+            ? {
+                name: '', brand: '', price: '', thc: '', cbd: '',
+            type: 'Hybrid', cartSize: '1g', vapeType: 'Classic THC', flavors: [],
+            notes: '', badge: '', featured: false, inStock: true,
+            ...defaultValues,
                 }
-                : isCartridges
-                    ? {
-                        name: '', brand: '', price: '', thc: '', cbd: '', cbg: '', cbn: '',
-                        type: 'Hybrid', extractType: 'Cured Resin', cartSize: '1g', effects: [],
-                        notes: '', badge: '', featured: false, inStock: true,
-                        ...defaultValues,
+            : isCartridges
+            ? {
+                name: '', brand: '', price: '', thc: '', cbd: '', cbg: '', cbn: '',
+            type: 'Hybrid', extractType: 'Cured Resin', cartSize: '1g', effects: [],
+            notes: '', badge: '', featured: false, inStock: true,
+            ...defaultValues,
                     }
-                    : {
-                        name: '', brand: '', price: '', thc: '', cbd: '',
-                        type: 'Hybrid', sellType: 'Pre-packed', notes: '', badge: '',
-                        featured: false, inStock: true,
-                        ...defaultValues,
+            : {
+                name: '', brand: '', price: '', thc: '', cbd: '',
+            type: 'Hybrid', sellType: 'Pre-packed', notes: '', badge: '',
+            featured: false, inStock: true,
+            ...defaultValues,
                     },
     })
 
-    const hasUnsavedChanges = isDirty || extraDirty || !!imageFile
+            const hasUnsavedChanges = isDirty || extraDirty || !!imageFile
 
     const onSubmit = async (data) => {
         try {
-            let imageUrl = defaultValues?.imageUrl || ''
+                let imageUrl = defaultValues?.imageUrl || ''
             if (imageFile) {
                 setUploading(true)
                 const productId = defaultValues?.id || `${categorySlug}_${Date.now()}`
-                try {
-                    imageUrl = await uploadProductImage(imageFile, productId)
-                } catch {
-                    toast.error('Image upload failed — product not saved')
+            try {
+                imageUrl = await uploadProductImage(imageFile, productId)
+            } catch {
+                toast.error('Image upload failed — product not saved')
                     setUploading(false)
-                    return
+            return
                 }
-                setUploading(false)
+            setUploading(false)
             }
 
             if (!isEdit && !imageUrl) {
@@ -481,274 +523,327 @@ export default function ProductForm({ defaultValues, categorySlug, onSave, onCan
             }
 
             const productData = isEdibles
-                ? {
-                    ...data,
-                    price: Number(data.price) || 0,
-                    thcMg: Number(data.thcMg) || 0,
-                    pieceCount: Number(data.pieceCount) || 10,
-                    effects,
-                    sellType: 'Pre-packed',
-                    imageUrl,
-                    category: categorySlug,
+            ? {
+                ...data,
+                price: Number(data.price) || 0,
+            thcMg: Number(data.thcMg) || 0,
+            pieceCount: Number(data.pieceCount) || 10,
+            effects,
+            sellType: 'Pre-packed',
+            imageUrl,
+            category: categorySlug,
                 }
-                : isVapes
-                    ? {
-                        ...data,
-                        price: Number(data.price) || 0,
-                        thc: Number(data.thc) || 0,
-                        cbd: Number(data.cbd) || 0,
-                        flavors,
-                        sellType: 'Pre-packed',
-                        imageUrl,
-                        category: categorySlug,
+            : isVapes
+            ? {
+                ...data,
+                price: Number(data.price) || 0,
+            thc: Number(data.thc) || 0,
+            cbd: Number(data.cbd) || 0,
+            flavors,
+            sellType: 'Pre-packed',
+            imageUrl,
+            category: categorySlug,
                     }
-                    : isCartridges
-                        ? {
-                            ...data,
-                            price: Number(data.price) || 0,
-                            thc: Number(data.thc) || 0,
-                            cbd: Number(data.cbd) || 0,
-                            cbg: Number(data.cbg) || 0,
-                            cbn: Number(data.cbn) || 0,
-                            effects: cartEffects,
-                            sellType: 'Pre-packed',
-                            imageUrl,
-                            category: categorySlug,
+            : isCartridges
+            ? {
+                ...data,
+                price: Number(data.price) || 0,
+            thc: Number(data.thc) || 0,
+            cbd: Number(data.cbd) || 0,
+            cbg: Number(data.cbg) || 0,
+            cbn: Number(data.cbn) || 0,
+            effects: cartEffects,
+            sellType: 'Pre-packed',
+            imageUrl,
+            category: categorySlug,
                         }
-                        : {
-                            ...data,
-                            price: Number(data.price) || 0,
-                            thc: Number(data.thc) || 0,
-                            cbd: Number(data.cbd) || 0,
-                            terpenes,
-                            priceByWeight: data.sellType === 'Weighted' ? priceByWeight : {},
-                            imageUrl,
-                            category: categorySlug,
-                        }
+            : isPrerolls
+            ? {
+                ...data,
+                price: Number(data.price) || 0,
+            thc: Number(data.thc) || 0,
+            cbd: Number(data.cbd) || 0,
+            sellType: 'Pre-packed',
+            imageUrl,
+            category: categorySlug,
+                            }
+            : {
+                ...data,
+                price: Number(data.price) || 0,
+            thc: Number(data.thc) || 0,
+            cbd: Number(data.cbd) || 0,
+            terpenes,
+            priceByWeight: data.sellType === 'Weighted' ? priceByWeight : { },
+            imageUrl,
+            category: categorySlug,
+                            }
 
             await onSave(productData, defaultValues?.id)
         } catch (err) {
-            console.error(err)
+                console.error(err)
             toast.error('Failed to save product')
         }
     }
 
     const addTerpene = () => {
         const t = terpeneInput.trim()
-        if (t && !terpenes.includes(t)) { setTerpenes(prev => [...prev, t]); setExtraDirty(true) }
-        setTerpeneInput('')
+            if (t && !terpenes.includes(t)) {setTerpenes(prev => [...prev, t]); setExtraDirty(true) }
+            setTerpeneInput('')
     }
-    const removeTerpene = (t) => { setTerpenes(prev => prev.filter(x => x !== t)); setExtraDirty(true) }
+    const removeTerpene = (t) => {setTerpenes(prev => prev.filter(x => x !== t)); setExtraDirty(true) }
 
-    return (
-        <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="panel-body">
+            return (
+            <form onSubmit={handleSubmit(onSubmit)}>
+                <div className="panel-body">
 
-                {/* Image */}
-                <ImageUploader value={defaultValues?.imageUrl} onChange={setImageFile} />
-                {!isEdit && !imageFile && !defaultValues?.imageUrl && (
-                    <div style={{ fontSize: 12, color: 'var(--danger)', marginTop: -8, marginBottom: 8 }}>
-                        Image is required for new products
-                    </div>
-                )}
-
-                {/* Name + Brand */}
-                <div className="form-grid">
-                    <div className="form-group">
-                        <label className="form-label">Product Name *</label>
-                        <input
-                            className={`form-input ${errors.name ? 'error' : ''}`}
-                            placeholder={isEdibles ? 'Sour Peach Raspberry' : 'Purple Punch #4'}
-                            {...register('name')}
-                        />
-                        {errors.name && <span className="form-error">{errors.name.message}</span>}
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Brand</label>
-                        <input className="form-input" placeholder={isEdibles ? 'Easyday' : 'Brand name'} {...register('brand')} />
-                    </div>
-                </div>
-
-                {/* Price + Strain Type */}
-                <div className="form-grid">
-                    <div className="form-group">
-                        <label className="form-label">Price ($) *</label>
-                        <input
-                            type="number" step="0.01" min="0"
-                            className={`form-input ${errors.price ? 'error' : ''}`}
-                            placeholder="25.00"
-                            {...register('price')}
-                        />
-                        {errors.price && <span className="form-error">{errors.price.message}</span>}
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Strain Type *</label>
-                        <select className="form-select" {...register('type')}>
-                            {PRODUCT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                    </div>
-                </div>
-
-                {/* ── EDIBLES-SPECIFIC fields ── */}
-                {isEdibles && (
-                    <EdiblesFields
-                        register={register}
-                        errors={errors}
-                        effects={effects}
-                        setEffects={setEffects}
-                        setExtraDirty={setExtraDirty}
-                        defaultValues={defaultValues}
-                    />
-                )}
-
-                {/* ── VAPES-SPECIFIC fields ── */}
-                {isVapes && (
-                    <VapesFields
-                        register={register}
-                        errors={errors}
-                        flavors={flavors}
-                        setFlavors={setFlavors}
-                        setExtraDirty={setExtraDirty}
-                    />
-                )}
-
-                {/* ── CARTRIDGES-SPECIFIC fields ── */}
-                {isCartridges && (
-                    <CartridgesFields
-                        register={register}
-                        errors={errors}
-                        effects={cartEffects}
-                        setEffects={setCartEffects}
-                        setExtraDirty={setExtraDirty}
-                    />
-                )}
-
-                {/* ── FLOWER/OTHER fields ── */}
-                {!isEdibles && !isVapes && !isCartridges && (<>
-                    {/* THC + CBD */}
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label className="form-label">THC % *</label>
-                            <input type="number" step="0.01" min="0" max="100"
-                                className={`form-input ${errors.thc ? 'error' : ''}`}
-                                placeholder="22.5" {...register('thc')} />
-                            {errors.thc && <span className="form-error">{errors.thc.message}</span>}
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">CBD %</label>
-                            <input type="number" step="0.01" min="0" max="100"
-                                className={`form-input ${errors.cbd ? 'error' : ''}`}
-                                placeholder="0.5" {...register('cbd')} />
-                            {errors.cbd && <span className="form-error">{errors.cbd.message}</span>}
-                        </div>
-                    </div>
-
-                    {/* Packaging Type */}
-                    <div className="form-group">
-                        <label className="form-label">Packaging Type *</label>
-                        <select className="form-select" {...register('sellType')}>
-                            <option value="Pre-packed">Pre-packed</option>
-                            <option value="Weighted">Weighted</option>
-                        </select>
-                    </div>
-
-                    {/* Price by Weight */}
-                    {watch('sellType') === 'Weighted' && (
-                        <div className="form-group">
-                            <label className="form-label">Price by Weight</label>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
-                                {WEIGHT_TIERS.map(w => (
-                                    <div key={w} className="form-group">
-                                        <label className="form-label" style={{ fontSize: 11 }}>{w}</label>
-                                        <input type="number" step="0.01" min="0" className="form-input"
-                                            placeholder="—"
-                                            value={priceByWeight[w] || ''}
-                                            onChange={e => {
-                                                setPriceByWeight(prev => ({ ...prev, [w]: e.target.value ? Number(e.target.value) : undefined }))
-                                                setExtraDirty(true)
-                                            }}
-                                            style={{ padding: '8px 10px' }}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
+                    {/* Image */}
+                    <ImageUploader value={defaultValues?.imageUrl} onChange={setImageFile} />
+                    {!isEdit && !imageFile && !defaultValues?.imageUrl && (
+                        <div style={{ fontSize: 12, color: 'var(--danger)', marginTop: -8, marginBottom: 8 }}>
+                            Image is required for new products
                         </div>
                     )}
 
-                    {/* Terpenes */}
-                    <div className="form-group">
-                        <label className="form-label">Terpenes</label>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <input type="text" className="form-input" placeholder="Add terpene + Enter"
-                                value={terpeneInput}
-                                onChange={e => setTerpeneInput(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTerpene() } }}
+                    {/* Name + Brand */}
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">Product Name *</label>
+                            <input
+                                className={`form-input ${errors.name ? 'error' : ''}`}
+                                placeholder={isEdibles ? 'Sour Peach Raspberry' : 'Purple Punch #4'}
+                                {...register('name')}
                             />
-                            <button type="button" className="btn btn-secondary btn-sm" onClick={addTerpene}>
-                                <Plus size={14} />
-                            </button>
+                            {errors.name && <span className="form-error">{errors.name.message}</span>}
                         </div>
-                        {terpenes.length > 0 && (
-                            <div className="tag-list">
-                                {terpenes.map(t => (
-                                    <span className="tag" key={t}>
-                                        {t}
-                                        <span className="tag-remove" onClick={() => removeTerpene(t)}><X size={11} /></span>
-                                    </span>
-                                ))}
+                        <div className="form-group">
+                            <label className="form-label">Brand</label>
+                            <input className="form-input" placeholder={isEdibles ? 'Easyday' : 'Brand name'} {...register('brand')} />
+                        </div>
+                    </div>
+
+                    {/* Price + Strain Type */}
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">Price ($) *</label>
+                            <input
+                                type="number" step="0.01" min="0"
+                                className={`form-input ${errors.price ? 'error' : ''}`}
+                                placeholder="25.00"
+                                {...register('price')}
+                            />
+                            {errors.price && <span className="form-error">{errors.price.message}</span>}
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Strain Type *</label>
+                            <select className="form-select" {...register('type')}>
+                                {PRODUCT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* ── EDIBLES-SPECIFIC fields ── */}
+                    {isEdibles && (
+                        <EdiblesFields
+                            register={register}
+                            errors={errors}
+                            effects={effects}
+                            setEffects={setEffects}
+                            setExtraDirty={setExtraDirty}
+                            defaultValues={defaultValues}
+                        />
+                    )}
+
+                    {/* ── VAPES-SPECIFIC fields ── */}
+                    {isVapes && (
+                        <VapesFields
+                            register={register}
+                            errors={errors}
+                            flavors={flavors}
+                            setFlavors={setFlavors}
+                            setExtraDirty={setExtraDirty}
+                        />
+                    )}
+
+                    {/* ── CARTRIDGES-SPECIFIC fields ── */}
+                    {isCartridges && (
+                        <CartridgesFields
+                            register={register}
+                            errors={errors}
+                            effects={cartEffects}
+                            setEffects={setCartEffects}
+                            setExtraDirty={setExtraDirty}
+                        />
+                    )}
+
+                    {/* ── FLOWER/OTHER fields ── */}
+                    {!isEdibles && !isVapes && !isCartridges && (<>
+                        {/* THC + CBD */}
+                        <div className="form-grid">
+                            <div className="form-group">
+                                <label className="form-label">THC % *</label>
+                                <input type="number" step="0.01" min="0" max="100"
+                                    className={`form-input ${errors.thc ? 'error' : ''}`}
+                                    placeholder="22.5" {...register('thc')} />
+                                {errors.thc && <span className="form-error">{errors.thc.message}</span>}
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">CBD %</label>
+                                <input type="number" step="0.01" min="0" max="100"
+                                    className={`form-input ${errors.cbd ? 'error' : ''}`}
+                                    placeholder="0.5" {...register('cbd')} />
+                                {errors.cbd && <span className="form-error">{errors.cbd.message}</span>}
+                            </div>
+                        </div>
+
+                        {/* Packaging Type */}
+                        <div className="form-group">
+                            <label className="form-label">Packaging Type *</label>
+                            <select className="form-select" {...register('sellType')}>
+                                <option value="Pre-packed">Pre-packed</option>
+                                <option value="Weighted">Weighted</option>
+                            </select>
+                        </div>
+
+                        {/* Price by Weight */}
+                        {watch('sellType') === 'Weighted' && (
+                            <div className="form-group">
+                                <label className="form-label">Price by Weight</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+                                    {WEIGHT_TIERS.map(w => (
+                                        <div key={w} className="form-group">
+                                            <label className="form-label" style={{ fontSize: 11 }}>{w}</label>
+                                            <input type="number" step="0.01" min="0" className="form-input"
+                                                placeholder="—"
+                                                value={priceByWeight[w] || ''}
+                                                onChange={e => {
+                                                    setPriceByWeight(prev => ({ ...prev, [w]: e.target.value ? Number(e.target.value) : undefined }))
+                                                    setExtraDirty(true)
+                                                }}
+                                                style={{ padding: '8px 10px' }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
-                    </div>
-                </>)}
 
-                {/* Notes — shared */}
-                <div className="form-group">
-                    <label className="form-label">
-                        {isEdibles ? 'Flavor Notes (max 200 chars)' : 'Flavor / Effect Notes (max 120 chars)'}
-                    </label>
-                    <textarea
-                        className="form-textarea"
-                        placeholder={isEdibles ? 'Sour peach & raspberry with a tangy tropical finish...' : 'Smooth, earthy with hints of grape...'}
-                        maxLength={isEdibles ? 200 : 120}
-                        {...register('notes')}
-                        style={{ minHeight: 64 }}
-                    />
-                </div>
+                        {/* Terpenes */}
+                        <div className="form-group">
+                            <label className="form-label">Terpenes</label>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <input type="text" className="form-input" placeholder="Add terpene + Enter"
+                                    value={terpeneInput}
+                                    onChange={e => setTerpeneInput(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTerpene() } }}
+                                />
+                                <button type="button" className="btn btn-secondary btn-sm" onClick={addTerpene}>
+                                    <Plus size={14} />
+                                </button>
+                            </div>
+                            {terpenes.length > 0 && (
+                                <div className="tag-list">
+                                    {terpenes.map(t => (
+                                        <span className="tag" key={t}>
+                                            {t}
+                                            <span className="tag-remove" onClick={() => removeTerpene(t)}><X size={11} /></span>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </>
+                    )}
 
-                {/* Badge + Toggles — shared */}
-                <div className="form-grid">
+                    {/* Notes — shared */}
                     <div className="form-group">
-                        <label className="form-label">Badge</label>
-                        <select className="form-select" {...register('badge')}>
-                            {BADGES.map(b => <option key={b} value={b}>{b || '— None —'}</option>)}
-                        </select>
+                        <label className="form-label">
+                            {isEdibles ? 'Flavor Notes (max 200 chars)' : 'Flavor / Effect Notes (max 120 chars)'}
+                        </label>
+                        <textarea
+                            className="form-textarea"
+                            placeholder={isEdibles ? 'Sour peach & raspberry with a tangy tropical finish...' : 'Smooth, earthy with hints of grape...'}
+                            maxLength={isEdibles ? 200 : 120}
+                            {...register('notes')}
+                            style={{ minHeight: 64 }}
+                        />
                     </div>
-                    <div className="form-group">
-                        <label className="form-label">Flags</label>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-                            <ToggleField control={control} name="inStock" label="In Stock" />
-                            <ToggleField control={control} name="featured" label="Featured" />
+
+                    {/* Badge + Toggles — shared */}
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">Badge</label>
+                            <select className="form-select" {...register('badge')}>
+                                {BADGES.map(b => <option key={b} value={b}>{b || '— None —'}</option>)}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Flags</label>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
+                                <ToggleField control={control} name="inStock" label="In Stock" />
+                                <ToggleField control={control} name="featured" label="Featured" />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Unsaved changes indicator */}
-            {hasUnsavedChanges && (
-                <div style={{ padding: '8px 16px', background: 'rgba(243,156,18,0.1)', borderTop: '1px solid rgba(243,156,18,0.25)', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#f39c12' }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f39c12', flexShrink: 0 }} />
-                    You have unsaved changes
+                {/* Unsaved changes indicator */}
+                {hasUnsavedChanges && (
+                    <div style={{ padding: '8px 16px', background: 'rgba(243,156,18,0.1)', borderTop: '1px solid rgba(243,156,18,0.25)', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#f39c12' }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f39c12', flexShrink: 0 }} />
+                        You have unsaved changes
+                    </div>
+                )}
+
+                <div className="panel-footer">
+                    <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+                    <button type="submit" className="btn btn-primary" disabled={isSubmitting || uploading}>
+                        {uploading ? <><div className="spinner" style={{ width: 14, height: 14 }} /> Uploading…</>
+                            : isSubmitting ? <><div className="spinner" style={{ width: 14, height: 14 }} /> Saving…</>
+                                : isEdit ? 'Update Product' : 'Add Product'}
+                    </button>
                 </div>
-            )}
+            </form>
+            )
+}
 
-            <div className="panel-footer">
-                <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={isSubmitting || uploading}>
-                    {uploading ? <><div className="spinner" style={{ width: 14, height: 14 }} /> Uploading…</>
-                        : isSubmitting ? <><div className="spinner" style={{ width: 14, height: 14 }} /> Saving…</>
-                            : isEdit ? 'Update Product' : 'Add Product'}
-                </button>
-            </div>
-        </form>
-    )
+            /* ── Pre-Rolls Fields ────────────────────────────────────────────────── */
+            function PrerollsFields({register, errors}) {
+    return (
+            <>
+                <div className="section-title">Pre-Roll Details</div>
+                <div className="form-grid">
+                    <div className="form-group">
+                        <label className="form-label">Weight</label>
+                        <select className="form-input" {...register('weight')}>
+                            {['0.5g', '0.7g', '1g', '1.5g', '2g', '2.5g', '3g', 'Custom'].map(w => (
+                                <option key={w} value={w}>{w}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="form-grid">
+                    <div className="form-group">
+                        <label className="form-label">THC % *</label>
+                        <input
+                            type="number" step="0.01" min="0" max="100"
+                            className={`form-input ${errors.thc ? 'error' : ''}`}
+                            placeholder="22.5"
+                            {...register('thc')}
+                        />
+                        {errors.thc && <span className="form-error">{errors.thc.message}</span>}
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">CBD %</label>
+                        <input
+                            type="number" step="0.01" min="0" max="100"
+                            className={`form-input ${errors.cbd ? 'error' : ''}`}
+                            placeholder="0.0"
+                            {...register('cbd')}
+                        />
+                        {errors.cbd && <span className="form-error">{errors.cbd.message}</span>}
+                    </div>
+                </div>
+            </>
+            )
 }

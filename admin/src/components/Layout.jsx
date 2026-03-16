@@ -23,7 +23,7 @@ const CATEGORIES = [
     { slug: 'edibles', label: 'Edibles' },
     { slug: 'disposables-vapes', label: 'Vapes' },
     { slug: 'cartridges', label: 'Cartridges' },
-    { slug: 'prerolls', label: 'Pre-Rolls' },
+    { slug: 'pre-rolls', label: 'Pre-Rolls' },
     { slug: 'concentrates', label: 'Concentrates' },
     { slug: 'accessories', label: 'Accessories' },
 ]
