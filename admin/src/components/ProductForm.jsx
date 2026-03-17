@@ -396,10 +396,11 @@ function CartridgesFields({ register, errors, effects, setEffects, setExtraDirty
                                 <span className="tag-remove" onClick={() => removeEffect(e)}><X size={11} /></span>
                             </span>
                         ))}
-                )}
                     </div>
+                )}
+            </div>
         </>
-            )
+    )
 }
 
             /* ── Pre-Rolls Fields ────────────────────────────────────────────────── */
@@ -803,47 +804,5 @@ function CartridgesFields({ register, errors, effects, setEffects, setExtraDirty
                     </button>
                 </div>
             </form>
-            )
-}
-
-            /* ── Pre-Rolls Fields ────────────────────────────────────────────────── */
-            function PrerollsFields({register, errors}) {
-    return (
-            <>
-                <div className="section-title">Pre-Roll Details</div>
-                <div className="form-grid">
-                    <div className="form-group">
-                        <label className="form-label">Weight</label>
-                        <select className="form-input" {...register('weight')}>
-                            {['0.5g', '0.7g', '1g', '1.5g', '2g', '2.5g', '3g', 'Custom'].map(w => (
-                                <option key={w} value={w}>{w}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                <div className="form-grid">
-                    <div className="form-group">
-                        <label className="form-label">THC % *</label>
-                        <input
-                            type="number" step="0.01" min="0" max="100"
-                            className={`form-input ${errors.thc ? 'error' : ''}`}
-                            placeholder="22.5"
-                            {...register('thc')}
-                        />
-                        {errors.thc && <span className="form-error">{errors.thc.message}</span>}
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">CBD %</label>
-                        <input
-                            type="number" step="0.01" min="0" max="100"
-                            className={`form-input ${errors.cbd ? 'error' : ''}`}
-                            placeholder="0.0"
-                            {...register('cbd')}
-                        />
-                        {errors.cbd && <span className="form-error">{errors.cbd.message}</span>}
-                    </div>
-                </div>
-            </>
             )
 }

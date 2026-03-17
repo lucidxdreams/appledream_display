@@ -144,9 +144,10 @@ function VapeCard({ product, index, cardW, cardH }) {
     const isNew = (product.badge || '').toLowerCase() === 'new';
     const floatV = (index % 4) + 1;
 
-    // Image larger than edibles — portrait proportion
-    const imgH = Math.min(cardH * 0.48, 180);
-    const imgW = imgH * 0.6;
+    // Disposables imagery must be stunning and dominant (2x bigger than standard)
+    const imgH = Math.min(cardH * 0.55, 340); // Increased from 180 to 340
+    const imgW = imgH * 0.8; // Slightly wider aspect ratio
+
 
     return (
         <div
@@ -257,10 +258,11 @@ export default function VapesLayout({ products = [], categoryTheme }) {
         const padX = 36;
         const padY = 20;
         const avlW = W - padX * 2 - gap * (cols - 1);
-        const cardW = Math.max(130, Math.min(210, Math.floor(avlW / cols)));
+        const cardW = Math.max(160, Math.min(260, Math.floor(avlW / cols))); // Made base cards wider
         const rows = Math.ceil(n / cols);
         const avlH = H - padY * 2 - gap * (rows - 1);
-        const cardH = Math.max(280, Math.min(400, Math.floor(avlH / rows)));
+        const cardH = Math.max(340, Math.min(520, Math.floor(avlH / rows))); // Made base cards significantly taller
+
         return { cardW, cardH, cols };
     }, [products.length, W, H]);
 

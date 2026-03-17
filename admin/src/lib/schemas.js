@@ -80,6 +80,7 @@ export const dealSchema = z.object({
     title: z.string().min(1, 'Title is required').max(200),
     description: z.string().min(1, 'Description is required').max(1000),
     dealType: z.enum(['BOGO', 'Discount', 'Bundle', 'Flash Sale', 'Custom']),
+    displayMode: z.enum(['Standard', 'Full Image Banner', 'Text Only']).optional().default('Standard'),
     originalPrice: z.coerce.number().min(0).max(50000).nullable().optional(),
     dealPrice: z.coerce.number().min(0).max(50000).nullable().optional(),
     displayPriority: z.coerce.number().int().min(1).max(100).optional().default(1),

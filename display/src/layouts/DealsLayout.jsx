@@ -1,14 +1,14 @@
 /**
- * DealsLayout.jsx — "The Vault" (Phase 4)
+ * DealsLayout.jsx — "Bento Box" Design (Redesign)
  *
  * Reads active deals from Firestore (deals collection).
- * Selects layout variant based on deal count:
- *   0 deals → "No Active Deals" animated fallback
- *   1 deal  → Full Bleed Hero (full screen single card)
- *   2-3     → Hero (60%) + Side Panel (40%)
- *   4-6     → Symmetrical 3-column grid
+ * Sorts them by priority.
  *
- * GSAP "Vault Open" entrance animation (1.8s) runs on each mount.
+ * Responsive Grid Rules:
+ * - Built on CSS Grid
+ * - displayMode "Full Image Banner" will span full width natively in CSS
+ * - displayMode "Standard" will map to smaller bento squares/rectangles
+ * - displayMode "Text Only" maps to compact informational strips
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -16,7 +16,6 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import gsap from 'gsap';
 import DealCard from '../components/DealCard';
-import EmberCanvas from '../components/EmberCanvas';
 import './DealsLayout.css';
 
 /* ── Firestore active-deal filter ─────────────────────────────────── */
@@ -34,58 +33,16 @@ function isActive(deal) {
 /* ── No-Deals Fallback ────────────────────────────────────────────── */
 function NoDeals() {
     return (
-        <div className="vault-no-deals">
-            <div className="vault-no-deals__art">
-                <div className="vault-no-deals__ring vault-no-deals__ring--1" />
-                <div className="vault-no-deals__ring vault-no-deals__ring--2" />
-                <div className="vault-no-deals__ring vault-no-deals__ring--3" />
-                <span className="vault-no-deals__icon">🔒</span>
-            </div>
-            <h2 className="vault-no-deals__heading">The Vault is Resting</h2>
-            <p className="vault-no-deals__sub">New deals dropping soon — check back shortly</p>
-            <div className="vault-no-deals__loyalty">
-                <span className="vault-no-deals__loyalty-icon">⭐</span>
-                <span className="vault-no-deals__loyalty-text">
+        <div className="bento-no-deals">
+            <div className="bento-no-deals__icon">🎁</div>
+            <h2 className="bento-no-deals__heading">NO ACTIVE DEALS</h2>
+            <p className="bento-no-deals__sub">Check back shortly for new promotions</p>
+            <div className="bento-no-deals__loyalty">
+                <span className="bento-no-deals__loyalty-icon">⭐</span>
+                <span className="bento-no-deals__loyalty-text">
                     Ask about our Loyalty Program — earn points on every purchase
                 </span>
             </div>
-        </div>
-    );
-}
-
-/* ── Full-Bleed Hero (1 deal) ─────────────────────────────────────── */
-function HeroLayout({ deals }) {
-    return (
-        <div className="vault-layout vault-layout--hero">
-            <DealCard deal={deals[0]} isHero index={0} />
-        </div>
-    );
-}
-
-/* ── Hero + Side Panel (2-3 deals) ───────────────────────────────── */
-function HeroSideLayout({ deals }) {
-    const [hero, ...rest] = deals;
-    return (
-        <div className="vault-layout vault-layout--hero-side">
-            <div className="vault-hero-pane">
-                <DealCard deal={hero} isHero index={0} />
-            </div>
-            <div className="vault-side-pane">
-                {rest.map((deal, i) => (
-                    <DealCard key={deal.id} deal={deal} isSide index={i + 1} />
-                ))}
-            </div>
-        </div>
-    );
-}
-
-/* ── Symmetrical Grid (4-6 deals) ────────────────────────────────── */
-function GridLayout({ deals }) {
-    return (
-        <div className="vault-layout vault-layout--grid">
-            {deals.map((deal, i) => (
-                <DealCard key={deal.id} deal={deal} index={i} />
-            ))}
         </div>
     );
 }
@@ -108,6 +65,10 @@ export default function DealsLayout() {
                 const items = snap.docs
                     .map((d) => ({ id: d.id, ...d.data() }))
                     .filter(isActive);
+                
+                // Sort by priority
+                items.sort((a, b) => (a.displayPriority ?? 99) - (b.displayPriority ?? 99));
+                
                 setDeals(items);
                 setLoading(false);
             },
@@ -119,96 +80,70 @@ export default function DealsLayout() {
         return () => unsub();
     }, []);
 
-    /* ── GSAP Vault Open animation ──────────────────────────────── */
+    /* ── GSAP Bento Grid animation ──────────────────────────────── */
     useEffect(() => {
-        if (loading) return;
+        if (loading || deals.length === 0) return;
         if (animatedRef.current) return;
         animatedRef.current = true;
 
         const ctx = gsap.context(() => {
             const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-            // 1. Concentric rings expand from center
-            tl.from('.vault-rings .vault-ring', {
-                scale: 0,
-                opacity: 0,
-                duration: 0.5,
-                stagger: 0.08,
-                ease: 'power4.out',
-            });
+            // Animate Header
+            tl.fromTo('.bento-header', 
+                { opacity: 0, filter: 'blur(10px)', y: -30 },
+                { opacity: 1, filter: 'blur(0px)', y: 0, duration: 0.8 }
+            );
 
-            // 2. Ember particles fade in
-            tl.to('.ember-canvas', {
-                opacity: 1,
-                duration: 0.3,
-            }, '-=0.2');
-
-            // 3. "DEALS" header slams in (elastic)
-            tl.from('.deals-header', {
-                y: -100,
-                opacity: 0,
-                duration: 0.4,
-                ease: 'back.out(1.7)',
-            }, '-=0.1');
-
-            // 4. Deal cards fall + bounce into position (stagger)
-            tl.from('.deal-card', {
-                y: -200,
-                opacity: 0,
-                stagger: 0.15,
-                duration: 0.5,
-                ease: 'bounce.out',
-            }, '-=0.2');
-
-            // 5. Countdown timers snap in (elastic)
-            tl.from('.countdown-timer', {
-                scale: 0,
-                opacity: 0,
-                duration: 0.3,
-                ease: 'elastic.out(1, 0.3)',
-            }, '-=0.1');
-
-            // 6. Glow borders animate on
-            tl.from('.deal-card', {
-                boxShadow: 'none',
-                duration: 0.4,
-            }, '-=0.1');
+            // Stagger in the bento boxes
+            tl.fromTo('.bento-grid-item',
+                { opacity: 0, scale: 0.95, y: 40 },
+                { opacity: 1, scale: 1, y: 0, stagger: 0.1, duration: 0.7, ease: 'back.out(1.2)' },
+                '-=0.4'
+            );
         }, sceneRef);
 
         return () => ctx.revert();
-    }, [loading]);
+    }, [loading, deals]);
 
-    /* ── Layout variant selection ───────────────────────────────── */
-    function renderLayout() {
-        if (loading) return null;
-        if (deals.length === 0) return <NoDeals />;
-        if (deals.length === 1) return <HeroLayout deals={deals} />;
-        if (deals.length <= 3) return <HeroSideLayout deals={deals} />;
-        return <GridLayout deals={deals.slice(0, 6)} />;
-    }
+
+    if (loading) return null;
 
     return (
-        <div ref={sceneRef} className="vault-scene">
-            {/* Ember particles */}
-            <EmberCanvas />
-
-            {/* Concentric rings (vault open effect) */}
-            <div className="vault-rings" aria-hidden="true">
-                {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className={`vault-ring vault-ring--${i}`} />
-                ))}
-            </div>
+        <div ref={sceneRef} className="bento-scene">
+            {/* Animated Ambient Background Glows */}
+            <div className="bento-ambient-glow glow-1" />
+            <div className="bento-ambient-glow glow-2" />
 
             {/* Page header */}
-            <header className="deals-header">
-                <span className="deals-header__flame">🔥</span>
-                <span className="deals-header__text">DEALS</span>
-                <span className="deals-header__flame">🔥</span>
+            <header className="bento-header">
+                <span className="bento-header__text">Featured Deals</span>
             </header>
 
             {/* Content area */}
-            <div className="vault-content">
-                {renderLayout()}
+            <div className="bento-content">
+                {deals.length === 0 ? (
+                    <NoDeals />
+                ) : (
+                    <div className="bento-grid">
+                        {deals.map((deal, i) => {
+                            // Determine the CSS class based on the mode
+                            const mode = deal.displayMode || 'Standard';
+                            let spanClass = 'bento-grid-item--standard';
+                            if (mode === 'Full Image Banner') spanClass = 'bento-grid-item--banner';
+                            if (mode === 'Text Only') spanClass = 'bento-grid-item--text';
+
+                            // Edge case: if it's the only deal, let the standard box span everything
+                            if (deals.length === 1 && mode !== 'Text Only') spanClass = 'bento-grid-item--banner';
+
+                            return (
+                                <div key={deal.id} className={`bento-grid-item ${spanClass}`}>
+                                    <DealCard deal={deal} mode={mode} />
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );

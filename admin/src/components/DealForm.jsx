@@ -43,6 +43,7 @@ export default function DealForm({ defaultValues, onSave, onCancel }) {
             title: '',
             description: '',
             dealType: 'Discount',
+            displayMode: 'Standard',
             originalPrice: '',
             dealPrice: '',
             displayPriority: 1,
@@ -57,6 +58,7 @@ export default function DealForm({ defaultValues, onSave, onCancel }) {
 
     const originalPrice = watch('originalPrice')
     const dealPrice = watch('dealPrice')
+    const displayMode = watch('displayMode')
 
     const discount =
         originalPrice && dealPrice && Number(originalPrice) > 0
@@ -82,8 +84,10 @@ export default function DealForm({ defaultValues, onSave, onCancel }) {
 
             const dealData = {
                 ...data,
-                originalPrice: data.originalPrice ? Number(data.originalPrice) : null,
-                dealPrice: data.dealPrice ? Number(data.dealPrice) : null,
+                // If the user selected Full Image Banner, we enforce a clean slate for text fields
+                description: data.displayMode === 'Full Image Banner' ? '' : data.description,
+                originalPrice: data.displayMode === 'Full Image Banner' ? null : (data.originalPrice ? Number(data.originalPrice) : null),
+                dealPrice: data.displayMode === 'Full Image Banner' ? null : (data.dealPrice ? Number(data.dealPrice) : null),
                 displayPriority: Number(data.displayPriority) || 1,
                 startTime: data.startTime ? new Date(data.startTime) : null,
                 endTime: data.endTime ? new Date(data.endTime) : null,
@@ -112,24 +116,34 @@ export default function DealForm({ defaultValues, onSave, onCancel }) {
                     {errors.title && <span className="form-error">{errors.title.message}</span>}
                 </div>
 
-                {/* Description */}
-                <div className="form-group">
-                    <label className="form-label">Description *</label>
-                    <textarea
-                        className={`form-textarea ${errors.description ? 'error' : ''}`}
-                        placeholder="Buy one, get one FREE on all pre-rolls..."
-                        {...register('description')}
-                        style={{ minHeight: 72 }}
-                    />
-                    {errors.description && <span className="form-error">{errors.description.message}</span>}
-                </div>
+                {/* Description - Hidded on Banner */}
+                {displayMode !== 'Full Image Banner' && (
+                    <div className="form-group">
+                        <label className="form-label">Description *</label>
+                        <textarea
+                            className={`form-textarea ${errors.description ? 'error' : ''}`}
+                            placeholder="Buy one, get one FREE on all pre-rolls..."
+                            {...register('description')}
+                            style={{ minHeight: 72 }}
+                        />
+                        {errors.description && <span className="form-error">{errors.description.message}</span>}
+                    </div>
+                )}
 
-                {/* Type + Priority */}
+                {/* Type, Mode + Priority */}
                 <div className="form-grid">
                     <div className="form-group">
-                        <label className="form-label">Deal Type *</label>
+                        <label className="form-label">Deal Type</label>
                         <select className="form-select" {...register('dealType')}>
                             {DEAL_TYPES.map((t) => <option key={t}>{t}</option>)}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Display Format</label>
+                        <select className="form-select" {...register('displayMode')}>
+                            <option value="Standard">Standard Card (Image + Text)</option>
+                            <option value="Full Image Banner">Full Image Banner</option>
+                            <option value="Text Only">Text Only</option>
                         </select>
                     </div>
                     <div className="form-group">
@@ -144,36 +158,38 @@ export default function DealForm({ defaultValues, onSave, onCancel }) {
                     </div>
                 </div>
 
-                {/* Pricing */}
-                <div className="form-grid">
-                    <div className="form-group">
-                        <label className="form-label">Original Price ($)</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            className={`form-input ${errors.originalPrice ? 'error' : ''}`}
-                            placeholder="40.00"
-                            {...register('originalPrice')}
-                        />
-                        {errors.originalPrice && <span className="form-error">{errors.originalPrice.message}</span>}
+                {/* Pricing - Hidden on Banner */}
+                {displayMode !== 'Full Image Banner' && (
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">Original Price ($)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                className={`form-input ${errors.originalPrice ? 'error' : ''}`}
+                                placeholder="40.00"
+                                {...register('originalPrice')}
+                            />
+                            {errors.originalPrice && <span className="form-error">{errors.originalPrice.message}</span>}
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Deal Price ($)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                className={`form-input ${errors.dealPrice ? 'error' : ''}`}
+                                placeholder="20.00"
+                                {...register('dealPrice')}
+                            />
+                            {errors.dealPrice && <span className="form-error">{errors.dealPrice.message}</span>}
+                        </div>
                     </div>
-                    <div className="form-group">
-                        <label className="form-label">Deal Price ($)</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            className={`form-input ${errors.dealPrice ? 'error' : ''}`}
-                            placeholder="20.00"
-                            {...register('dealPrice')}
-                        />
-                        {errors.dealPrice && <span className="form-error">{errors.dealPrice.message}</span>}
-                    </div>
-                </div>
+                )}
 
                 {/* Discount badge */}
-                {discount !== null && discount > 0 && (
+                {displayMode !== 'Full Image Banner' && discount !== null && discount > 0 && (
                     <div
                         style={{
                             display: 'inline-flex',
@@ -223,11 +239,13 @@ export default function DealForm({ defaultValues, onSave, onCancel }) {
                 </div>
 
                 {/* Image */}
-                <ImageUploader
-                    value={defaultValues?.imageUrl}
-                    onChange={setImageFile}
-                    label="Deal Image (optional)"
-                />
+                {displayMode !== 'Text Only' && (
+                    <ImageUploader
+                        value={defaultValues?.imageUrl}
+                        onChange={setImageFile}
+                        label={displayMode === 'Full Image Banner' ? "Banner Image (16:9 recommended) *" : "Deal Image (optional)"}
+                    />
+                )}
 
                 {/* Active toggle */}
                 <div className="form-group">
