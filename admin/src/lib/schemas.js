@@ -13,6 +13,7 @@ export const productSchema = z.object({
     badge: z.string().optional().default(''),
     featured: z.boolean().optional().default(false),
     inStock: z.boolean().optional().default(true),
+    sku: z.string().optional().default(''),
 })
 
 export const ediblesSchema = z.object({
@@ -26,6 +27,7 @@ export const ediblesSchema = z.object({
     badge: z.string().optional().default(''),
     featured: z.boolean().optional().default(false),
     inStock: z.boolean().optional().default(true),
+    sku: z.string().optional().default(''),
 })
 
 export const vapesSchema = z.object({
@@ -42,6 +44,7 @@ export const vapesSchema = z.object({
     badge: z.string().optional().default(''),
     featured: z.boolean().optional().default(false),
     inStock: z.boolean().optional().default(true),
+    sku: z.string().optional().default(''),
 })
 
 export const cartridgesSchema = z.object({
@@ -60,6 +63,7 @@ export const cartridgesSchema = z.object({
     badge: z.string().optional().default(''),
     featured: z.boolean().optional().default(false),
     inStock: z.boolean().optional().default(true),
+    sku: z.string().optional().default(''),
 })
 
 export const prerollsSchema = z.object({
@@ -74,6 +78,7 @@ export const prerollsSchema = z.object({
     badge: z.string().optional().default(''),
     featured: z.boolean().optional().default(false),
     inStock: z.boolean().optional().default(true),
+    sku: z.string().optional().default(''),
 })
 
 export const dealSchema = z.object({

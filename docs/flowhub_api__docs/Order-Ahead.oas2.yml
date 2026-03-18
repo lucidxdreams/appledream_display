@@ -1,0 +1,517 @@
+swagger: '2.0'
+info:
+  title: Order Ahead Ingest
+  version: '1.0'
+  license:
+    name: ''
+  contact:
+    name: Devs
+    email: devs@flowhub.com
+  description: Definition of the Order Ahead Ingest Service
+host: api.flowhub.co
+paths:
+  /order-ahead/v0/create:
+    post:
+      operationId: newOrder
+      summary: Order ahead ingest
+      tags:
+        - orderAhead
+      description: Processes incoming order ahead requests
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/Order'
+          description: ''
+      responses:
+        '200':
+          $ref: '#/responses/order-response'
+        '400':
+          description: Something is wrong
+          schema:
+            type: object
+        '401':
+          $ref: '#/responses/unauthorized-response'
+        '403':
+          description: Forbidden
+        '500':
+          $ref: '#/responses/error-reponse'
+      security:
+        - Auth0: []
+  '/orders/{orderId}':
+    patch:
+      operationId: patchOrder
+      summary: Order ahead ingest
+      tags:
+        - orderAhead
+      description: Updates an existing order.
+      produces:
+        - application/json
+      parameters:
+        - name: orderId
+          required: true
+          in: path
+          type: string
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/Order'
+      responses:
+        '200':
+          $ref: '#/responses/order-response'
+        '400':
+          description: Something is wrong
+          schema:
+            type: object
+        '401':
+          $ref: '#/responses/unauthorized-response'
+        '403':
+          description: Forbidden
+        '500':
+          $ref: '#/responses/error-reponse'
+      security:
+        - Auth0: []
+  '/orderPostback/{orderId}':
+    post:
+      operationId: orderPostback
+      summary: ''
+      tags:
+        - orderAhead
+      description: Sends an outgoing order status update via an order's postbackUrl.
+      parameters:
+        - in: path
+          name: orderId
+          type: string
+          required: true
+      responses:
+        '204':
+          description: Postback received
+        '400':
+          description: Something is wrong
+          schema:
+            type: object
+        '401':
+          $ref: '#/responses/unauthorized-response'
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          $ref: '#/responses/error-reponse'
+      security:
+        - Auth0: []
+      x-private: true
+  '/order-ahead/v0/orderStatus/{orderId}':
+    get:
+      operationId: orderStatus
+      summary: ''
+      tags:
+        - orderAhead
+      description: Returns the current status of an order.
+      parameters:
+        - in: path
+          name: orderId
+          type: string
+          required: true
+      produces:
+        - application/json
+      responses:
+        '200':
+          $ref: '#/responses/order-response'
+        '400':
+          description: Something is wrong
+          schema:
+            type: object
+        '401':
+          $ref: '#/responses/unauthorized-response'
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          $ref: '#/responses/error-reponse'
+      security:
+        - Auth0: []
+    parameters:
+      - name: orderId
+        in: path
+        type: string
+        required: true
+  /metrics:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: string
+      summary: API Metrics
+      produces:
+        - text/plain
+      description: Internal use only
+      operationId: metrics
+      tags:
+        - metrics
+      x-private: true
+  /authTest:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: string
+      summary: Authentication Test
+      produces:
+        - text/plain
+      description: Internal use only
+      operationId: authTest
+      tags:
+        - authTest
+      x-private: true
+  /health:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: string
+      summary: API Healthcheck
+      produces:
+        - text/plain
+      description: Internal use only
+      operationId: health
+      tags:
+        - health
+  /version:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: string
+      summary: API Version
+      produces:
+        - text/plain
+      description: Internal use only
+      operationId: version
+      tags:
+        - version
+      security:
+        - Auth0: []
+  /swaggerspec:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema: {}
+      summary: Swagger
+      produces:
+        - text/html
+      description: Internal use only
+      operationId: swaggerspec
+      tags:
+        - swagger
+  /swaggerspec/swagger-ui.css:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema: {}
+      summary: Swagger css
+      produces:
+        - text/css
+      description: Internal use only
+      operationId: swaggercss
+      tags:
+        - swagger
+  /swaggerspec/swagger-ui-bundle.js:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema: {}
+      summary: Swagger bundle
+      produces:
+        - application/json
+      description: Internal use only
+      operationId: swaggerbundle
+      tags:
+        - swagger
+  /swaggerspec/favicon-32x32.png:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema: {}
+      summary: Swagger bundle
+      produces:
+        - text/plain
+      description: Internal use only
+      operationId: swaggerFavicon
+      tags:
+        - swagger
+  /swaggerspec/favicon-16x16.png:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema: {}
+      summary: Swagger bundle
+      produces:
+        - text/plain
+      description: Internal use only
+      operationId: favicon
+      tags:
+        - swagger
+  /swaggerspec/swagger-ui-standalone-preset.js:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema: {}
+        '401':
+          $ref: '#/responses/unauthorized-response'
+        '403':
+          description: Forbidden
+        '500':
+          $ref: '#/responses/error-reponse'
+      summary: Swagger standalone
+      produces:
+        - application/javascript
+      description: Internal use only
+      operationId: swaggerstandalone
+      tags:
+        - swagger
+  /swaggerspec/api-docs:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema: {}
+      summary: Swagger
+      produces:
+        - application/json
+      description: Internal use only
+      operationId: swagger
+      tags:
+        - swagger
+securityDefinitions:
+  Auth0:
+    type: oauth2
+    flow: accessCode
+    authorizationUrl: 'https://flowhub.auth0.com/o/oauth2/auth'
+    tokenUrl: 'https://flowhub.auth0.com/0/oauth2/token'
+    description: OAuth2 Security via Access Token
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - Auth0: []
+definitions:
+  address:
+    type: object
+    properties:
+      street1:
+        type: string
+      street2:
+        type: string
+      city:
+        type: string
+      state:
+        type: string
+      zip:
+        type: string
+    required:
+      - street1
+      - city
+      - state
+      - zip
+  Customer:
+    type: object
+    properties:
+      firstName:
+        type: string
+        example: Jane
+      lastName:
+        type: string
+        example: Smith
+      birthDate:
+        type: string
+        format: date
+      externalId:
+        type: string
+      email:
+        type: string
+        example: jane@customer.example
+      phone:
+        description: An E.164 formatted phone number
+        type: string
+        example: '+13035553718'
+      medRecOrBoth:
+        type: string
+        enum:
+          - med
+          - rec
+          - both
+      medId:
+        type: string
+        description: required when customer is medical
+      medExp:
+        type: string
+        description: required medId is present
+  Order:
+    type: object
+    required:
+      - externalCreatedAt
+      - customer
+      - orderItems
+    properties:
+      address:
+        $ref: '#/definitions/address'
+      externalCreatedAt:
+        type: string
+        format: date-time
+      customer:
+        $ref: '#/definitions/Customer'
+      customerId:
+        type: string
+        x-stoplight:
+          id: gjcq8e5g6hp8a
+        description: '*Required if redeeming loyalty points.*  '
+      cartDiscountNote:
+        type: string
+        description: A note describing discounts applied to the cart.
+      customerNote:
+        type: string
+        description: A note provided by the customer.
+      orderItems:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/definitions/OrderItem'
+      orderType:
+        type: string
+        enum:
+          - delivery
+          - pickup
+          - kiosk
+      requestedFulfillmentTimeStart:
+        type: string
+        format: date-time
+      requestedFulfillmentTimeEnd:
+        type: string
+        format: date-time
+      postbackUrl:
+        type: string
+        description: A URL to post back to with updates about the order.
+      fees:
+        type: array
+        items:
+          $ref: '#/definitions/Fees'
+      loyaltyPointsInPennies:
+        type: integer
+        x-stoplight:
+          id: l8kwqvxcc0aeo
+        description: '*Requires customerId to use.*  Value of loyalty points to redeem in pennies'
+  OrderItem:
+    type: object
+    required:
+      - productId
+      - quantityPurchased
+    properties:
+      productId:
+        type: number
+      quantityPurchased:
+        type: number
+        minimum: 1
+      discountNote:
+        type: string
+  PatchOrder:
+    $ref: '#/definitions/Order'
+  Fees:
+    type: object
+    title: fees
+    properties:
+      name:
+        type: string
+      amount:
+        type: number
+        description: In pennies
+responses:
+  order-response:
+    description: An object representing the current state of an order.
+    schema:
+      type: object
+      properties:
+        customerExternalId:
+          description: The external customer ID provided during order creation.
+          type: string
+        orderId:
+          type: string
+        status:
+          type: string
+          enum:
+            - new
+            - started
+            - ready
+            - inQueue
+            - inTransit
+            - delivered
+            - unableToComplete
+            - unableToVerify
+            - deleted
+            - sold
+      required:
+        - customerExternalId
+        - orderId
+        - status
+  error-reponse:
+    description: Error Response
+    schema:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+  unauthorized-response:
+    description: ''
+    schema:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              detail:
+                type: string
+              code:
+                type: string
+              ids:
+                type: array
+                items:
+                  type: integer
+        status:
+          type: integer
+  new-response:
+    description: ''
+    schema:
+      type: object
+      properties: {}
+tags:
+  - name: metrics
+  - name: orderAhead
+  - name: health
+  - name: version
+  - name: authTest
+  - name: swagger

@@ -1,0 +1,1061 @@
+swagger: '2.0'
+info:
+  title: Orders API
+  version: '1.0'
+  license:
+    name: ''
+  contact:
+    name: API Devs
+    email: api@flowhub.com
+  description: Definition of the Orders calls
+host: api.flowhub.co
+paths:
+  /v1/customers/findByPhoneNumber:
+    get:
+      operationId: customersfindByPhoneNumber
+      summary: Customer by phone number
+      tags:
+        - Customers
+        - customers
+        - v1
+      description: This method should be used to return information on a customer in the Flowhub system Response based on the phone number associated with the customer
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/parameters/trait:query:phoneNumber'
+        - in: header
+          name: key
+          type: string
+        - in: header
+          name: clientId
+          type: string
+      responses:
+        '200':
+          $ref: '#/responses/customer-response'
+        '400':
+          description: id of a Customer is required on request
+        '401':
+          $ref: '#/responses/unauthorized-response'
+        '404':
+          description: Customer not found
+        '500':
+          $ref: '#/responses/error-reponse'
+      security:
+        - Basic Auth: []
+  '/v1/customers/{customerId}':
+    get:
+      operationId: customersfindByCustomerId
+      summary: Customer by Id
+      tags:
+        - Customers
+        - customers
+        - v1
+      description: This method should be used to return information on a customer in the Flowhub system Response based on the customer id
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/parameters/trait:query:customerId'
+        - $ref: '#/parameters/trait:path:customerId'
+        - in: header
+          name: key
+          type: string
+        - in: header
+          name: clientId
+          type: string
+        - type: string
+          in: query
+          name: store_id
+          description: 'This parameter should be included if querying loyalty point values for a specific location. Store Id is referred to as location_id in some places. '
+      responses:
+        '200':
+          $ref: '#/responses/customer-response'
+        '401':
+          $ref: '#/responses/unauthorized-response'
+        '404':
+          description: Customer not found
+        '500':
+          $ref: '#/responses/error-reponse'
+      security:
+        - Basic Authorization: []
+    parameters:
+      - name: customerId
+        in: path
+        type: string
+        required: true
+  '/v1/orders/findByCustomerId/{customerId}':
+    get:
+      operationId: ordersfindById
+      summary: Orders by Customer Id
+      tags:
+        - Orders
+        - orders
+        - v1
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/parameters/trait:query:createdAfter'
+        - $ref: '#/parameters/traig:query:createdBefore'
+        - $ref: '#/parameters/trait:query:page'
+        - $ref: '#/parameters/trait:query:pageSize'
+        - $ref: '#/parameters/trait:query:orderBy'
+        - $ref: '#/parameters/trait:path:customerId'
+        - in: header
+          name: key
+          type: string
+        - in: header
+          name: clientId
+          type: string
+      responses:
+        '200':
+          $ref: '#/responses/orders-response'
+        '401':
+          $ref: '#/responses/unauthorized-response'
+        '404':
+          description: Customer not found
+        '500':
+          $ref: '#/responses/error-reponse'
+      description: Find orders by Customer ID
+      security:
+        - Basic Authorization: []
+  '/v1/orders/findByLocationId/{importId}':
+    get:
+      operationId: ordersfindByLocationId
+      tags:
+        - Orders
+        - orders
+        - v1
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/parameters/trait:query:createdAfter'
+        - $ref: '#/parameters/traig:query:createdBefore'
+        - $ref: '#/parameters/trait:query:page'
+        - $ref: '#/parameters/trait:query:pageSize'
+        - $ref: '#/parameters/trait:query:orderBy'
+        - in: header
+          name: key
+          type: string
+        - in: header
+          name: clientId
+          type: string
+        - in: path
+          name: importId
+          type: string
+          required: true
+      responses:
+        '200':
+          $ref: '#/responses/orders-response'
+        '400':
+          description: id of a Location is required on request
+        '401':
+          $ref: '#/responses/unauthorized-response'
+        '404':
+          description: Location Id not found
+        '500':
+          $ref: '#/responses/error-reponse'
+      summary: Orders by Location
+      description: |-
+        Find orders by location. Use the /v0/clientsLocations endpoint to get the importId for each location. 
+
+        LocationId = ImportId for these /v1/ endpoints.
+      security:
+        - Basic Authorization: []
+    parameters:
+      - name: importId
+        in: path
+        type: string
+        required: true
+  /metrics:
+    get:
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: string
+      summary: API Metrics
+      produces:
+        - text/plain
+      description: Internal use only
+      security:
+        - Auth0: []
+      operationId: metrics
+      tags:
+        - metrics
+      x-private: true
+  /v1/customers/?:
+    get:
+      responses:
+        '200':
+          $ref: '#/responses/customer-response'
+      summary: Customers
+      description: This endpoint will GET data for all customers
+      operationId: Customers All
+      tags:
+        - Customers
+        - customers
+        - v1
+      produces:
+        - application/json
+      security:
+        - Basic Authorization: []
+      parameters:
+        - in: query
+          name: created_after
+          type: string
+          format: date
+        - in: query
+          name: page
+          type: string
+          default: '10'
+        - in: query
+          name: page_size
+          type: integer
+          default: asc
+        - in: query
+          name: order_by
+          type: string
+        - in: query
+          name: created_before
+          type: string
+          format: date
+        - in: header
+          name: key
+          type: string
+        - in: header
+          name: ClientId
+          type: string
+        - type: string
+          in: query
+          name: updated_after
+        - type: string
+          in: query
+          name: updated_before
+  '/v1/customer?store_id={store_id}':
+    post:
+      summary: Customer Create
+      responses: {}
+      operationId: customer-create
+      x-stoplight:
+        id: 3wdkix4bteck9
+      description: |-
+        Creates a new customer. 
+
+        This endpoint requires additional permissions that must be granted by Flowhub.  If you attempt this request and receive an unauthorized response please reach out to help@flowhub.com to request those additional permissions. 
+      parameters:
+        - type: string
+          in: query
+          name: store_id
+          description: 'ID of the customer''s primary store. Though customers aren''t store-specific, this setting determines which store''s settings are used during creation.'
+          required: true
+        - in: body
+          name: body
+          schema:
+            type: object
+            x-examples:
+              Example 1:
+                id: a7bbef36-7aed-4346-84f6-236f06214099
+                createdAt: '2023-06-15T22:57:35.836575Z'
+                updatedAt: '2023-06-15T22:57:35.836575Z'
+                name: Jane Doe
+                type: recCustomer
+                birthDate: '1990-05-15'
+                isLoyal: true
+                loyaltyPoints: 120
+                loyaltyEnrolledAt: '2023-01-01T10:00:00Z'
+                phone: (555) 123-4567
+                email: jane.doe@example.com
+                streetAddress1: 123 Main St
+                streetAddress2: Apt 4B
+                city: Springfield
+                state: CA
+                zip: '90210'
+                consentsToPromotionalEmail: true
+                consentsToPromotionalSMS: false
+                groups:
+                  - groupId: group-001
+                    name: VIP
+                  - groupId: group-002
+                    name: Newsletter
+            required:
+              - birthDate
+              - name
+              - state
+              - type
+            properties:
+              birthDate:
+                type: string
+                description: The customer's birth date. Must be in the format yyyy-mm-dd.
+              city:
+                type: string
+              consentsToPromotionalEmail:
+                type: boolean
+                description: Whether or not the customer consents to receiving promotional emails. If not provided this will default to false.
+              consentsToPromotionalSMS:
+                type: boolean
+                description: Whether or not the customer consents to receiving promotional SMS messages. If not provided this will default to false.
+              email:
+                type: string
+              groups:
+                type: array
+                description: Groups to which the customer belongs
+                items:
+                  type: object
+                  properties:
+                    groupId:
+                      type: string
+              isLoyal:
+                type: boolean
+                description: Whether or not the customer is enrolled in the loyalty program. If not provided this will default to false.
+              loyaltyPoints:
+                type: integer
+              medId:
+                type: string
+                description: Customer's medical ID number.
+              medIdExpiration:
+                type: string
+                description: Expiration date of the customer's medical ID. If provided must be in format yyyy-mm-dd.
+              name:
+                type: string
+                description: Customer's full name (both first & last)
+              phone:
+                type: string
+              state:
+                type: string
+                description: 2-letter abbreviation of the state on the customer's ID.
+              stateId:
+                type: string
+                description: Customer's state identification number
+              stateIdExpiration:
+                type: string
+                description: Expiration date for the customer's state ID. If provided must be in format yyyy-mm-dd.
+              streetAddress1:
+                type: string
+              streetAddress2:
+                type: string
+              type:
+                type: string
+              zip:
+                type: string
+          description: ''
+        - type: string
+          in: header
+          name: clientId
+          description: Client ID where the customer will be created
+          required: true
+        - type: string
+          in: header
+          name: key
+          description: API Key used to authenticate the request
+          required: true
+      security:
+        - Basic Authorization: []
+      tags:
+        - customers
+  '/v1/customer/{customerId}?store_id={store_id}':
+    parameters:
+      - type: string
+        name: customerId
+        in: path
+        required: true
+        description: ID of the customer being updated
+    put:
+      summary: Customer Update
+      tags:
+        - customers
+      responses: {}
+      operationId: put-v1-customer
+      x-stoplight:
+        id: 1gslht3xzk19e
+      description: |-
+        Updates an existing customer. NOTE:  Any field that is not included in the body of the request will be removed from the customer.
+
+        This endpoint requires additional permissions that must be granted by Flowhub. If you attempt this request and receive an unauthorized response please reach out to help@flowhub.com to request those additional permissions.
+      parameters:
+        - type: string
+          in: query
+          name: store_id
+          description: 'ID of the customer''s primary store. Though customers aren''t store-specific, this setting determines which store''s settings are used while updating the customer.'
+          required: true
+        - in: body
+          name: body
+          schema:
+            type: object
+            x-examples:
+              Example 1:
+                id: a7bbef36-7aed-4346-84f6-236f06214099
+                createdAt: '2023-06-15T22:57:35.836575Z'
+                updatedAt: '2023-06-15T22:57:35.836575Z'
+                name: Jane Doe
+                type: recCustomer
+                birthDate: '1990-05-15'
+                isLoyal: true
+                loyaltyPoints: 120
+                loyaltyEnrolledAt: '2023-01-01T10:00:00Z'
+                phone: (555) 123-4567
+                email: jane.doe@example.com
+                streetAddress1: 123 Main St
+                streetAddress2: Apt 4B
+                city: Springfield
+                state: CA
+                zip: '90210'
+                consentsToPromotionalEmail: true
+                consentsToPromotionalSMS: false
+                groups:
+                  - groupId: group-001
+                    name: VIP
+                  - groupId: group-002
+                    name: Newsletter
+            required:
+              - birthDate
+              - name
+              - state
+              - type
+            properties:
+              birthDate:
+                type: string
+                description: The customer's birth date. Must be in the format yyyy-mm-dd.
+              city:
+                type: string
+              consentsToPromotionalEmail:
+                type: boolean
+                description: Whether or not the customer consents to receiving promotional emails. If not provided this will default to false.
+              consentsToPromotionalSMS:
+                type: boolean
+                description: Whether or not the customer consents to receiving promotional SMS messages. If not provided this will default to false.
+              email:
+                type: string
+              groups:
+                type: array
+                description: Groups to which the customer belongs
+                items:
+                  type: object
+                  properties:
+                    groupId:
+                      type: string
+              isLoyal:
+                type: boolean
+                description: Whether or not the customer is enrolled in the loyalty program. If not provided this will default to false.
+              loyaltyPoints:
+                type: integer
+              medId:
+                type: string
+                description: Customer's medical ID number.
+              medIdExpiration:
+                type: string
+                description: Expiration date of the customer's medical ID. If provided must be in format yyyy-mm-dd.
+              name:
+                type: string
+                description: Customer's full name (both first & last)
+              phone:
+                type: string
+              state:
+                type: string
+                description: 2-letter abbreviation of the state on the customer's ID.
+              stateId:
+                type: string
+                description: Customer's state identification number
+              stateIdExpiration:
+                type: string
+                description: Expiration date for the customer's state ID. If provided must be in format yyyy-mm-dd.
+              streetAddress1:
+                type: string
+              streetAddress2:
+                type: string
+              type:
+                type: string
+              zip:
+                type: string
+          description: ''
+        - in: query
+        - type: string
+          in: header
+          name: clientId
+          description: Client ID that the customer belongs to
+          required: true
+        - type: string
+          in: header
+          name: key
+          description: API Key used to authenticate the request
+          required: true
+      security:
+        - Basic Authorization: []
+securityDefinitions:
+  Auth0:
+    type: oauth2
+    flow: accessCode
+    authorizationUrl: 'https://flowhub.auth0.com/o/oauth2/auth'
+    tokenUrl: 'https://flowhub.auth0.com/0/oauth2/token'
+    description: OAuth2 Security via Access Token
+  Basic Authorization:
+    type: apiKey
+    in: header
+    name: key
+    x- ClientId: clientId
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - Auth0: []
+parameters:
+  'trait:query:customerId':
+    name: customer_id
+    in: query
+    type: string
+    description: Customer Id for the operation
+  'trait:path:locationId':
+    name: locationId
+    in: path
+    type: string
+    required: true
+    description: Location ID specific to the query
+  'trait:path:customerId':
+    name: customerId
+    in: path
+    type: string
+    required: true
+    description: Customer ID specific for the operation
+  'trait:query:phoneNumber':
+    name: phone_number
+    in: query
+    type: string
+    description: Query Param for Phone Number
+  'trait:header:clientId':
+    in: header
+    type: string
+    description: Client ID Header Param
+    name: clientid
+  'trait:query:page':
+    name: page
+    in: query
+    type: string
+    description: Page Number
+  'trait:query:orderBy':
+    name: order_by
+    in: query
+    description: Change the ordering of results
+    required: false
+    type: string
+    default: asc
+    enum:
+      - asc
+      - desc
+  'trait:query:pageSize':
+    name: page_size
+    in: query
+    description: Limit page size to this number
+    required: false
+    type: integer
+    default: 10
+    maximum: 10000
+    minimum: 1
+  'trait:query:createdAfter':
+    name: created_after
+    in: query
+    description: Retrieve record after this date
+    required: false
+    type: string
+    format: date-time
+    default: YYY-MM-DD
+  'traig:query:createdBefore':
+    name: created_before
+    in: query
+    description: MUST be used in conjunction with created_after
+    required: false
+    type: string
+    format: date-time
+    default: YYY-MM-DD
+definitions:
+  customer-model:
+    type: object
+    title: Customer
+    properties:
+      id:
+        type: string
+        format: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+      type:
+        type: string
+        enum:
+          - medCustomer
+          - recCustomer
+      name:
+        type: string
+        format: string
+      state:
+        type: string
+        format: state
+      birthDate:
+        type: string
+        format: date-time
+      isLoyal:
+        type: boolean
+        default: true
+      loyaltyPoints:
+        type: integer
+      loyaltyPointsInPennies:
+        type: integer
+        x-stoplight:
+          id: zd1lytzq6ju8n
+        description: 'Only included in the response if `store_id` is included in the request parameters AND there''s a valid loyalty program at that location. '
+      phone:
+        type: string
+        format: phone-number
+      email:
+        type: string
+        format: email
+      streetAddress1:
+        type: string
+      streetAddress2:
+        type: string
+      city:
+        type: string
+      zip:
+        type: string
+      country:
+        type: string
+      consentsToPromotionalEmail:
+        type: boolean
+        x-stoplight:
+          id: 7w7m43s2lr28l
+        default: false
+      consentsToPromotionalSMS:
+        type: boolean
+        x-stoplight:
+          id: crwt9v88mdfxl
+        default: false
+      groups:
+        type: array
+        x-stoplight:
+          id: 9x26iydebetrj
+        items:
+          $ref: '#/definitions/Customer-group-model'
+  order-model:
+    type: object
+    title: Order
+    description: Order Data Model
+    properties:
+      id:
+        type: string
+        format: string
+      budtender:
+        type: string
+      budtenderId:
+        type: string
+        x-stoplight:
+          id: 5d6htu5f6m1d8
+      clientId:
+        type: string
+        format: string
+      createdAt:
+        type: string
+        format: date-time
+      completedOn:
+        type: string
+        format: date-time
+      currentPoints:
+        type: integer
+      customerId:
+        type: string
+        format: string
+      customerType:
+        type: string
+        enum:
+          - recCustomer
+          - medCustomer
+      fulfilledBy:
+        type: string
+        x-stoplight:
+          id: fdxpxlxbba9ma
+      fulfilledById:
+        type: string
+        x-stoplight:
+          id: tsjhybdu7sb9s
+      fullName:
+        type: string
+      integratorId:
+        type: string
+        x-stoplight:
+          id: pzfsmlqych3jq
+      itemsInCart:
+        type: array
+        items:
+          $ref: '#/definitions/item-in-cart-model'
+      locationId:
+        type: string
+      name:
+        type: string
+        format: string
+        x-stoplight:
+          id: a3rysq6c43zba
+      orderId:
+        type: string
+        format: string
+      orderStatus:
+        type: string
+        enum:
+          - Pending
+          - Cancelled
+          - Sold
+      orderType:
+        type: string
+        enum:
+          - in-store-fulfillment
+          - delivery
+          - pickup
+          - kiosk
+          - lounge
+          - walk-in
+      originalSaleId:
+        type: string
+        x-stoplight:
+          id: d1qbuqgu7mhzy
+        description: 'If this sale is a refund, this field will be the `id` of the original sale that this one refunds.'
+      payments:
+        type: array
+        items:
+          $ref: '#/definitions/Payment'
+      sentToFulfillmentBy:
+        type: string
+        x-stoplight:
+          id: 1psu271783kxx
+      sentToFulfillmentById:
+        type: string
+        x-stoplight:
+          id: zpm54sh5vg26w
+      totals:
+        $ref: '#/definitions/totals-model'
+      voided:
+        type: boolean
+  totals-model:
+    type: object
+    properties:
+      FinalTotal:
+        type: number
+        multipleOf: 0.01
+      SubTotal:
+        type: number
+        multipleOf: 0.01
+      TotalDiscounts:
+        type: number
+        multipleOf: 0.01
+      TotalFees:
+        type: number
+        multipleOf: 0.01
+      TotalTaxes:
+        type: number
+        multipleOf: 0.01
+    title: Totals
+    description: Totals Data Model
+  item-in-cart-model:
+    type: object
+    title: Item In Cart
+    properties:
+      id:
+        type: string
+      category:
+        type: string
+        enum:
+          - BulkBud
+          - PackedBud
+          - Edible
+          - NonEdible
+          - Concentrate
+          - Accessory
+      itemDiscounts:
+        type: array
+        items:
+          $ref: '#/definitions/ItemDiscounts'
+      parentProductId:
+        type: string
+        x-stoplight:
+          id: l8pfe34r44u9k
+      productId:
+        type: string
+        x-stoplight:
+          id: vt1w4hq7unl4t
+      productName:
+        type: string
+      quantity:
+        type: number
+        multipleOf: 0.001
+      strainName:
+        type: string
+      sku:
+        type: string
+      tax:
+        type: array
+        items:
+          $ref: '#/definitions/tax'
+      title1:
+        type: string
+      title2:
+        type: string
+      totalCost:
+        type: number
+      totalPrice:
+        type: number
+        multipleOf: 0.01
+      unitOfWeight:
+        type: string
+        enum:
+          - Each
+          - Gram
+      unitPrice:
+        type: number
+        multipleOf: 0.01
+      unitCost:
+        type: number
+      variantId:
+        type: string
+        x-stoplight:
+          id: g5xg9j1aa2nbz
+      brand:
+        type: string
+        x-stoplight:
+          id: fum6q5v0fn85z
+      type:
+        type: string
+        x-stoplight:
+          id: dj8qsmr1oulxk
+  ItemDiscounts:
+    type: object
+    title: ItemDiscounts
+    properties:
+      _id:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+      discountAmount:
+        type: number
+        multipleOf: 0.01
+      discountType:
+        type: string
+      discountId:
+        type: string
+      dollarsOff:
+        type: number
+        multipleOf: 0.01
+      penniesOff:
+        type: number
+        multipleOf: 0.01
+      percentOff:
+        type: number
+      discounterName:
+        type: string
+      discounterId:
+        type: string
+      isCartDiscount:
+        type: boolean
+      couponCode:
+        type: string
+      quantity:
+        type: number
+  Payment:
+    type: object
+    properties:
+      _id:
+        type: string
+      paymentType:
+        type: string
+        enum:
+          - cash
+          - gift card
+          - loyalty points
+          - debit
+      amount:
+        type: number
+        multipleOf: 0.01
+      cardId:
+        type: string
+      loyaltyPoints:
+        type: number
+      debitProvider:
+        type: string
+      balanceAfterPayment:
+        type: number
+        multipleOf: 0.01
+  tax:
+    type: object
+    properties:
+      _id:
+        type: string
+      name:
+        type: string
+      percentage:
+        type: number
+      calculateBeforeDiscounts:
+        type: string
+      supplierSpecificTax:
+        type: boolean
+      excludeCustomerGroups:
+        type: array
+        items:
+          type: string
+      enableCostMarkup:
+        type: boolean
+      markupPercentage:
+        type: number
+      thisTaxInPennies:
+        type: number
+      appliesTo:
+        type: string
+        enum:
+          - all
+          - nonCannabis
+          - rec
+          - med
+          - both
+          - delivery
+  Customer-group-model:
+    title: customer-group-model
+    x-stoplight:
+      id: emqakohwwm0cp
+    type: object
+    properties:
+      name:
+        type: string
+        x-stoplight:
+          id: b1cvh6nqanz8s
+responses:
+  customer-response:
+    description: Response container a single customer object
+    schema:
+      $ref: '#/definitions/customer-model'
+  orders-response:
+    description: Response containing an array of orders and total
+    schema:
+      type: object
+      properties:
+        total:
+          type: number
+        orders:
+          type: array
+          items:
+            $ref: '#/definitions/order-model'
+  error-reponse:
+    description: Error Response
+    schema:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+  unauthorized-response:
+    description: ''
+    schema:
+      type: object
+      properties:
+        error:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
+        status:
+          type: integer
+  Orders-New:
+    description: 'New updated response which include budtender name, cost, and unit of measure'
+    schema:
+      type: object
+      properties:
+        total:
+          type: integer
+        orders:
+          type: array
+          items:
+            type: object
+            properties:
+              _id:
+                type: string
+              clientId:
+                type: string
+              createdAt:
+                type: string
+              customerId:
+                type: string
+              currentPoints:
+                type: integer
+              customerType:
+                type: string
+              name:
+                type: string
+              locationId:
+                type: string
+              locationName:
+                type: string
+              itemsInCart:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    category:
+                      type: string
+                    sku:
+                      type: string
+                    title1:
+                      type: string
+                    title2:
+                      type: string
+                    strainName:
+                      type: string
+                    productName:
+                      type: string
+                    quantity:
+                      type: integer
+                    unitPrice:
+                      type: integer
+                    totalPrice:
+                      type: integer
+                    unitOfWeight:
+                      type: string
+                    unitCost:
+                      type: number
+                    totalCost:
+                      type: integer
+                    id:
+                      type: string
+              voided:
+                type: boolean
+              fullName:
+                type: string
+              totals:
+                type: object
+                properties:
+                  finalTotal:
+                    type: integer
+                  subTotal:
+                    type: integer
+                  totalDiscounts:
+                    type: integer
+                  totalFees:
+                    type: integer
+                  totalTaxes:
+                    type: integer
+              completedOn:
+                type: string
+              orderStatus:
+                type: string
+              orderType:
+                type: string
+              budtender:
+                type: string
+tags:
+  - name: metrics
+  - name: customers
+  - name: v1
+  - name: post
+  - name: orderAhead

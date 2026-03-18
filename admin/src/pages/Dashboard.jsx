@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { logAuditEvent } from '../lib/auditLog'
 import {
-    collection, getDocs, doc, updateDoc, setDoc,
+    collection, getDocs, doc, updateDoc, setDoc, deleteDoc, addDoc,
     serverTimestamp, onSnapshot,
 } from 'firebase/firestore'
 import { db, auth } from '../firebase'
@@ -9,11 +9,12 @@ import { useLocation } from '../contexts/LocationContext'
 import toast from 'react-hot-toast'
 import {
     Layers, Package, Tag, Clock, Radio,
-    ChevronRight, Zap, AlertCircle
+    ChevronRight, Zap, AlertCircle, Database, RefreshCw
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import { fetchFlowhubInventory } from '../lib/flowhub'
 
 dayjs.extend(relativeTime)
 
@@ -28,6 +29,7 @@ export default function Dashboard() {
     })
     const [lastPushed, setLastPushed] = useState(null)
     const [pushing, setPushing] = useState(false)
+    const [syncingFlowhub, setSyncingFlowhub] = useState(false)
     const [categories, setCategories] = useState([])
     const [productCounts, setProductCounts] = useState({})
     const [loading, setLoading] = useState(true)
@@ -116,6 +118,106 @@ export default function Dashboard() {
         }
     }
 
+    const handleSyncAllFlowhub = async () => {
+        if (!confirm("This will securely fetch products from Flowhub for ALL categories. It will ADD new items, and DELETE items that were previously synced but are no longer in Flowhub. Manually created products will be preserved. Proceed?")) return;
+        setSyncingFlowhub(true);
+        try {
+            let totalAdded = 0;
+            let totalSkipped = 0;
+            let totalDeleted = 0;
+
+            const APP_CATEGORY_SLUGS = [
+                'exotic-flowers',
+                'edibles',
+                'disposables-vapes',
+                'cartridges',
+                'pre-rolls',
+                'concentrates',
+                'accessories'
+            ];
+
+            for (const slug of APP_CATEGORY_SLUGS) {
+                let flowhubItems = [];
+                try {
+                    flowhubItems = await fetchFlowhubInventory(selectedLocation, slug);
+                } catch (err) {
+                    console.warn(`Failed to fetch Flowhub inventory for ${slug}:`, err);
+                    continue; // Skip failing categories
+                }
+                
+                const snap = await getDocs(collection(db, 'locations', selectedLocation, 'products', slug, 'items'));
+                const existingProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                
+                const flowhubSkus = new Set(flowhubItems.map(item => item.sku).filter(Boolean));
+                
+                // 1. Delete Flowhub products that are no longer in Flowhub
+                for (const existing of existingProducts) {
+                    if (existing.sku && existing.sku.trim() !== '') {
+                        if (!flowhubSkus.has(existing.sku)) {
+                            try {
+                                await deleteDoc(doc(db, 'locations', selectedLocation, 'products', slug, 'items', existing.id));
+                                totalDeleted++;
+                            } catch (e) {
+                                console.error('Delete error for', existing.id, e);
+                            }
+                        }
+                    }
+                }
+
+                // 2. Add or Link new products
+                for (const item of flowhubItems) {
+                    if (!item.sku) continue;
+                    
+                    const existingBySku = existingProducts.find(p => p.sku === item.sku);
+                    const existingByName = existingProducts.find(p => p.name && item.name && p.name.toLowerCase() === item.name.toLowerCase());
+                    
+                    const exists = existingBySku || existingByName;
+
+                    if (!exists) {
+                        let defaultData = {};
+                        if (slug === 'exotic-flowers') defaultData = { sellType: 'Pre-packed', type: item.type || 'Hybrid' };
+                        if (slug === 'edibles') defaultData = { pieceCount: 10, type: item.type || 'Hybrid', thcMg: item.thc || 0 };
+                        if (slug === 'disposables-vapes') defaultData = { cartSize: '1g', vapeType: 'Classic THC', type: item.type || 'Hybrid' };
+                        if (slug === 'cartridges') defaultData = { cartSize: '1g', extractType: 'Distillate', type: item.type || 'Hybrid', effects: [] };
+                        if (slug === 'pre-rolls') defaultData = { weight: '1g', type: item.type || 'Hybrid' };
+                        if (slug === 'concentrates') defaultData = { weight: '1g', extractType: 'Badder', type: item.type || 'Hybrid' };
+
+                        try {
+                            await addDoc(
+                                collection(db, 'locations', selectedLocation, 'products', slug, 'items'),
+                                { ...item, ...defaultData, active: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }
+                            );
+                            totalAdded++;
+                        } catch (e) {
+                            console.error('Add error for', item.sku, e);
+                        }
+                    } else {
+                        // Auto-link old manual imports to Flowhub SKU to prevent duplicates on next syncs
+                        if (existingByName && (!existingByName.sku || existingByName.sku.trim() === '')) {
+                            try {
+                                await updateDoc(
+                                    doc(db, 'locations', selectedLocation, 'products', slug, 'items', existingByName.id),
+                                    { sku: item.sku, updatedAt: serverTimestamp() }
+                                );
+                            } catch (e) {
+                                console.error('Link update error for', existingByName.id, e);
+                            }
+                        }
+                        totalSkipped++;
+                    }
+                }
+            }
+
+            toast.success(`Global Sync Complete! Added: ${totalAdded}, Deleted: ${totalDeleted}, Skipped: ${totalSkipped}`, { duration: 6000 });
+            loadData(); // refresh counts
+        } catch (err) {
+            console.error('Global sync error:', err);
+            toast.error(err.message || "Failed to sync all from Flowhub");
+        } finally {
+            setSyncingFlowhub(false);
+        }
+    }
+
     const statCards = [
         {
             icon: <Layers size={20} />,
@@ -156,9 +258,15 @@ export default function Dashboard() {
                     <h1 className="page-title">Dashboard</h1>
                     <p className="page-subtitle">Overview of your display system</p>
                 </div>
-                <button className="btn btn-ghost btn-sm" onClick={loadData}>
-                    Refresh
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn btn-secondary" onClick={handleSyncAllFlowhub} disabled={syncingFlowhub}>
+                        {syncingFlowhub ? <RefreshCw size={16} className="spin" /> : <Database size={16} />}
+                        {syncingFlowhub ? 'Syncing Flowhub...' : 'Sync From Flowhub'}
+                    </button>
+                    <button className="btn btn-ghost btn-sm" onClick={loadData}>
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {/* Stat Cards */}

@@ -8,9 +8,10 @@ import { db, storage } from '../firebase'
 import { useLocation } from '../contexts/LocationContext'
 import { logAuditEvent } from '../lib/auditLog'
 import toast from 'react-hot-toast'
-import { Plus, Pencil, Trash2, ChevronLeft, Package } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronLeft, Package, RefreshCw } from 'lucide-react'
 import ProductForm from '../components/ProductForm'
 import ConfirmDialog from '../components/ConfirmDialog'
+import { fetchFlowhubInventory } from '../lib/flowhub'
 
 function Toggle({ checked, onChange }) {
     return (
@@ -27,6 +28,7 @@ export default function Products() {
     const { selectedLocation } = useLocation()
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
+    const [syncing, setSyncing] = useState(false)
     const [panelOpen, setPanelOpen] = useState(false)
     const [editingProduct, setEditingProduct] = useState(null)
     const [deleteTarget, setDeleteTarget] = useState(null)
@@ -148,6 +150,72 @@ export default function Products() {
         ? categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)
         : 'Products'
 
+    const handleSyncFlowhub = async () => {
+        if (!confirm(`This will fetch products from Flowhub for ${categoryLabel}. Proceed?`)) return;
+        setSyncing(true);
+        try {
+            const flowhubItems = await fetchFlowhubInventory(selectedLocation, categorySlug);
+            
+            let addedCount = 0;
+            const flowhubSkus = new Set(flowhubItems.map(item => item.sku).filter(Boolean));
+            
+            // Delete stale products synced previously but missing from Flowhub
+            for (const existing of products) {
+                if (existing.sku && existing.sku.trim() !== '') {
+                    if (!flowhubSkus.has(existing.sku)) {
+                        try {
+                            await deleteDoc(doc(db, 'locations', selectedLocation, 'products', categorySlug, 'items', existing.id));
+                        } catch (e) { console.error('Delete error', e); }
+                    }
+                }
+            }
+            
+            for (const item of flowhubItems) {
+                if (!item.sku) continue;
+                
+                const existingBySku = products.find(p => p.sku === item.sku);
+                const existingByName = products.find(p => p.name && item.name && p.name.toLowerCase() === item.name.toLowerCase());
+                
+                const exists = existingBySku || existingByName;
+
+                if (!exists) {
+                    let defaultData = {};
+                    if (categorySlug === 'exotic-flowers') defaultData = { sellType: 'Pre-packed', type: item.type || 'Hybrid' };
+                    if (categorySlug === 'edibles') defaultData = { pieceCount: 10, type: item.type || 'Hybrid', thcMg: item.thc || 0 };
+                    if (categorySlug === 'disposables-vapes') defaultData = { cartSize: '1g', vapeType: 'Classic THC', type: item.type || 'Hybrid' };
+                    if (categorySlug === 'cartridges') defaultData = { cartSize: '1g', extractType: 'Distillate', type: item.type || 'Hybrid', effects: [] };
+                    if (categorySlug === 'pre-rolls') defaultData = { weight: '1g', type: item.type || 'Hybrid' };
+                    if (categorySlug === 'concentrates') defaultData = { weight: '1g', extractType: 'Badder', type: item.type || 'Hybrid' };
+
+                    try {
+                        await addDoc(
+                            collection(db, 'locations', selectedLocation, 'products', categorySlug, 'items'),
+                            { ...item, ...defaultData, active: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }
+                        );
+                        addedCount++;
+                    } catch (e) { console.error('Add error', e); }
+                } else {
+                    if (existingByName && (!existingByName.sku || existingByName.sku.trim() === '')) {
+                        try {
+                            await updateDoc(
+                                doc(db, 'locations', selectedLocation, 'products', categorySlug, 'items', existingByName.id),
+                                { sku: item.sku, updatedAt: serverTimestamp() }
+                            );
+                        } catch (e) { console.error('Update err', e); }
+                    }
+                    skippedCount++;
+                }
+            }
+            
+            toast.success(`Sync complete! Added ${addedCount}, skipped ${skippedCount} existing.`);
+            loadProducts();
+        } catch (err) {
+            toast.error(err.message || 'Failed to sync with Flowhub');
+        } finally {
+            setSyncing(false);
+        }
+    }
+
     return (
         <div>
             {/* Header */}
@@ -163,9 +231,15 @@ export default function Products() {
                     <h1 className="page-title">{categoryLabel}</h1>
                     <p className="page-subtitle">{products.length} products · {products.filter(p => p.inStock).length} in stock</p>
                 </div>
-                <button className="btn btn-primary" onClick={openAdd}>
-                    <Plus size={16} /> Add Product
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn btn-secondary" onClick={handleSyncFlowhub} disabled={syncing}>
+                        <RefreshCw size={16} className={syncing ? 'spin' : ''} />
+                        {syncing ? 'Syncing...' : 'Sync Flowhub'}
+                    </button>
+                    <button className="btn btn-primary" onClick={openAdd}>
+                        <Plus size={16} /> Add Product
+                    </button>
+                </div>
             </div>
 
             {/* Table */}

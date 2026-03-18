@@ -1,0 +1,84 @@
+swagger: '2.0'
+info:
+  title: UpdateAccessToken
+  version: '1.0'
+host: flowhub.auth0.com
+paths:
+  /oauth/token:
+    post:
+      responses:
+        '200':
+          $ref: '#/responses/access%20token'
+        '401':
+          $ref: '#/responses/unauthorized'
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/oauthTokenBody'
+          x-examples:
+            example-1:
+              client_id: auth0_client_id
+              client_secret: auth0_client_secret
+              audience: 'https://api.flowhub.co'
+              grant_type: client_credentials
+      tags:
+        - oauth/token
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      summary: Get an Access Token
+      operationId: BearerToken
+responses:
+  access token:
+    description: ''
+    schema:
+      type: object
+      properties:
+        access_token:
+          type: string
+        scope:
+          type: string
+        expires_in:
+          type: integer
+        token_type:
+          type: string
+  unauthorized:
+    description: ''
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+        error_description:
+          type: string
+basePath: ''
+definitions:
+  oauthTokenBody:
+    type: object
+    properties:
+      client_id:
+        type: string
+        example: auth0_client_id
+      client_secret:
+        type: string
+        example: auth0_client_secret
+      audience:
+        type: string
+        example: 'https://api.flowhub.co/'
+      grant_type:
+        type: string
+        example: client_credentials
+        default: client_credentials
+    x-examples:
+      example-1:
+        client_id: auth0_client_id
+        client_secret: auth0_client_secret
+        audience: 'https://api.flowhub.co'
+        grant_type: client_credentials
+tags:
+  - name: oauth/token
+    description: get jwt
+schemes:
+  - https

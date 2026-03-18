@@ -595,6 +595,7 @@ function CartridgesFields({ register, errors, effects, setEffects, setExtraDirty
 
             return (
             <form onSubmit={handleSubmit(onSubmit)}>
+                <input type="hidden" {...register('sku')} />
                 <div className="panel-body">
 
                     {/* Image */}
