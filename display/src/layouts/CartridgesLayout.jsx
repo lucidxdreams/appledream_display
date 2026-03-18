@@ -10,41 +10,29 @@ import './CartridgesLayout.css';
 
 /* ── Math & Grid Logic (Identical to VapesLayout) ── */
 function calculateGrid(count, W, H) {
-    if (count === 0) return { cardW: 240, cardH: 340, cols: 0, rows: 0 };
+    if (count === 0) return { cardW: 240, cardH: 340, cols: 0, scale: 1 };
 
-    const paddingX = 40;
-    const paddingY = 20;
+    let cols = Math.ceil(Math.sqrt(count * (W / H) * (340 / 240)));
+    if (cols < 2 && count > 1) cols = 2;
+    if (cols > count) cols = count;
+    
+    const rows = Math.ceil(count / cols);
+    
     const gap = 20;
-
-    const availW = W - (paddingX * 2);
-    const availH = H - (paddingY * 2);
-
-    let bestFit = { cardW: 240, cardH: 340, cols: 0, rows: 0, area: 0 };
-
-    for (let c = 1; c <= count; c++) {
-        const r = Math.ceil(count / c);
-        const maxW_for_cols = (availW - gap * (c - 1)) / c;
-
-        // Bounding limits
-        const cardW = Math.max(Math.min(maxW_for_cols, 360), 200);
-
-        // Target height aspect 1.7 (tall vertical card)
-        const targetH = cardW * 1.7;
-        const totalH_needed = r * targetH + gap * (r - 1);
-
-        let finalH = targetH;
-        let finalW = cardW;
-
-        if (totalH_needed > availH) {
-            finalH = Math.max((availH - gap * (r - 1)) / r, 260); // min height 260
-        }
-
-        const area = finalW * finalH * count;
-        if (area > bestFit.area) {
-            bestFit = { cardW: finalW, cardH: finalH, cols: c, rows: r, area };
-        }
-    }
-    return bestFit;
+    const paddingX = 40;
+    const paddingY = 40;
+    
+    const avlW = W - paddingX * 2 - gap * (cols - 1);
+    const avlH = H - paddingY * 2 - gap * (rows - 1);
+    
+    const baseW = 240;
+    const baseH = 340;
+    
+    const scaleW = avlW / (cols * baseW);
+    const scaleH = avlH / (rows * baseH);
+    const scale = Math.min(scaleW, scaleH, 1.3);
+    
+    return { cardW: baseW, cardH: baseH, cols, scale };
 }
 
 /* ── Palettes (Mapped by Strain) ── */
@@ -233,7 +221,7 @@ export default function CartridgesLayout({ products = [] }) {
         return () => observer.disconnect();
     }, []);
 
-    const { cardW, cardH, cols } = useMemo(
+    const { cardW, cardH, cols, scale } = useMemo(
         () => calculateGrid(products.length || 1, dim.w, dim.h),
         [products.length, dim.w, dim.h]
     );
@@ -248,9 +236,9 @@ export default function CartridgesLayout({ products = [] }) {
                 className="cg-grid"
                 style={{
                     '--cols': cols || 1,
-                    // If height is cramped, dynamically reduce gap so it fits securely
-                    '--gap': dim.h < 600 ? '12px' : '20px',
-                    '--pad': dim.h < 600 ? '12px 20px' : '20px 40px'
+                    '--gap': '20px',
+                    '--pad': '0',
+                    transform: `scale(${scale})`
                 }}
             >
                 {products.length === 0 ? (

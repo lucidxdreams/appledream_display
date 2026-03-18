@@ -250,20 +250,31 @@ export default function VapesLayout({ products = [], categoryTheme }) {
 
     const { W, H } = size;
 
-    // Same sizing logic as NeuralConstellation
-    const { cardW, cardH, cols } = useMemo(() => {
+    // Dynamic card dimensions and auto-scaling
+    const { cardW, cardH, cols, scale } = useMemo(() => {
         const n = products.length || 1;
-        const cols = n <= 2 ? n : n <= 4 ? 2 : n <= 6 ? 3 : n <= 9 ? 3 : n <= 12 ? 4 : 5;
+        
+        let cols = Math.ceil(Math.sqrt(n * (W / H) * (340 / 180)));
+        if (cols < 2 && n > 1) cols = 2;
+        if (cols > n) cols = n;
+        
+        const rows = Math.ceil(n / cols);
+        
         const gap = 18;
         const padX = 36;
-        const padY = 20;
+        const padY = 36;
+        
         const avlW = W - padX * 2 - gap * (cols - 1);
-        const cardW = Math.max(160, Math.min(260, Math.floor(avlW / cols))); // Made base cards wider
-        const rows = Math.ceil(n / cols);
         const avlH = H - padY * 2 - gap * (rows - 1);
-        const cardH = Math.max(340, Math.min(520, Math.floor(avlH / rows))); // Made base cards significantly taller
-
-        return { cardW, cardH, cols };
+        
+        const baseW = 180;
+        const baseH = 340;
+        
+        const scaleW = avlW / (cols * baseW);
+        const scaleH = avlH / (rows * baseH);
+        const scale = Math.min(scaleW, scaleH, 1.3);
+        
+        return { cardW: baseW, cardH: baseH, cols, scale };
     }, [products.length, W, H]);
 
     return (
@@ -281,7 +292,7 @@ export default function VapesLayout({ products = [], categoryTheme }) {
 
             {/* Card grid — same CSS pattern as ca-grid */}
             <div className="vp-grid"
-                style={{ '--cols': cols, '--gap': '18px', '--pad': '20px 36px' }}>
+                style={{ '--cols': cols, '--gap': '18px', '--pad': '0', transform: `scale(${scale})` }}>
                 {products.map((p, i) => (
                     <VapeCard key={p.id} product={p} index={i} cardW={cardW} cardH={cardH} />
                 ))}

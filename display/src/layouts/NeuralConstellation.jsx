@@ -300,19 +300,34 @@ export default function NeuralConstellation({ products = [], categoryTheme }) {
 
     const { W, H } = size;
 
-    // Dynamic card dimensions
-    const { cardW, cardH, cols } = useMemo(() => {
+    // Dynamic card dimensions and auto-scaling
+    const { cardW, cardH, cols, scale } = useMemo(() => {
         const n = products.length || 1;
-        const cols = n <= 2 ? n : n <= 4 ? 2 : n <= 6 ? 3 : n <= 9 ? 3 : n <= 12 ? 4 : 5;
+        
+        // Find ideal columns based on aspect ratio math
+        let cols = Math.ceil(Math.sqrt(n * (W / H) * (320 / 180)));
+        if (cols < 2 && n > 1) cols = 2;
+        if (cols > n) cols = n;
+        
+        const rows = Math.ceil(n / cols);
+        
         const gap = 18;
         const padX = 36;
-        const padY = 20;
+        const padY = 36;
+        
         const avlW = W - padX * 2 - gap * (cols - 1);
-        const cardW = Math.max(130, Math.min(200, Math.floor(avlW / cols)));
-        const rows = Math.ceil(n / cols);
         const avlH = H - padY * 2 - gap * (rows - 1);
-        const cardH = Math.max(280, Math.min(360, Math.floor(avlH / rows)));
-        return { cardW, cardH, cols };
+        
+        // Base sizes for the card
+        const baseW = 180;
+        const baseH = 320;
+        
+        // How much can we scale the base grid to perfectly fit the screen?
+        const scaleW = avlW / (cols * baseW);
+        const scaleH = avlH / (rows * baseH);
+        const scale = Math.min(scaleW, scaleH, 1.3); // Cap max size so they don't get comically large
+        
+        return { cardW: baseW, cardH: baseH, cols, scale };
     }, [products.length, W, H]);
 
     return (
@@ -330,7 +345,7 @@ export default function NeuralConstellation({ products = [], categoryTheme }) {
 
             {/* Grid */}
             <div className="ca-grid"
-                style={{ '--cols': cols, '--gap': `${18}px`, '--pad': '36px 36px' }}>
+                style={{ '--cols': cols, '--gap': `${18}px`, '--pad': '0', transform: `scale(${scale})` }}>
                 {products.map((p, i) => (
                     <EdibleCard
                         key={p.id}
