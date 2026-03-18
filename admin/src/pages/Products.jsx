@@ -32,6 +32,8 @@ export default function Products() {
     const [panelOpen, setPanelOpen] = useState(false)
     const [editingProduct, setEditingProduct] = useState(null)
     const [deleteTarget, setDeleteTarget] = useState(null)
+    const [selectedProducts, setSelectedProducts] = useState([])
+    const [deletingBulk, setDeletingBulk] = useState(false)
 
     useEffect(() => {
         loadProducts()
@@ -146,6 +148,45 @@ export default function Products() {
         }
     }
 
+    const handleSelectAll = () => {
+        if (selectedProducts.length === products.length) {
+            setSelectedProducts([])
+        } else {
+            setSelectedProducts(products.map(p => p.id))
+        }
+    }
+
+    const handleSelectProduct = (id) => {
+        if (selectedProducts.includes(id)) {
+            setSelectedProducts(prev => prev.filter(pid => pid !== id))
+        } else {
+            setSelectedProducts(prev => [...prev, id])
+        }
+    }
+
+    const handleBulkDelete = async () => {
+        if (!confirm(`Are you sure you want to delete ${selectedProducts.length} selected products?`)) return;
+        setDeletingBulk(true);
+        try {
+            for (const id of selectedProducts) {
+                // Best effort image deletion
+                try {
+                    const imageRef = ref(storage, `products/${id}/image.webp`);
+                    await deleteObject(imageRef);
+                } catch { }
+                await deleteDoc(doc(db, 'locations', selectedLocation, 'products', categorySlug, 'items', id));
+            }
+            toast.success(`Deleted ${selectedProducts.length} products`);
+            setSelectedProducts([]);
+            loadProducts();
+            logAuditEvent({ action: 'product.bulk_delete', entity: 'product', count: selectedProducts.length, details: { category: categorySlug, location: selectedLocation } });
+        } catch (err) {
+            toast.error('Failed to delete some products');
+        } finally {
+            setDeletingBulk(false);
+        }
+    }
+
     const categoryLabel = categorySlug
         ? categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)
         : 'Products'
@@ -232,6 +273,12 @@ export default function Products() {
                     <p className="page-subtitle">{products.length} products · {products.filter(p => p.inStock).length} in stock</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
+                    {selectedProducts.length > 0 && (
+                        <button className="btn btn-danger" onClick={handleBulkDelete} disabled={deletingBulk} style={{ background: 'var(--status-error)', color: 'white', border: 'none' }}>
+                            <Trash2 size={16} />
+                            {deletingBulk ? 'Deleting...' : `Delete Selected (${selectedProducts.length})`}
+                        </button>
+                    )}
                     <button className="btn btn-secondary" onClick={handleSyncFlowhub} disabled={syncing}>
                         <RefreshCw size={16} className={syncing ? 'spin' : ''} />
                         {syncing ? 'Syncing...' : 'Sync Flowhub'}
@@ -258,6 +305,14 @@ export default function Products() {
                     <table className="data-table">
                         <thead>
                             <tr>
+                                <th style={{ width: 40, paddingRight: 0 }}>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={products.length > 0 && selectedProducts.length === products.length}
+                                        onChange={handleSelectAll}
+                                        className="checkbox"
+                                    />
+                                </th>
                                 <th style={{ width: 60 }}>Image</th>
                                 <th>Name</th>
                                 <th>Brand</th>
@@ -272,6 +327,14 @@ export default function Products() {
                         <tbody>
                             {products.map((product) => (
                                 <tr key={product.id}>
+                                    <td style={{ width: 40, paddingRight: 0 }}>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={selectedProducts.includes(product.id)}
+                                            onChange={() => handleSelectProduct(product.id)}
+                                            className="checkbox"
+                                        />
+                                    </td>
                                     {/* Thumbnail */}
                                     <td>
                                         <div className="product-thumb">
