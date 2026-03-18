@@ -139,10 +139,10 @@ export default function Dashboard() {
             for (const slug of APP_CATEGORY_SLUGS) {
                 let flowhubItems = [];
                 try {
-                    flowhubItems = await fetchFlowhubInventory(selectedLocation, slug);
+                    const fetchedItems = await fetchFlowhubInventory(selectedLocation, slug);
+                    if (fetchedItems) flowhubItems = fetchedItems;
                 } catch (err) {
-                    console.warn(`Failed to fetch Flowhub inventory for ${slug}:`, err);
-                    continue; // Skip failing categories
+                    throw new Error(`Connection to Flowhub blocked. This is typically caused by browser security headers missing on their API. Details: ${err.message}`);
                 }
                 
                 const snap = await getDocs(collection(db, 'locations', selectedLocation, 'products', slug, 'items'));

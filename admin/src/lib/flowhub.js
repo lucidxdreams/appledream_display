@@ -25,9 +25,8 @@ export async function fetchFlowhubInventory(locationId, categorySlug) {
 
     const validCategories = CATEGORY_MAP[categorySlug] || [];
 
-    // During dev, use our Vite proxy to avoid CORS. In prod, update as needed.
-    // Given the admin dashboard might not be hosted the same way, we rely on the proxy for local testing.
-    const baseUrl = import.meta.env.PROD ? 'https://api.flowhub.com' : '/flowhub-api';
+    // During dev, we use our Vite proxy to avoid CORS. In prod, we use the free cors.eu.org community proxy.
+    const baseUrl = import.meta.env.PROD ? 'https://cors.eu.org/https://api.flowhub.com' : '/flowhub-api';
     const url = `${baseUrl}/v0/inventoryNonZero`;
 
     try {
