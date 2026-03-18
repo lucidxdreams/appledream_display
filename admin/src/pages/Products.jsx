@@ -236,13 +236,25 @@ export default function Products() {
                         addedCount++;
                     } catch (e) { console.error('Add error', e); }
                 } else {
+                    let updates = { updatedAt: serverTimestamp() };
+                    
                     if (existingByName && (!existingByName.sku || existingByName.sku.trim() === '')) {
+                        updates.sku = item.sku;
+                    }
+
+                    if (!exists.imageUrl && item.imageUrl) {
+                        updates.imageUrl = item.imageUrl;
+                    }
+
+                    if (Object.keys(updates).length > 1) {
                         try {
                             await updateDoc(
-                                doc(db, 'locations', selectedLocation, 'products', categorySlug, 'items', existingByName.id),
-                                { sku: item.sku, updatedAt: serverTimestamp() }
+                                doc(db, 'locations', selectedLocation, 'products', categorySlug, 'items', exists.id),
+                                updates
                             );
-                        } catch (e) { console.error('Update err', e); }
+                        } catch (e) {
+                            console.error('Link/Image update err for', exists.id, e);
+                        }
                     }
                     skippedCount++;
                 }

@@ -29,23 +29,10 @@ const req = https.request(options, res => {
     // Check mt-pleasant location
     const mtP = inventory.filter(i => i.locationId === '96de8175-4e2f-448a-aa93-02152d35eccd');
     
-    const categories = mtP.map(i => i.category);
-    const uniqueCats = [...new Set(categories)];
-    console.log("Categories in mt-pleasant:", uniqueCats);
-
-    // Check for duplicate SKUs inside the SAME category
-    const skuMap = {};
-    let dupes = 0;
-    mtP.forEach(i => {
-        if (!i.sku) return;
-        if (skuMap[i.sku]) {
-            dupes++;
-        } else {
-            skuMap[i.sku] = true;
-        }
-    });
-    console.log("Duplicate SKUs within Flowhub response:", dupes);
-
+    if (mtP.length > 0) {
+        console.log("Sample Item Keys:", Object.keys(mtP[0]));
+        console.log("Sample Item Image Props:", mtP.find(p => p.image || p.imageUrl || p.thumb || p.picture));
+    }
   });
 });
 req.on('error', console.error);

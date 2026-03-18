@@ -192,15 +192,25 @@ export default function Dashboard() {
                             console.error('Add error for', item.sku, e);
                         }
                     } else {
-                        // Auto-link old manual imports to Flowhub SKU to prevent duplicates on next syncs
+                        // Auto-link old manual imports to Flowhub SKU and backfill missing images
+                        let updates = { updatedAt: serverTimestamp() };
+                        
                         if (existingByName && (!existingByName.sku || existingByName.sku.trim() === '')) {
+                            updates.sku = item.sku;
+                        }
+                        
+                        if (!exists.imageUrl && item.imageUrl) {
+                            updates.imageUrl = item.imageUrl;
+                        }
+
+                        if (Object.keys(updates).length > 1) {
                             try {
                                 await updateDoc(
-                                    doc(db, 'locations', selectedLocation, 'products', slug, 'items', existingByName.id),
-                                    { sku: item.sku, updatedAt: serverTimestamp() }
+                                    doc(db, 'locations', selectedLocation, 'products', slug, 'items', exists.id),
+                                    updates
                                 );
                             } catch (e) {
-                                console.error('Link update error for', existingByName.id, e);
+                                console.error('Link/Image update error for', exists.id, e);
                             }
                         }
                         totalSkipped++;

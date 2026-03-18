@@ -98,6 +98,7 @@ export async function fetchFlowhubInventory(locationId, categorySlug) {
                 price,
                 thc,
                 sku,
+                imageUrl: item.productPictureURL || '',
                 type: 'Hybrid', // Default or guess from strain tags if available
                 inStock: item.quantity > 0,
             };
