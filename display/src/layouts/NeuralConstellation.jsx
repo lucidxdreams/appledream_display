@@ -12,37 +12,114 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import './NeuralConstellation.css';
 
-function toHex(r, g, b) {
-    return '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+/* ── Color helpers ───────────────────────────────────────────────── */
+function hslToRgb(h, s, l) {
+    // h,s,l all in [0,1]
+    const a = s * Math.min(l, 1 - l);
+    const f = n => {
+        const k = (n + h * 12) % 12;
+        return Math.round((l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))) * 255);
+    };
+    return [f(0), f(8), f(4)];
 }
 
-/* Sample dominant + vibrant colors from an image via canvas */
-function sampleImageColors(img) {
-    const SIZE = 64;
+function toHex(r, g, b) {
+    return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+}
+
+function rgbStr(r, g, b, a) {
+    return a !== undefined ? `rgba(${r},${g},${b},${a})` : `rgb(${r},${g},${b})`;
+}
+
+/*
+ * Hue-bucket quantizer:
+ *  1. Downscale image to 48×48 on a canvas.
+ *  2. Distribute colorful pixels (skip near-white / near-black / near-grey) into
+ *     36 hue buckets.
+ *  3. Score each bucket: sat^1.5 × coverage^0.5 — favours vivid AND common hues.
+ *  4. Return the winning hue in [0,1] plus its average saturation.
+ */
+function extractDominantHue(img) {
+    const SIZE = 48;
     const canvas = document.createElement('canvas');
     canvas.width = SIZE; canvas.height = SIZE;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.drawImage(img, 0, 0, SIZE, SIZE);
     const { data } = ctx.getImageData(0, 0, SIZE, SIZE);
-    const pixels = [];
+
+    const HUE_N = 36;
+    const buckets = Array.from({ length: HUE_N }, () => ({ count: 0, satSum: 0 }));
+    let total = 0;
+
     for (let i = 0; i < data.length; i += 4) {
-        const [r, g, b, a] = [data[i], data[i+1], data[i+2], data[i+3]];
+        const a = data[i + 3];
         if (a < 128) continue;
+        const r = data[i] / 255, g = data[i + 1] / 255, b = data[i + 2] / 255;
         const max = Math.max(r, g, b), min = Math.min(r, g, b);
-        const sat = max === 0 ? 0 : (max - min) / max;
-        const lum = (max + min) / 510;
-        pixels.push({ r, g, b, sat, lum });
+        const l = (max + min) / 2;
+        if (l > 0.92 || l < 0.05) continue;           // skip white / black
+        const d = max - min;
+        const s = max === 0 ? 0 : d / max;             // HSV saturation
+        if (s < 0.18) continue;                         // skip greys
+
+        let h = 0;
+        if      (max === r) h = ((g - b) / d + 6) % 6;
+        else if (max === g) h = (b - r) / d + 2;
+        else                h = (r - g) / d + 4;
+        h /= 6;
+
+        const bi = Math.floor(h * HUE_N) % HUE_N;
+        buckets[bi].count++;
+        buckets[bi].satSum += s;
+        total++;
     }
-    if (!pixels.length) return null;
-    // Most saturated (vibrant)
-    pixels.sort((a, b) => b.sat - a.sat);
-    const vibrant = pixels[0];
-    // Lightest among top-10% most saturated
-    const top = pixels.slice(0, Math.max(1, pixels.length >> 3));
-    top.sort((a, b) => b.lum - a.lum);
-    const light = top[0];
-    const dark  = top[top.length - 1];
-    return { vibrant, light, dark };
+
+    if (total === 0) return null;
+
+    let bestScore = -1, bestBucket = -1;
+    for (let i = 0; i < HUE_N; i++) {
+        if (!buckets[i].count) continue;
+        const avgSat   = buckets[i].satSum / buckets[i].count;
+        const coverage = buckets[i].count / total;
+        const score    = Math.pow(avgSat, 1.5) * Math.pow(coverage, 0.5);
+        if (score > bestScore) { bestScore = score; bestBucket = i; }
+    }
+    if (bestBucket === -1) return null;
+
+    const hue = (bestBucket + 0.5) / HUE_N;
+    const sat = Math.min(1, Math.max(0.60, buckets[bestBucket].satSum / buckets[bestBucket].count));
+    return { hue, sat };
+}
+
+/*
+ * Build a harmonious 12-variable palette from a single hue + saturation.
+ * All variants are derived via color theory — no random sampling.
+ *
+ *  vibrant  → S=sat*1.05, L=0.50  — the primary accent
+ *  light    → S=sat*0.65, L=0.82  — readable text / labels
+ *  dark     → S=1.00,     L=0.22  — deep shadow / gradient base
+ *  muted    → S=sat*0.75, L=0.44  — chip background hue
+ */
+function buildPaletteFromHue(hue, sat) {
+    const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
+    const V  = hslToRgb(hue, clamp(sat * 1.05), 0.50);  // vibrant
+    const L  = hslToRgb(hue, clamp(sat * 0.65), 0.82);  // light
+    const D  = hslToRgb(hue, clamp(sat),        0.22);  // dark
+    const M  = hslToRgb(hue, clamp(sat * 0.80), 0.44);  // muted
+    return {
+        halo:      toHex(...V),
+        glow:      rgbStr(...V, 0.58),
+        glowSm:    rgbStr(...V, 0.20),
+        border:    rgbStr(...V, 0.52),
+        mg:        toHex(...L),
+        mgBg:      rgbStr(...V, 0.22),
+        chip:      rgbStr(...M, 0.24),
+        chipTxt:   toHex(...L),
+        grad1:     toHex(...D),
+        grad2:     toHex(...V),
+        bar:       `linear-gradient(135deg,${toHex(...D)},${toHex(...V)})`,
+        spotlight: rgbStr(...V, 0.22),
+    };
 }
 
 /* ── Strain palettes ─────────────────────────────────────────────── */
@@ -81,24 +158,9 @@ function useImagePalette(imageUrl) {
         img.onload = () => {
             if (cancelled) return;
             try {
-                const result = sampleImageColors(img);
+                const result = extractDominantHue(img);
                 if (!result) { setPalette(null); return; }
-                const { vibrant: v, light, dark } = result;
-                const { r, g, b } = v;
-                setPalette({
-                    halo:      toHex(r, g, b),
-                    glow:      `rgba(${r},${g},${b},0.55)`,
-                    glowSm:    `rgba(${r},${g},${b},0.18)`,
-                    border:    `rgba(${r},${g},${b},0.5)`,
-                    mg:        toHex(light.r, light.g, light.b),
-                    mgBg:      `rgba(${r},${g},${b},0.25)`,
-                    chip:      `rgba(${r},${g},${b},0.22)`,
-                    chipTxt:   toHex(light.r, light.g, light.b),
-                    grad1:     toHex(dark.r, dark.g, dark.b),
-                    grad2:     toHex(r, g, b),
-                    bar:       `linear-gradient(135deg,${toHex(dark.r,dark.g,dark.b)},${toHex(r,g,b)})`,
-                    spotlight: `rgba(${r},${g},${b},0.22)`,
-                });
+                setPalette(buildPaletteFromHue(result.hue, result.sat));
             } catch { if (!cancelled) setPalette(null); }
         };
         img.onerror = () => { if (!cancelled) setPalette(null); };
