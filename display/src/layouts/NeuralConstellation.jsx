@@ -12,6 +12,39 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import './NeuralConstellation.css';
 
+function toHex(r, g, b) {
+    return '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+}
+
+/* Sample dominant + vibrant colors from an image via canvas */
+function sampleImageColors(img) {
+    const SIZE = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = SIZE; canvas.height = SIZE;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, SIZE, SIZE);
+    const { data } = ctx.getImageData(0, 0, SIZE, SIZE);
+    const pixels = [];
+    for (let i = 0; i < data.length; i += 4) {
+        const [r, g, b, a] = [data[i], data[i+1], data[i+2], data[i+3]];
+        if (a < 128) continue;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        const sat = max === 0 ? 0 : (max - min) / max;
+        const lum = (max + min) / 510;
+        pixels.push({ r, g, b, sat, lum });
+    }
+    if (!pixels.length) return null;
+    // Most saturated (vibrant)
+    pixels.sort((a, b) => b.sat - a.sat);
+    const vibrant = pixels[0];
+    // Lightest among top-10% most saturated
+    const top = pixels.slice(0, Math.max(1, pixels.length >> 3));
+    top.sort((a, b) => b.lum - a.lum);
+    const light = top[0];
+    const dark  = top[top.length - 1];
+    return { vibrant, light, dark };
+}
+
 /* ── Strain palettes ─────────────────────────────────────────────── */
 const PALETTES = {
     indica: {
@@ -36,6 +69,44 @@ const PALETTES = {
         label: 'Hybrid', aurora: '#059669', spotlight: 'rgba(16,185,129,0.18)',
     },
 };
+
+/* ── Extract dominant palette from product image ────────────────── */
+function useImagePalette(imageUrl) {
+    const [palette, setPalette] = useState(null);
+    useEffect(() => {
+        if (!imageUrl) { setPalette(null); return; }
+        let cancelled = false;
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            if (cancelled) return;
+            try {
+                const result = sampleImageColors(img);
+                if (!result) { setPalette(null); return; }
+                const { vibrant: v, light, dark } = result;
+                const { r, g, b } = v;
+                setPalette({
+                    halo:      toHex(r, g, b),
+                    glow:      `rgba(${r},${g},${b},0.55)`,
+                    glowSm:    `rgba(${r},${g},${b},0.18)`,
+                    border:    `rgba(${r},${g},${b},0.5)`,
+                    mg:        toHex(light.r, light.g, light.b),
+                    mgBg:      `rgba(${r},${g},${b},0.25)`,
+                    chip:      `rgba(${r},${g},${b},0.22)`,
+                    chipTxt:   toHex(light.r, light.g, light.b),
+                    grad1:     toHex(dark.r, dark.g, dark.b),
+                    grad2:     toHex(r, g, b),
+                    bar:       `linear-gradient(135deg,${toHex(dark.r,dark.g,dark.b)},${toHex(r,g,b)})`,
+                    spotlight: `rgba(${r},${g},${b},0.22)`,
+                });
+            } catch { if (!cancelled) setPalette(null); }
+        };
+        img.onerror = () => { if (!cancelled) setPalette(null); };
+        img.src = imageUrl;
+        return () => { cancelled = true; };
+    }, [imageUrl]);
+    return palette;
+}
 
 function getStrain(p) {
     const t = (p.type || '').toLowerCase();
@@ -161,7 +232,8 @@ function Sparkles({ W, H }) {
 /* ── Hero Card (center spotlight) ───────────────────────────────── */
 function HeroCard({ product }) {
     const strain = getStrain(product);
-    const pal = PALETTES[strain];
+    const extracted = useImagePalette(product.imageUrl);
+    const pal = extracted || PALETTES[strain];
     const effects = (product.effects || []).slice(0, 4);
     const thcMg = product.thcMg || product.thc || 0;
     const pieces = product.pieceCount;
@@ -229,7 +301,8 @@ function HeroCard({ product }) {
 /* ── Side Card ──────────────────────────────────────────────────── */
 function SideCard({ product }) {
     const strain = getStrain(product);
-    const pal = PALETTES[strain];
+    const extracted = useImagePalette(product.imageUrl);
+    const pal = extracted || PALETTES[strain];
     const thcMg = product.thcMg || product.thc || 0;
     const pieces = product.pieceCount;
     const price = Number(product.price || 0).toFixed(2);
@@ -375,7 +448,7 @@ export default function NeuralConstellation({ products = [], categoryTheme, onAl
                             style={{
                                 position: 'absolute',
                                 left: x - cardW / 2,
-                                top: '47%',
+                                top: '52%',
                                 ...(isHero
                                     ? { transform: `translateY(-50%) scale(${scale})` }
                                     : { marginTop: -cardH / 2, height: cardH, transform: `scale(${scale})` }
