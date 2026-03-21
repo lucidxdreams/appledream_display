@@ -8,10 +8,11 @@ import { db, storage } from '../firebase'
 import { useLocation } from '../contexts/LocationContext'
 import { logAuditEvent } from '../lib/auditLog'
 import toast from 'react-hot-toast'
-import { Plus, Pencil, Trash2, ChevronLeft, Package, RefreshCw } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronLeft, Package, RefreshCw, Layers } from 'lucide-react'
 import ProductForm from '../components/ProductForm'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { fetchFlowhubInventory } from '../lib/flowhub'
+import VariantsTab from './VariantsTab'
 
 function Toggle({ checked, onChange }) {
     return (
@@ -34,6 +35,7 @@ export default function Products() {
     const [deleteTarget, setDeleteTarget] = useState(null)
     const [selectedProducts, setSelectedProducts] = useState([])
     const [deletingBulk, setDeletingBulk] = useState(false)
+    const [activeTab, setActiveTab] = useState('products')
 
     useEffect(() => {
         loadProducts()
@@ -285,24 +287,63 @@ export default function Products() {
                     <p className="page-subtitle">{products.length} products · {products.filter(p => p.inStock).length} in stock</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    {selectedProducts.length > 0 && (
-                        <button className="btn btn-danger" onClick={handleBulkDelete} disabled={deletingBulk} style={{ background: 'var(--status-error)', color: 'white', border: 'none' }}>
-                            <Trash2 size={16} />
-                            {deletingBulk ? 'Deleting...' : `Delete Selected (${selectedProducts.length})`}
+                    {activeTab === 'products' && (<>
+                        {selectedProducts.length > 0 && (
+                            <button className="btn btn-danger" onClick={handleBulkDelete} disabled={deletingBulk} style={{ background: 'var(--status-error)', color: 'white', border: 'none' }}>
+                                <Trash2 size={16} />
+                                {deletingBulk ? 'Deleting...' : `Delete Selected (${selectedProducts.length})`}
+                            </button>
+                        )}
+                        <button className="btn btn-secondary" onClick={handleSyncFlowhub} disabled={syncing}>
+                            <RefreshCw size={16} className={syncing ? 'spin' : ''} />
+                            {syncing ? 'Syncing...' : 'Sync Flowhub'}
                         </button>
-                    )}
-                    <button className="btn btn-secondary" onClick={handleSyncFlowhub} disabled={syncing}>
-                        <RefreshCw size={16} className={syncing ? 'spin' : ''} />
-                        {syncing ? 'Syncing...' : 'Sync Flowhub'}
-                    </button>
-                    <button className="btn btn-primary" onClick={openAdd}>
-                        <Plus size={16} /> Add Product
-                    </button>
+                        <button className="btn btn-primary" onClick={openAdd}>
+                            <Plus size={16} /> Add Product
+                        </button>
+                    </>)}
                 </div>
             </div>
 
+            {/* Tab switcher */}
+            <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
+                {[
+                    { key: 'products', label: 'Products', icon: <Package size={14} /> },
+                    { key: 'variants', label: 'Variants', icon: <Layers size={14} /> },
+                ].map(tab => (
+                    <button
+                        key={tab.key}
+                        onClick={() => setActiveTab(tab.key)}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            padding: '8px 16px',
+                            background: 'none',
+                            border: 'none',
+                            borderBottom: activeTab === tab.key ? '2px solid var(--accent)' : '2px solid transparent',
+                            color: activeTab === tab.key ? 'var(--accent)' : 'var(--text-secondary)',
+                            fontWeight: activeTab === tab.key ? 600 : 400,
+                            fontSize: 13,
+                            cursor: 'pointer',
+                            marginBottom: -1,
+                            transition: 'all 0.15s',
+                        }}
+                    >
+                        {tab.icon} {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Variants Tab */}
+            {activeTab === 'variants' && (
+                <VariantsTab
+                    products={products}
+                    categorySlug={categorySlug}
+                    locationId={selectedLocation}
+                />
+            )}
+
             {/* Table */}
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            {activeTab === 'products' && <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 {loading ? (
                     <div style={{ padding: 40, textAlign: 'center' }}>
                         <div className="spinner" style={{ margin: '0 auto' }} />
@@ -430,7 +471,7 @@ export default function Products() {
                         </tbody>
                     </table>
                 )}
-            </div>
+            </div>}
 
             {/* Slide-in panel */}
             {panelOpen && (

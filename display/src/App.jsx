@@ -5,7 +5,7 @@
  * /:locationId  → Full display for that location
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Routes, Route, useParams, useNavigate } from 'react-router-dom';
 import { collection, onSnapshot } from 'firebase/firestore';
 import ConnectionOverlay from './components/ConnectionOverlay';
@@ -24,6 +24,7 @@ import BudUniverse from './layouts/BudUniverse';
 import NeuralConstellation from './layouts/NeuralConstellation';
 import NeonTechGrid from './layouts/NeonTechGrid';
 import TheCollection from './layouts/TheCollection';
+import VariantLayout from './layouts/VariantLayout';
 import './App.css';
 
 /* ── Locations ───────────────────────────────────────────────────────────── */
@@ -56,13 +57,20 @@ function getTheme(category) {
 }
 
 /* ── Layout selector ─────────────────────────────────────────────────────── */
-function CategoryLayout({ category, products, theme }) {
+function CategoryLayout({ category, products, variantGroups, theme, onAllShown }) {
   if (!category || products.length === 0) {
     return <div className="app-empty"><p>Waiting for products…</p></div>;
   }
+
+  // If any enabled variant groups exist for this category, use VariantLayout
+  const activeGroups = (variantGroups || []).filter(g => g.enabled !== false);
+  if (activeGroups.length > 0) {
+    return <VariantLayout products={products} variantGroups={activeGroups} categoryTheme={theme} />;
+  }
+
   const id = (category.id || '').toLowerCase();
   if (id.includes('flower')) return <CloudBubbles products={products} categoryTheme={theme} />;
-  if (id.includes('edible')) return <NeuralConstellation products={products} categoryTheme={theme} />;
+  if (id.includes('edible')) return <NeuralConstellation products={products} categoryTheme={theme} onAllShown={onAllShown} />;
   if (id.includes('vape') || id.includes('disposable')) return <VapesLayout products={products} categoryTheme={theme} />;
   if (id.includes('cart')) return <CartridgesLayout products={products} categoryTheme={theme} />;
   if (id.includes('pre')) return <PreRollsLayout products={products} categoryTheme={theme} />;
@@ -70,7 +78,7 @@ function CategoryLayout({ category, products, theme }) {
   return <CloudBubbles products={products} categoryTheme={theme} />;
 }
 
-/* ── Clock ───────────────────────────────────────────────────────────────── */
+/* ── Clock & Weather ───────────────────────────────────────────────────────────────── */
 function Clock() {
   const [time, setTime] = useState(() => new Date());
   useEffect(() => {
@@ -78,9 +86,56 @@ function Clock() {
     return () => clearInterval(id);
   }, []);
   return (
-    <span className="app-clock">
+    <div className="app-clock">
       {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-    </span>
+    </div>
+  );
+}
+
+function Weather() {
+  const [weather, setWeather] = useState({ temp: '--', condition: 'Loading...', icon: '🌤️' });
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+        if (!API_KEY) {
+          setWeather({ temp: '--', condition: 'Washington DC', icon: '🏛️' });
+          return;
+        }
+        const res = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=Washington,DC,US&units=imperial&appid=${API_KEY}`
+        );
+        if (!res.ok) throw new Error('Weather fetch failed');
+        const data = await res.json();
+        const temp = Math.round(data.main.temp);
+        const condition = data.weather[0].main;
+        const iconMap = {
+          Clear: '☀️', Clouds: '☁️', Rain: '🌧️', Drizzle: '🌦️',
+          Thunderstorm: '⛈️', Snow: '❄️', Mist: '🌫️', Fog: '🌫️'
+        };
+        setWeather({ temp: `${temp}°F`, condition, icon: iconMap[condition] || '🌤️' });
+        setError(false);
+      } catch (err) {
+        console.error('[Weather] Error:', err);
+        setError(true);
+        setWeather({ temp: '--', condition: 'Washington DC', icon: '🏛️' });
+      }
+    };
+    fetchWeather();
+    const interval = setInterval(fetchWeather, 600000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="app-weather">
+      <span className="app-weather-icon">{weather.icon}</span>
+      <div className="app-weather-info">
+        <div className="app-weather-temp">{weather.temp}</div>
+        <div className="app-weather-condition">{weather.condition}</div>
+      </div>
+    </div>
   );
 }
 
@@ -156,16 +211,33 @@ function LocationPicker() {
 /* ── Display (/:locationId) ──────────────────────────────────────────────── */
 function Display() {
   const { locationId } = useParams();
-  const { currentCategory, nextCategory, progress, jumpTo, categories, connectionError } = useRotation(locationId);
+  const { currentCategory, nextCategory, progress, jumpTo, setSkipAutoAdvance, categories, connectionError } = useRotation(locationId);
   const [products, setProducts] = useState([]);
+  const [variantGroups, setVariantGroups] = useState([]);
   const [productConnError, setProductConnError] = useState(false);
   const productErrorCount = useRef(0);
   const theme = getTheme(currentCategory);
+
+  const isEdibles = (currentCategory?.id || '').toLowerCase().includes('edible');
+
+  // Block the category timer while edibles is cycling through products
+  useEffect(() => {
+    setSkipAutoAdvance(isEdibles);
+  }, [isEdibles, setSkipAutoAdvance]);
+
+  // Called by NeuralConstellation when all edibles products have been shown once
+  const handleEdiblesComplete = useCallback(() => {
+    const idx = categories.findIndex(c => c.id === currentCategory?.id);
+    const next = (idx + 1) % Math.max(categories.length, 1);
+    setSkipAutoAdvance(false);
+    jumpTo(next);
+  }, [categories, currentCategory, jumpTo, setSkipAutoAdvance]);
 
   // Subscribe to products for current category — scoped to this location
   useEffect(() => {
     if (!currentCategory?.id || !locationId) {
       setProducts([]);
+      setVariantGroups([]);
       return;
     }
     const ref = collection(db, 'locations', locationId, 'products', currentCategory.id, 'items');
@@ -181,7 +253,16 @@ function Display() {
       productErrorCount.current += 1;
       if (productErrorCount.current >= 3) setProductConnError(true);
     });
-    return () => unsub();
+
+    // Subscribe to variant groups for this category
+    const vgRef = collection(db, 'locations', locationId, 'products', currentCategory.id, 'variantGroups');
+    const unsubVG = onSnapshot(vgRef, (snap) => {
+      setVariantGroups(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    }, () => {
+      setVariantGroups([]);
+    });
+
+    return () => { unsub(); unsubVG(); };
   }, [currentCategory?.id, locationId]);
 
   // Apply CSS variables to root
@@ -202,14 +283,14 @@ function Display() {
 
       {/* HEADER */}
       <header className="app-header">
-        <div className="app-category-name">
-          {currentCategory?.name || 'Loading…'}
-        </div>
-        <div className="app-logo">
-          <img src={`${import.meta.env.BASE_URL}main_logo.webp`} alt="Logo" style={{ height: '76px', objectFit: 'contain' }} />
-        </div>
-        <div className="app-header-right">
-          <Clock />
+        <div className="app-header-center">
+          <div className="app-logo">
+            <img src={`${import.meta.env.BASE_URL}main_logo.webp`} alt="Logo" className="app-logo-img" />
+          </div>
+          <div className="app-header-meta">
+            <Clock />
+            <Weather />
+          </div>
         </div>
       </header>
 
@@ -220,7 +301,13 @@ function Display() {
           categoryName={currentCategory?.name}
           categoryAccent={theme.accent}
         >
-          <CategoryLayout category={currentCategory} products={products} theme={theme} />
+          <CategoryLayout
+            category={currentCategory}
+            products={products}
+            variantGroups={variantGroups}
+            theme={theme}
+            onAllShown={isEdibles ? handleEdiblesComplete : undefined}
+          />
         </CategoryTransition>
       </main>
 

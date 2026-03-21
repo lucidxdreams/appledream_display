@@ -1,65 +1,39 @@
 /**
- * NeuralConstellation.jsx — "Candy Aurora" Edibles Display
+ * NeuralConstellation.jsx — "Candy Carousel" Edibles Display
  *
- * Premium glassmorphism showcase:
- *  · Animated aurora borealis background (CSS, candy palette)
- *  · Tall frosted-glass cards with strain-colored holographic glow
- *  · Circular product image with animated halo ring
- *  · Prominent THC mg dial badge + piece count
- *  · Effects as slim frosted chips
- *  · Staggered float-up entrance + continuous gentle levitation
- *  · Scales 1–16 products gracefully (auto-cols)
+ * Cinematic 3-D carousel:
+ *  · Center card: full-resolution hero with large image + all details
+ *  · Side cards: scaled, blurred, faded — feed in from both sides
+ *  · Far cards: barely visible silhouettes at screen edges
+ *  · Auto-advances every 5 s; manual navigation resets timer
+ *  · Aurora orb background + sparkle particles preserved
  */
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import './NeuralConstellation.css';
 
 /* ── Strain palettes ─────────────────────────────────────────────── */
 const PALETTES = {
     indica: {
-        halo: '#8b5cf6',
-        glow: 'rgba(139, 92, 246, 0.5)',
-        glowSm: 'rgba(139, 92, 246, 0.15)',
-        border: 'rgba(139, 92, 246, 0.45)',
-        mg: '#c4b5fd',
-        mgBg: 'rgba(139, 92, 246, 0.22)',
-        chip: 'rgba(139, 92, 246, 0.18)',
-        chipTxt: '#c4b5fd',
-        grad1: '#8b5cf6',
-        grad2: '#c084fc',
-        bar: 'linear-gradient(180deg, #7c3aed, #a855f7)',
-        label: 'Indica',
-        aurora: '#7c3aed',
+        halo: '#8b5cf6', glow: 'rgba(139,92,246,0.55)', glowSm: 'rgba(139,92,246,0.18)',
+        border: 'rgba(139,92,246,0.5)', mg: '#c4b5fd', mgBg: 'rgba(139,92,246,0.25)',
+        chip: 'rgba(139,92,246,0.2)', chipTxt: '#c4b5fd',
+        grad1: '#8b5cf6', grad2: '#c084fc', bar: 'linear-gradient(135deg,#7c3aed,#a855f7)',
+        label: 'Indica', aurora: '#7c3aed', spotlight: 'rgba(139,92,246,0.22)',
     },
     sativa: {
-        halo: '#f59e0b',
-        glow: 'rgba(245, 158, 11, 0.5)',
-        glowSm: 'rgba(245, 158, 11, 0.15)',
-        border: 'rgba(245, 158, 11, 0.45)',
-        mg: '#fde68a',
-        mgBg: 'rgba(245, 158, 11, 0.22)',
-        chip: 'rgba(245, 158, 11, 0.18)',
-        chipTxt: '#fde68a',
-        grad1: '#f59e0b',
-        grad2: '#fbbf24',
-        bar: 'linear-gradient(180deg, #d97706, #f59e0b)',
-        label: 'Sativa',
-        aurora: '#d97706',
+        halo: '#f59e0b', glow: 'rgba(245,158,11,0.55)', glowSm: 'rgba(245,158,11,0.18)',
+        border: 'rgba(245,158,11,0.5)', mg: '#fde68a', mgBg: 'rgba(245,158,11,0.25)',
+        chip: 'rgba(245,158,11,0.2)', chipTxt: '#fde68a',
+        grad1: '#f59e0b', grad2: '#fbbf24', bar: 'linear-gradient(135deg,#d97706,#f59e0b)',
+        label: 'Sativa', aurora: '#d97706', spotlight: 'rgba(245,158,11,0.18)',
     },
     hybrid: {
-        halo: '#10b981',
-        glow: 'rgba(16, 185, 129, 0.5)',
-        glowSm: 'rgba(16, 185, 129, 0.15)',
-        border: 'rgba(16, 185, 129, 0.45)',
-        mg: '#6ee7b7',
-        mgBg: 'rgba(16, 185, 129, 0.22)',
-        chip: 'rgba(16, 185, 129, 0.18)',
-        chipTxt: '#6ee7b7',
-        grad1: '#10b981',
-        grad2: '#34d399',
-        bar: 'linear-gradient(180deg, #059669, #10b981)',
-        label: 'Hybrid',
-        aurora: '#059669',
+        halo: '#10b981', glow: 'rgba(16,185,129,0.55)', glowSm: 'rgba(16,185,129,0.18)',
+        border: 'rgba(16,185,129,0.5)', mg: '#6ee7b7', mgBg: 'rgba(16,185,129,0.25)',
+        chip: 'rgba(16,185,129,0.2)', chipTxt: '#6ee7b7',
+        grad1: '#10b981', grad2: '#34d399', bar: 'linear-gradient(135deg,#059669,#10b981)',
+        label: 'Hybrid', aurora: '#059669', spotlight: 'rgba(16,185,129,0.18)',
     },
 };
 
@@ -184,178 +158,260 @@ function Sparkles({ W, H }) {
     );
 }
 
-/* ── Single product card ─────────────────────────────────────── */
-function EdibleCard({ product, index, cardW, cardH }) {
+/* ── Hero Card (center spotlight) ───────────────────────────────── */
+function HeroCard({ product }) {
     const strain = getStrain(product);
     const pal = PALETTES[strain];
     const effects = (product.effects || []).slice(0, 4);
     const thcMg = product.thcMg || product.thc || 0;
     const pieces = product.pieceCount;
     const price = Number(product.price || 0).toFixed(2);
-    const isNew = (product.badge || '').toLowerCase() === 'new';
-    const floatV = (index % 4) + 1;
-    const imgSize = Math.min(cardW * 0.62, 110);
 
     return (
-        <div
-            className={`ca-card ca-float-${floatV} ca-card--in`}
-            style={{
-                '--pal-halo': pal.halo,
-                '--pal-glow': pal.glow,
-                '--pal-glow-sm': pal.glowSm,
-                '--pal-border': pal.border,
-                '--pal-mg': pal.mg,
-                '--pal-mg-bg': pal.mgBg,
-                '--pal-chip': pal.chip,
-                '--pal-chip-txt': pal.chipTxt,
-                '--pal-grad1': pal.grad1,
-                '--pal-grad2': pal.grad2,
-                '--pal-bar': pal.bar,
-                '--entrance-del': `${index * 0.07}s`,
-                '--float-del': `${index * 0.15}s`,
-                width: cardW,
-                minHeight: cardH,
-            }}
-        >
-            {/* Left strain bar */}
-            <div className="ca-bar" />
+        <div className="ec-hero-card" style={{
+            '--pal-halo': pal.halo, '--pal-glow': pal.glow, '--pal-glow-sm': pal.glowSm,
+            '--pal-border': pal.border, '--pal-mg': pal.mg, '--pal-mg-bg': pal.mgBg,
+            '--pal-chip': pal.chip, '--pal-chip-txt': pal.chipTxt,
+            '--pal-grad1': pal.grad1, '--pal-grad2': pal.grad2, '--pal-bar': pal.bar,
+        }}>
+            <div className="ec-hero-topline" />
 
-            {/* Top section: badge + strain label */}
-            <div className="ca-top">
-                <span className="ca-strain-label">{pal.label}</span>
-                <div style={{ display: 'flex', gap: 4 }}>
-                    {product.badge && (
-                        <span className={`ca-badge ${isNew ? 'ca-badge--new' : 'ca-badge--hot'}`}>
-                            {product.badge}
-                        </span>
+            {/* Clean floating image — no rings, no dark circle */}
+            <div className="ec-hero-img-area">
+                <div className="ec-hero-img-bg" />
+                {product.imageUrl
+                    ? <img src={product.imageUrl} alt={product.name} className="ec-hero-img" />
+                    : <span className="ec-hero-emoji">🍬</span>
+                }
+                <div className="ec-hero-img-shadow" />
+            </div>
+
+            {/* Divider with centred strain pill straddling the line */}
+            <div className="ec-hero-divider-wrap">
+                <div className="ec-hero-divider" />
+                <span className="ec-hero-strain-pill">{pal.label}</span>
+            </div>
+
+            {/* Text content */}
+            <div className="ec-hero-content">
+                {product.brand && <div className="ec-hero-brand">{product.brand}</div>}
+                <div className="ec-hero-name">{product.name}</div>
+                {effects.length > 0 && (
+                    <div className="ec-hero-effects">
+                        {effects.map(e => <span key={e} className="ec-chip">{e}</span>)}
+                    </div>
+                )}
+                {product.notes && <div className="ec-hero-notes">{product.notes}</div>}
+            </div>
+
+            {/* Bottom strip: strain | mg THC | pcs | price */}
+            <div className="ec-hero-bottom-row">
+                <div className="ec-hero-meta">
+                    {thcMg > 0 && (
+                        <div className="ec-hero-thc">
+                            <span className="ec-hero-thc-val">{thcMg}</span>
+                            <span className="ec-hero-thc-unit">mg THC</span>
+                        </div>
                     )}
-                    {product.featured && <span className="ca-badge ca-badge--feat">★</span>}
+                    {pieces && (
+                        <div className="ec-hero-pieces">
+                            <span className="ec-hero-pieces-val">{pieces}</span>
+                            <span className="ec-hero-pieces-unit">pcs</span>
+                        </div>
+                    )}
                 </div>
+                <div className="ec-hero-price">${price}</div>
             </div>
-
-            {/* Product image — circular with halo */}
-            <div className="ca-img-outer" style={{ width: imgSize, height: imgSize }}>
-                <div className="ca-halo-ring" />
-                <div className="ca-halo-ring ca-halo-ring--2" />
-                <div className="ca-img-inner">
-                    {product.imageUrl
-                        ? <img src={product.imageUrl} alt={product.name} className="ca-img" />
-                        : <span className="ca-emoji">🍬</span>
-                    }
-                </div>
-            </div>
-
-            {/* Name */}
-            <div className="ca-name">{product.name}</div>
-            {product.brand && <div className="ca-brand">{product.brand}</div>}
-
-            {/* THC mg + pieces row */}
-            <div className="ca-meta">
-                {thcMg > 0 && (
-                    <div className="ca-thc-badge">
-                        <span className="ca-thc-val">{thcMg}</span>
-                        <span className="ca-thc-unit">mg THC</span>
-                    </div>
-                )}
-                {pieces && (
-                    <div className="ca-pieces-badge">
-                        <span className="ca-pieces-val">{pieces}</span>
-                        <span className="ca-pieces-unit">pcs</span>
-                    </div>
-                )}
-            </div>
-
-            {/* Effects */}
-            {effects.length > 0 && (
-                <div className="ca-effects">
-                    {effects.map(e => <span key={e} className="ca-chip">{e}</span>)}
-                </div>
-            )}
-
-            {/* Notes */}
-            {product.notes && (
-                <div className="ca-notes">{product.notes}</div>
-            )}
-
-            {/* Price */}
-            <div className="ca-price">${price}</div>
         </div>
     );
 }
 
-/* ── Main ─────────────────────────────────────────────────────── */
-export default function NeuralConstellation({ products = [], categoryTheme }) {
+/* ── Side Card ──────────────────────────────────────────────────── */
+function SideCard({ product }) {
+    const strain = getStrain(product);
+    const pal = PALETTES[strain];
+    const thcMg = product.thcMg || product.thc || 0;
+    const pieces = product.pieceCount;
+    const price = Number(product.price || 0).toFixed(2);
+
+    return (
+        <div className="ec-side-card" style={{
+            '--pal-halo': pal.halo, '--pal-glow': pal.glow, '--pal-border': pal.border,
+            '--pal-mg': pal.mg, '--pal-mg-bg': pal.mgBg,
+            '--pal-grad1': pal.grad1, '--pal-grad2': pal.grad2,
+        }}>
+            <div className="ec-side-topline" />
+            <div className="ec-side-img-area">
+                {product.imageUrl
+                    ? <img src={product.imageUrl} alt={product.name} className="ec-side-img" />
+                    : <span className="ec-side-emoji">🍬</span>
+                }
+            </div>
+            <div className="ec-side-divider-wrap">
+                <div className="ec-side-divider" />
+                <span className="ec-side-strain">{pal.label}</span>
+            </div>
+            <div className="ec-side-content">
+                {product.brand && <div className="ec-side-brand">{product.brand}</div>}
+                <div className="ec-side-name">{product.name}</div>
+            </div>
+            <div className="ec-side-bottom-row">
+                <div className="ec-side-meta">
+                    {thcMg > 0 && (
+                        <div className="ec-side-thc">
+                            <span className="ec-side-thc-val">{thcMg}</span>
+                            <span className="ec-side-thc-unit">mg THC</span>
+                        </div>
+                    )}
+                    {pieces && (
+                        <div className="ec-side-thc">
+                            <span className="ec-side-thc-val">{pieces}</span>
+                            <span className="ec-side-thc-unit">pcs</span>
+                        </div>
+                    )}
+                </div>
+                <div className="ec-side-price">${price}</div>
+            </div>
+        </div>
+    );
+}
+
+/* ── Carousel slot definitions ──────────────────────────────────── */
+const SLOTS = [
+    { offset: -2, xFrac: -0.310, scale: 0.44, opacity: 0.20, z: 1, blur: 3.5 },
+    { offset: -1, xFrac: -0.195, scale: 0.66, opacity: 0.56, z: 2, blur: 1.5 },
+    { offset:  0, xFrac:  0,     scale: 1.00, opacity: 1.00, z: 5, blur: 0   },
+    { offset:  1, xFrac:  0.195, scale: 0.66, opacity: 0.56, z: 2, blur: 1.5 },
+    { offset:  2, xFrac:  0.310, scale: 0.44, opacity: 0.20, z: 1, blur: 3.5 },
+];
+
+const AUTO_INTERVAL = 5000;
+
+/* ── Main carousel ──────────────────────────────────────────────── */
+export default function NeuralConstellation({ products = [], categoryTheme, onAllShown }) {
     const containerRef = useRef(null);
-    const [size, setSize] = useState({ W: 1280, H: 720 });
+    const [dim, setDim] = useState({ W: 1280, H: 720 });
+    const [activeIdx, setActiveIdx] = useState(0);
+    const timerRef = useRef(null);
+    const onAllShownRef = useRef(onAllShown);
+    const prevActiveIdxRef = useRef(0);
+    const n = products.length;
+
+    useEffect(() => { onAllShownRef.current = onAllShown; }, [onAllShown]);
 
     useEffect(() => {
         const el = containerRef.current;
         if (!el) return;
-        const measure = () => setSize({ W: el.clientWidth || 1280, H: el.clientHeight || 720 });
+        const measure = () => { if (el) setDim({ W: el.clientWidth || 1280, H: el.clientHeight || 720 }); };
         measure();
         const ro = new ResizeObserver(measure);
         ro.observe(el);
         return () => ro.disconnect();
     }, []);
 
-    const { W, H } = size;
+    const startTimer = useCallback(() => {
+        clearInterval(timerRef.current);
+        if (n === 0) return;
+        if (n === 1) {
+            timerRef.current = setInterval(() => onAllShownRef.current?.(), AUTO_INTERVAL);
+            return;
+        }
+        timerRef.current = setInterval(() => setActiveIdx(i => (i + 1) % n), AUTO_INTERVAL);
+    }, [n]);
 
-    // Dynamic card dimensions and auto-scaling
-    const { cardW, cardH, cols, scale } = useMemo(() => {
-        const n = products.length || 1;
-        
-        // Find ideal columns based on aspect ratio math
-        let cols = Math.ceil(Math.sqrt(n * (W / H) * (320 / 180)));
-        if (cols < 2 && n > 1) cols = 2;
-        if (cols > n) cols = n;
-        
-        const rows = Math.ceil(n / cols);
-        
-        const gap = 18;
-        const padX = 36;
-        const padY = 36;
-        
-        const avlW = W - padX * 2 - gap * (cols - 1);
-        const avlH = H - padY * 2 - gap * (rows - 1);
-        
-        // Base sizes for the card
-        const baseW = 180;
-        const baseH = 320;
-        
-        // How much can we scale the base grid to perfectly fit the screen?
-        const scaleW = avlW / (cols * baseW);
-        const scaleH = avlH / (rows * baseH);
-        const scale = Math.min(scaleW, scaleH, 1.3); // Cap max size so they don't get comically large
-        
-        return { cardW: baseW, cardH: baseH, cols, scale };
-    }, [products.length, W, H]);
+    // Detect full cycle (activeIdx wraps from any non-zero back to 0)
+    useEffect(() => {
+        if (n > 1 && prevActiveIdxRef.current > 0 && activeIdx === 0) {
+            onAllShownRef.current?.();
+        }
+        prevActiveIdxRef.current = activeIdx;
+    }, [activeIdx, n]);
+
+    useEffect(() => {
+        startTimer();
+        return () => clearInterval(timerRef.current);
+    }, [startTimer]);
+
+    const goTo = useCallback((idx) => {
+        setActiveIdx(((idx % n) + n) % n);
+        startTimer();
+    }, [n, startTimer]);
+
+    if (n === 0) return <div className="ec-scene"><div className="ec-bg" /></div>;
+
+    const { W, H } = dim;
+    const activePal = PALETTES[getStrain(products[activeIdx])];
+
+    const visibleCards = SLOTS.map(slot => ({
+        ...slot,
+        prodIdx: ((activeIdx + slot.offset) % n + n) % n,
+        x: W / 2 + slot.xFrac * W,
+    }));
 
     return (
-        <div ref={containerRef} className="ca-scene"
+        <div ref={containerRef} className="ec-scene"
             style={{ width: '100%', height: '100%', '--accent': categoryTheme?.accent || '#c06c84' }}>
 
-            {/* Deep plum bg */}
-            <div className="ca-bg" />
-
-            {/* Animated aurora orbs */}
+            <div className="ec-bg" />
             <AuroraOrbs W={W} H={H} />
-
-            {/* Fine sparkle particles */}
             <Sparkles W={W} H={H} />
 
-            {/* Grid */}
-            <div className="ca-grid"
-                style={{ '--cols': cols, '--gap': `${18}px`, '--pad': '0', transform: `scale(${scale})` }}>
-                {products.map((p, i) => (
-                    <EdibleCard
-                        key={p.id}
-                        product={p}
-                        index={i}
-                        cardW={cardW}
-                        cardH={cardH}
-                    />
-                ))}
+            {/* Dynamic spotlight behind center card */}
+            <div className="ec-spotlight" style={{
+                background: `radial-gradient(ellipse 38% 62% at 50% 58%, ${activePal.spotlight} 0%, transparent 72%)`,
+            }} />
+
+            {/* Carousel track */}
+            <div className="ec-track">
+                {visibleCards.map(({ offset, prodIdx, x, scale, opacity, z, blur }) => {
+                    const product = products[prodIdx];
+                    const isHero = offset === 0;
+                    const cardW = isHero ? Math.min(W * 0.224, 544) : Math.min(W * 0.16, 400);
+                    const cardH = Math.min(H * 0.592, 656);
+                    return (
+                        <div
+                            key={`slot-${offset}`}
+                            className="ec-card-slot"
+                            style={{
+                                position: 'absolute',
+                                left: x - cardW / 2,
+                                top: '47%',
+                                ...(isHero
+                                    ? { transform: `translateY(-50%) scale(${scale})` }
+                                    : { marginTop: -cardH / 2, height: cardH, transform: `scale(${scale})` }
+                                ),
+                                width: cardW,
+                                transformOrigin: 'center center',
+                                opacity,
+                                zIndex: z,
+                                filter: blur > 0 ? `blur(${blur}px)` : 'none',
+                                cursor: offset !== 0 ? 'pointer' : 'default',
+                                transition: 'left 0.75s cubic-bezier(0.16,1,0.3,1), transform 0.75s cubic-bezier(0.16,1,0.3,1), opacity 0.55s cubic-bezier(0.16,1,0.3,1), filter 0.55s ease',
+                            }}
+                            onClick={() => offset !== 0 && goTo(prodIdx)}
+                        >
+                            {isHero ? <HeroCard product={product} /> : <SideCard product={product} />}
+                        </div>
+                    );
+                })}
             </div>
+
+            {/* Prev / Next arrows */}
+            {n > 1 && (
+                <>
+                    <button className="ec-arrow ec-arrow--prev" onClick={() => goTo(activeIdx - 1)}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                    </button>
+                    <button className="ec-arrow ec-arrow--next" onClick={() => goTo(activeIdx + 1)}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </button>
+                </>
+            )}
+
         </div>
     );
 }

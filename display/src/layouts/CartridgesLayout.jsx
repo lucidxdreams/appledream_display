@@ -5,35 +5,9 @@
  * applying large images and robust grids, but retaining extra cartridge details (Extract Type, CBG, CBN, Effects).
  */
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useFloatingLayout } from './useFloatingLayout';
 import './CartridgesLayout.css';
-
-/* ── Math & Grid Logic (Identical to VapesLayout) ── */
-function calculateGrid(count, W, H) {
-    if (count === 0) return { cardW: 240, cardH: 340, cols: 0, scale: 1 };
-
-    let cols = Math.ceil(Math.sqrt(count * (W / H) * (340 / 240)));
-    if (cols < 2 && count > 1) cols = 2;
-    if (cols > count) cols = count;
-    
-    const rows = Math.ceil(count / cols);
-    
-    const gap = 20;
-    const paddingX = 40;
-    const paddingY = 40;
-    
-    const avlW = W - paddingX * 2 - gap * (cols - 1);
-    const avlH = H - paddingY * 2 - gap * (rows - 1);
-    
-    const baseW = 240;
-    const baseH = 340;
-    
-    const scaleW = avlW / (cols * baseW);
-    const scaleH = avlH / (rows * baseH);
-    const scale = Math.min(scaleW, scaleH, 1.3);
-    
-    return { cardW: baseW, cardH: baseH, cols, scale };
-}
 
 /* ── Palettes (Mapped by Strain) ── */
 const PALETTES = {
@@ -99,8 +73,6 @@ function CartridgeCard({ product, index, cardW, cardH }) {
     // Vary the float animation slightly so they don't sync
     const floatV = (index % 3) + 1;
 
-    // Scale image area dynamically - significantly larger as requested
-    const imgH = cardH * 0.50;
     const imgW = cardW * 0.85;
 
     return (
@@ -125,7 +97,7 @@ function CartridgeCard({ product, index, cardW, cardH }) {
                 </div>
             </div>
 
-            <div className="cg-img-wrap" style={{ width: imgW, height: imgH }}>
+            <div className="cg-img-wrap" style={{ width: imgW }}>
                 <div className="cg-img-glow" />
                 {product.imageUrl ? (
                     <img src={product.imageUrl} alt={product.name} className="cg-img" loading="lazy" />
@@ -134,62 +106,56 @@ function CartridgeCard({ product, index, cardW, cardH }) {
                 )}
             </div>
 
-            <div style={{ flex: 1, minHeight: 4 }} />
-
+            <div style={{ flexShrink: 0, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div className="cg-brand">{product.brand || 'Premium Extract'}</div>
-            <div className="cg-name" style={{
-                fontSize: cardW < 240 ? '1em' : '1.1em',
-                WebkitLineClamp: cardH < 280 ? 1 : 2,
-                marginBottom: 12
-            }}>
+            <div className="cg-name">
                 {product.name}
             </div>
 
             {/* Cannabinoid Bars */}
             <div className="cg-c-bars">
-                <div className="cg-c-row">
-                    <div className="cg-c-labels">
-                        <span className="cg-c-label">THC</span>
-                        <span className="cg-c-val">{thc}%</span>
+                    <div className="cg-c-row">
+                        <div className="cg-c-labels">
+                            <span className="cg-c-label">THC</span>
+                            <span className="cg-c-val">{thc}%</span>
+                        </div>
+                        <div className="cg-c-track">
+                            <div className="cg-c-fill" style={{ width: `${Math.min(thc, 100)}%` }} />
+                        </div>
                     </div>
-                    <div className="cg-c-track">
-                        <div className="cg-c-fill" style={{ width: `${Math.min(thc, 100)}%` }} />
-                    </div>
+
+                    {cbd > 0 && (
+                        <div className="cg-c-row" style={{ marginTop: 4 }}>
+                            <div className="cg-c-labels">
+                                <span className="cg-c-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.6em' }}>CBD</span>
+                                <span className="cg-c-val" style={{ color: '#93c5fd', fontSize: '0.75em', textShadow: 'none' }}>{cbd}%</span>
+                            </div>
+                            <div className="cg-c-track" style={{ height: 3 }}>
+                                <div className="cg-c-fill minor" style={{ width: `${Math.min(cbd * 2, 100)}%` }} />
+                            </div>
+                        </div>
+                    )}
+
+                    {(cbg > 0 || cbn > 0) && (
+                        <div className="cg-c-minor-row" style={{ marginTop: 4 }}>
+                            {cbg > 0 && (
+                                <div className="cg-c-minor-item">
+                                    <span className="cg-c-label" style={{ marginRight: 6 }}>CBG</span>
+                                    <span className="cg-c-val">{cbg}%</span>
+                                </div>
+                            )}
+                            {cbn > 0 && (
+                                <div className="cg-c-minor-item" style={{ textAlign: 'right' }}>
+                                    <span className="cg-c-label" style={{ marginRight: 6 }}>CBN</span>
+                                    <span className="cg-c-val">{cbn}%</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
-                {cbd > 0 && (
-                    <div className="cg-c-row" style={{ marginTop: 4 }}>
-                        <div className="cg-c-labels">
-                            <span className="cg-c-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.6em' }}>CBD</span>
-                            <span className="cg-c-val" style={{ color: '#93c5fd', fontSize: '0.75em', textShadow: 'none' }}>{cbd}%</span>
-                        </div>
-                        <div className="cg-c-track" style={{ height: 3 }}>
-                            <div className="cg-c-fill minor" style={{ width: `${Math.min(cbd * 2, 100)}%` }} />
-                        </div>
-                    </div>
-                )}
-
-                {/* CBG/CBN row if applicable, shown only if taller layout */}
-                {(cbg > 0 || cbn > 0) && cardH > 320 && (
-                    <div className="cg-c-minor-row" style={{ marginTop: 4 }}>
-                        {cbg > 0 && (
-                            <div className="cg-c-minor-item">
-                                <span className="cg-c-label" style={{ marginRight: 6 }}>CBG</span>
-                                <span className="cg-c-val">{cbg}%</span>
-                            </div>
-                        )}
-                        {cbn > 0 && (
-                            <div className="cg-c-minor-item" style={{ textAlign: 'right' }}>
-                                <span className="cg-c-label" style={{ marginRight: 6 }}>CBN</span>
-                                <span className="cg-c-val">{cbn}%</span>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-
             {/* Effects and Price */}
-            {effects.length > 0 && cardH > 280 && (
+            {effects.length > 0 && (
                 <div className="cg-effects">
                     {effects.map(e => (
                         <div key={e} className="cg-chip">{e}</div>
@@ -198,6 +164,7 @@ function CartridgeCard({ product, index, cardW, cardH }) {
             )}
 
             <div className="cg-price">${price}</div>
+            </div>
         </div>
     );
 }
@@ -221,10 +188,13 @@ export default function CartridgesLayout({ products = [] }) {
         return () => observer.disconnect();
     }, []);
 
-    const { cardW, cardH, cols, scale } = useMemo(
-        () => calculateGrid(products.length || 1, dim.w, dim.h),
-        [products.length, dim.w, dim.h]
-    );
+    const { positions, cardW, cardH } = useFloatingLayout({
+        products,
+        containerW: dim.w,
+        containerH: dim.h,
+        baseCardW: 220,
+        baseCardH: 300,
+    });
 
     return (
         <div className="cg-scene" ref={containerRef}>
@@ -232,28 +202,27 @@ export default function CartridgesLayout({ products = [] }) {
             <div className="cg-bloom cg-bloom--1" />
             <div className="cg-bloom cg-bloom--2" />
 
-            <div
-                className="cg-grid"
-                style={{
-                    '--cols': cols || 1,
-                    '--gap': '20px',
-                    '--pad': '0',
-                    transform: `scale(${scale})`
-                }}
-            >
-                {products.length === 0 ? (
-                    <div style={{ color: 'rgba(255,255,255,0.4)', gridColumn: '1 / -1' }}>Waiting for products…</div>
-                ) : (
-                    products.map((p, i) => (
+            <div className="cg-floating-container">
+                {products.map((p, i) => positions[i] ? (
+                    <div
+                        key={p.id}
+                        className="cg-card-wrapper"
+                        style={{
+                            position: 'absolute',
+                            left: positions[i].x - cardW / 2,
+                            top: positions[i].y - cardH / 2,
+                            width: cardW,
+                            height: cardH,
+                        }}
+                    >
                         <CartridgeCard
-                            key={p.id}
                             product={p}
                             index={i}
                             cardW={cardW}
                             cardH={cardH}
                         />
-                    ))
-                )}
+                    </div>
+                ) : null)}
             </div>
         </div>
     );

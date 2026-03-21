@@ -1,0 +1,244 @@
+/* ── VariantLayout ── */
+
+.vl-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+/* Subtle background */
+.vl-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 20%, rgba(16, 185, 129, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.vl-bloom {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(80px);
+    opacity: 0.18;
+}
+
+.vl-bloom--1 {
+    width: 500px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.5) 0%, transparent 70%);
+    top: -60px;
+    left: -80px;
+}
+
+.vl-bloom--2 {
+    width: 400px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, transparent 70%);
+    bottom: 40px;
+    right: -40px;
+}
+
+/* ── Grid ── */
+.vl-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(var(--vl-cols, 4), 1fr);
+    gap: 10px;
+    padding: 14px 16px;
+    width: 100%;
+    align-content: start;
+    overflow-y: auto;
+    max-height: 100%;
+}
+
+/* Group cells span 2 columns */
+.vl-group-cell {
+    grid-column: span 2;
+    display: flex;
+}
+
+.vl-group-cell .vgc {
+    flex: 1;
+    width: 100%;
+}
+
+/* Solo cells span 1 column */
+.vl-solo-cell {
+    grid-column: span 1;
+    display: flex;
+}
+
+/* ── Standalone card ── */
+.vl-solo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 10px;
+    background: rgba(10, 12, 16, 0.82);
+    border: 1px solid var(--vl-border);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 12px 36px rgba(0, 0, 0, 0.6),
+        0 0 28px rgba(0, 0, 0, 0.3);
+    gap: 5px;
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+}
+
+.vl-solo--in {
+    animation: vl-solo-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) var(--entrance-del, 0s) forwards;
+}
+
+@keyframes vl-solo-enter {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.vl-float-1 { animation: vl-solo-enter 0.5s cubic-bezier(0.22,1,0.36,1) var(--entrance-del,0s) forwards, vl-fa 7s ease-in-out var(--float-del,0.5s) infinite; }
+.vl-float-2 { animation: vl-solo-enter 0.5s cubic-bezier(0.22,1,0.36,1) var(--entrance-del,0s) forwards, vl-fb 8.5s ease-in-out var(--float-del,0.5s) infinite; }
+.vl-float-3 { animation: vl-solo-enter 0.5s cubic-bezier(0.22,1,0.36,1) var(--entrance-del,0s) forwards, vl-fc 6.5s ease-in-out var(--float-del,0.5s) infinite; }
+
+@keyframes vl-fa { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes vl-fb { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes vl-fc { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+.vl-solo-top-line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--vl-grad1), var(--vl-grad2));
+    border-radius: 12px 12px 0 0;
+    opacity: 0.85;
+}
+
+.vl-solo-strain {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--vl-neon);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 7px;
+    border-radius: 20px;
+    border: 1px solid var(--vl-border);
+    margin-top: 2px;
+}
+
+.vl-solo-img-wrap {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px 0;
+}
+
+.vl-solo-glow {
+    position: absolute;
+    inset: -10px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--vl-glow) 0%, transparent 70%);
+    opacity: 0.5;
+}
+
+.vl-solo-img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 8px var(--vl-glow));
+}
+
+.vl-solo-fallback {
+    font-size: 1.8em;
+    opacity: 0.5;
+}
+
+.vl-solo-brand {
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vl-solo-name {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    line-height: 1.3;
+    max-width: 130px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.vl-solo-thc-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    padding: 0 8px;
+    margin-top: 2px;
+}
+
+.vl-solo-thc-label {
+    font-size: 8px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.35);
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+}
+
+.vl-solo-thc-track {
+    flex: 1;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.vl-solo-thc-fill {
+    height: 100%;
+    background: var(--vl-bar);
+    border-radius: 2px;
+    box-shadow: 0 0 5px var(--vl-glow);
+}
+
+.vl-solo-thc-val {
+    font-size: 8.5px;
+    font-weight: 700;
+    color: var(--vl-neon);
+    flex-shrink: 0;
+    text-shadow: 0 0 6px var(--vl-glow);
+}
+
+.vl-solo-price {
+    font-size: 15px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--vl-grad1), var(--vl-grad2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-top: 2px;
+    text-shadow: none;
+}

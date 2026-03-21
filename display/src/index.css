@@ -31,9 +31,9 @@
   --font-body: 'Manrope', sans-serif;
 
   /* Layout */
-  --header-height: 8vh;
-  --content-height: 84vh;
-  --footer-height: 8vh;
+  --header-height: 12vh;
+  --content-height: 83vh;
+  --footer-height: 5vh;
 
   /* Timing */
   --transition-speed: 0.3s;

@@ -70,20 +70,18 @@
     }
 }
 
-/* ── Grid ──────────────────────────────────────────────────────── */
-.cg-grid {
+/* ── Floating Container ──────────────────────────────────────────────────────── */
+.cg-floating-container {
     position: relative;
     z-index: 2;
-    display: grid;
-    grid-template-columns: repeat(var(--cols, 3), auto);
-    gap: var(--gap, 20px);
-    padding: var(--pad, 20px 40px);
-    align-items: center;
-    justify-content: center;
-    justify-items: center;
-    max-width: 100%;
-    max-height: 100%;
-    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.cg-card-wrapper {
+    position: absolute;
+    will-change: transform;
 }
 
 /* ── Card ──────────────────────────────────────────────────────── */
@@ -105,18 +103,12 @@
         0 0 0 1px rgba(255, 255, 255, 0.04) inset,
         0 1px 0 rgba(255, 255, 255, 0.07) inset,
         0 0 40px var(--pal-neon-dim, rgba(245, 158, 11, 0.08));
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     cursor: default;
     will-change: transform;
 }
 
-.cg-card:hover {
-    transform: translateY(-6px) scale(1.02);
-    box-shadow:
-        0 16px 60px rgba(0, 0, 0, 0.8),
-        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
-        0 0 60px var(--pal-neon-glow, rgba(245, 158, 11, 0.35));
-}
+/* hover removed — display-only screen */
 
 /* Animations */
 @keyframes cg-enter {
@@ -248,8 +240,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 8px auto 14px;
-    flex-shrink: 0;
+    margin: 4px auto 4px;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .cg-img-glow {

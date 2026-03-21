@@ -12,7 +12,8 @@
  *  · Top neon accent line, staggered float animation
  */
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useFloatingLayout } from './useFloatingLayout';
 import './VapesLayout.css';
 
 /* ── Strain palettes ─────────────────────────────────────────── */
@@ -144,10 +145,6 @@ function VapeCard({ product, index, cardW, cardH }) {
     const isNew = (product.badge || '').toLowerCase() === 'new';
     const floatV = (index % 4) + 1;
 
-    // Disposables imagery must be stunning and dominant (2x bigger than standard)
-    const imgH = Math.min(cardH * 0.55, 340); // Increased from 180 to 340
-    const imgW = imgH * 0.8; // Slightly wider aspect ratio
-
 
     return (
         <div
@@ -165,7 +162,7 @@ function VapeCard({ product, index, cardW, cardH }) {
                 '--entrance-del': `${index * 0.07}s`,
                 '--float-del': `${index * 0.18}s`,
                 width: cardW,
-                minHeight: cardH,
+                height: cardH,
             }}
         >
             {/* Top neon line */}
@@ -185,7 +182,7 @@ function VapeCard({ product, index, cardW, cardH }) {
             </div>
 
             {/* Product image — portrait, intentionally larger than edibles */}
-            <div className="vp-img-wrap" style={{ height: imgH, width: imgW }}>
+            <div className="vp-img-wrap">
                 <div className="vp-img-glow" />
                 {product.imageUrl
                     ? <img src={product.imageUrl} alt={product.name} className="vp-img" />
@@ -193,11 +190,12 @@ function VapeCard({ product, index, cardW, cardH }) {
                 }
             </div>
 
+            <div style={{ flexShrink: 0, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             {/* Name + brand */}
             <div className="vp-name">{product.name}</div>
             {product.brand && <div className="vp-brand">{product.brand}</div>}
 
-            {/* Vape type (only if non-default) */}
+            {/* Vape type */}
             {vapeType && vapeType !== 'Classic THC' && (
                 <div className="vp-type-tag">{vapeType}</div>
             )}
@@ -229,6 +227,7 @@ function VapeCard({ product, index, cardW, cardH }) {
 
             {/* Price */}
             <div className="vp-price">${price}</div>
+            </div>
         </div>
     );
 }
@@ -250,32 +249,13 @@ export default function VapesLayout({ products = [], categoryTheme }) {
 
     const { W, H } = size;
 
-    // Dynamic card dimensions and auto-scaling
-    const { cardW, cardH, cols, scale } = useMemo(() => {
-        const n = products.length || 1;
-        
-        let cols = Math.ceil(Math.sqrt(n * (W / H) * (340 / 180)));
-        if (cols < 2 && n > 1) cols = 2;
-        if (cols > n) cols = n;
-        
-        const rows = Math.ceil(n / cols);
-        
-        const gap = 18;
-        const padX = 36;
-        const padY = 36;
-        
-        const avlW = W - padX * 2 - gap * (cols - 1);
-        const avlH = H - padY * 2 - gap * (rows - 1);
-        
-        const baseW = 180;
-        const baseH = 340;
-        
-        const scaleW = avlW / (cols * baseW);
-        const scaleH = avlH / (rows * baseH);
-        const scale = Math.min(scaleW, scaleH, 1.3);
-        
-        return { cardW: baseW, cardH: baseH, cols, scale };
-    }, [products.length, W, H]);
+    const { positions, cardW, cardH } = useFloatingLayout({
+        products,
+        containerW: W,
+        containerH: H,
+        baseCardW: 200,
+        baseCardH: 300,
+    });
 
     return (
         <div ref={containerRef} className="vp-scene"
@@ -290,12 +270,28 @@ export default function VapesLayout({ products = [], categoryTheme }) {
             <div className="vp-bloom vp-bloom--2" />
             <div className="vp-bloom vp-bloom--3" />
 
-            {/* Card grid — same CSS pattern as ca-grid */}
-            <div className="vp-grid"
-                style={{ '--cols': cols, '--gap': '18px', '--pad': '0', transform: `scale(${scale})` }}>
-                {products.map((p, i) => (
-                    <VapeCard key={p.id} product={p} index={i} cardW={cardW} cardH={cardH} />
-                ))}
+            {/* Floating Cards */}
+            <div className="vp-floating-container">
+                {products.map((p, i) => positions[i] ? (
+                    <div
+                        key={p.id}
+                        className="vp-card-wrapper"
+                        style={{
+                            position: 'absolute',
+                            left: positions[i].x - cardW / 2,
+                            top: positions[i].y - cardH / 2,
+                            width: cardW,
+                            height: cardH,
+                        }}
+                    >
+                        <VapeCard
+                            product={p}
+                            index={i}
+                            cardW={cardW}
+                            cardH={cardH}
+                        />
+                    </div>
+                ) : null)}
             </div>
         </div>
     );

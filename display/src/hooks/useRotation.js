@@ -28,6 +28,7 @@ export function useRotation(locationId) {
     const resetFlagRef = useRef(false);
     const catErrorCount = useRef(0);
     const settingsErrorCount = useRef(0);
+    const skipAutoAdvanceRef = useRef(false);
 
     // ── 1. Subscribe to categories for this location ───────────────────────────
     useEffect(() => {
@@ -118,9 +119,11 @@ export function useRotation(locationId) {
         setProgress(prog);
 
         if (prog >= 1) {
-            const nextIdx = (currentIndexRef.current + 1) % cats.length;
-            currentIndexRef.current = nextIdx;
-            setCurrentIndex(nextIdx);
+            if (!skipAutoAdvanceRef.current) {
+                const nextIdx = (currentIndexRef.current + 1) % cats.length;
+                currentIndexRef.current = nextIdx;
+                setCurrentIndex(nextIdx);
+            }
             startTimeRef.current = Date.now();
         }
 
@@ -132,7 +135,13 @@ export function useRotation(locationId) {
         return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
     }, [tick]);
 
-    // ── 4. jumpTo helper ───────────────────────────────────────────────────────
+    // ── 4. skipAutoAdvance toggle ──────────────────────────────────────────────
+    const setSkipAutoAdvance = useCallback((v) => {
+        skipAutoAdvanceRef.current = v;
+        if (!v) startTimeRef.current = Date.now(); // reset timer when re-enabled
+    }, []);
+
+    // ── 5. jumpTo helper ───────────────────────────────────────────────────────
     const jumpTo = useCallback((indexOrId) => {
         const cats = categoriesRef.current;
         let idx = typeof indexOrId === 'number'
@@ -145,11 +154,11 @@ export function useRotation(locationId) {
         setProgress(0);
     }, []);
 
-    // ── 5. Derived values ──────────────────────────────────────────────────────
+    // ── 6. Derived values ──────────────────────────────────────────────────────
     const safeIndex = categories.length > 0 ? currentIndex % categories.length : 0;
     const currentCategory = categories[safeIndex] ?? null;
     const nextIndex = categories.length > 1 ? (safeIndex + 1) % categories.length : safeIndex;
     const nextCategory = categories[nextIndex] ?? null;
 
-    return { currentCategory, nextCategory, progress, jumpTo, categories, connectionError };
+    return { currentCategory, nextCategory, progress, jumpTo, setSkipAutoAdvance, categories, connectionError };
 }

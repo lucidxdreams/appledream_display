@@ -1,0 +1,316 @@
+/* ── VariantGroupCard ── */
+
+.vgc {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    background: rgba(10, 12, 16, 0.82);
+    border: 1px solid var(--vgc-border);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    backdrop-filter: blur(14px);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 20px 60px rgba(0, 0, 0, 0.65),
+        0 0 40px var(--vgc-dim);
+    opacity: 0;
+    transform: translateY(22px) scale(0.97);
+}
+
+/* ── Entrance animation ── */
+.vgc--in {
+    animation: vgc-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) var(--entrance-del, 0s) forwards;
+}
+
+@keyframes vgc-enter {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ── Gentle float ── */
+.vgc-float-1 { animation: vgc-enter 0.55s cubic-bezier(0.22,1,0.36,1) var(--entrance-del,0s) forwards, vgc-float-a 7s ease-in-out var(--float-del,0.5s) infinite; }
+.vgc-float-2 { animation: vgc-enter 0.55s cubic-bezier(0.22,1,0.36,1) var(--entrance-del,0s) forwards, vgc-float-b 8.5s ease-in-out var(--float-del,0.5s) infinite; }
+.vgc-float-3 { animation: vgc-enter 0.55s cubic-bezier(0.22,1,0.36,1) var(--entrance-del,0s) forwards, vgc-float-c 6.5s ease-in-out var(--float-del,0.5s) infinite; }
+
+@keyframes vgc-float-a { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes vgc-float-b { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes vgc-float-c { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+/* ── Strain accent line at top ── */
+.vgc-top-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--vgc-grad1), var(--vgc-grad2));
+    border-radius: 14px 14px 0 0;
+    opacity: 0.9;
+    z-index: 2;
+}
+
+/* ── LEFT: Hero product ── */
+.vgc-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 16px 16px;
+    width: 155px;
+    flex-shrink: 0;
+    gap: 5px;
+    background: linear-gradient(180deg, var(--vgc-dim) 0%, transparent 100%);
+}
+
+.vgc-hero-strain {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--vgc-neon);
+    background: var(--vgc-dim);
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--vgc-border);
+    margin-bottom: 4px;
+}
+
+.vgc-hero-img-wrap {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.vgc-hero-glow {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--vgc-glow) 0%, transparent 70%);
+    opacity: 0.6;
+    animation: vgc-pulse 3s ease-in-out infinite;
+}
+
+@keyframes vgc-pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.08); }
+}
+
+.vgc-hero-img {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 4px 12px var(--vgc-glow));
+}
+
+.vgc-hero-fallback {
+    font-size: 2.2em;
+    opacity: 0.6;
+}
+
+.vgc-hero-brand {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+}
+
+.vgc-hero-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.92);
+    text-align: center;
+    line-height: 1.3;
+    max-width: 130px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* THC bar */
+.vgc-hero-thc-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    margin-top: 2px;
+}
+
+.vgc-hero-thc-label {
+    font-size: 8.5px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+}
+
+.vgc-hero-thc-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.vgc-hero-thc-fill {
+    height: 100%;
+    background: var(--vgc-bar);
+    border-radius: 2px;
+    box-shadow: 0 0 6px var(--vgc-glow);
+}
+
+.vgc-hero-thc-val {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--vgc-neon);
+    flex-shrink: 0;
+    text-shadow: 0 0 8px var(--vgc-glow);
+}
+
+.vgc-hero-price {
+    font-size: 16px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--vgc-grad1), var(--vgc-grad2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.01em;
+    margin-top: 2px;
+    text-shadow: none;
+}
+
+.vgc-hero-count {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 0.04em;
+}
+
+/* ── DIVIDER ── */
+.vgc-divider {
+    width: 1px;
+    background: linear-gradient(180deg, transparent 5%, var(--vgc-border) 30%, var(--vgc-border) 70%, transparent 95%);
+    flex-shrink: 0;
+    margin: 12px 0;
+    opacity: 0.7;
+}
+
+/* ── RIGHT: Variants list ── */
+.vgc-list-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 14px 12px 12px;
+    min-width: 0;
+}
+
+.vgc-list-header {
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--vgc-neon);
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+.vgc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+}
+
+/* ── Single variant row ── */
+.vgc-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 7px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.15s;
+    opacity: 0;
+    animation: vgc-row-in 0.3s ease calc(var(--entrance-del, 0s) + 0.3s + calc(var(--vi, 0) * 0.04s)) forwards;
+}
+
+@keyframes vgc-row-in {
+    from { opacity: 0; transform: translateX(8px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.vgc-row-img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    border-radius: 4px;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.vgc-row-name {
+    flex: 1;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.82);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.vgc-row-right {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+/* Strain-colored THC chip per variant */
+.vgc-row-strain {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+.vgc-row-strain--hybrid {
+    color: #a7f3d0;
+    background: rgba(16, 185, 129, 0.18);
+}
+
+.vgc-row-strain--indica {
+    color: #d8b4fe;
+    background: rgba(168, 85, 247, 0.18);
+}
+
+.vgc-row-strain--sativa {
+    color: #fde68a;
+    background: rgba(245, 158, 11, 0.18);
+}
+
+.vgc-row-price {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.75);
+    min-width: 28px;
+    text-align: right;
+}

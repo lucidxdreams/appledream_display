@@ -70,10 +70,13 @@ function useContainerSize(ref) {
     const [size, setSize] = useState({ w: 1280, h: 720 });
     useEffect(() => {
         if (!ref.current) return;
-        const measure = () => setSize({
-            w: ref.current.clientWidth || 1280,
-            h: ref.current.clientHeight || 720,
-        });
+        const measure = () => {
+            if (!ref.current) return;
+            setSize({
+                w: ref.current.clientWidth || 1280,
+                h: ref.current.clientHeight || 720,
+            });
+        };
         measure();
         const ro = new ResizeObserver(measure);
         ro.observe(ref.current);
@@ -101,7 +104,7 @@ function calcRadius(count, W, H) {
 /* ── D3 Force Simulation Layout Hook ─────────────────────────────── */
 const LABEL_HEIGHT = 52;
 const COLLISION_PAD = 16;
-const HEADER_RESERVED = 30;  // Extra top margin so bubbles stay clear of header
+const HEADER_RESERVED = 180;  // Keep bubbles clear of header (logo + clock + weather)
 
 function useForceLayout(products, W, H) {
     return useMemo(() => {
@@ -203,7 +206,7 @@ function ArcBadges({ product, r, strain }) {
             aria-hidden="true"
         >
             <defs>
-                <path id={`la-${id}`} d={`M 50,${50 + arcR} A ${arcR},${arcR} 0 0,1 50,${50 - arcR}`} fill="none" />
+                <path id={`la-${id}`} d={`M 50,${50 - arcR} A ${arcR},${arcR} 0 0,0 50,${50 + arcR}`} fill="none" />
                 <path id={`ra-${id}`} d={`M 50,${50 - arcR} A ${arcR},${arcR} 0 0,1 50,${50 + arcR}`} fill="none" />
                 {/* Strain-specific gradient for text */}
                 <linearGradient id={`tg-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -218,13 +221,13 @@ function ArcBadges({ product, r, strain }) {
                     strokeLinejoin="round" fill={colors.arcStroke1}
                     fontSize="5.5" fontWeight="900"
                     style={{ fontFamily: 'var(--font-display)' }}>
-                    <textPath href={`#la-${id}`} startOffset="24%" textAnchor="middle">
+                    <textPath href={`#la-${id}`} startOffset="76%" textAnchor="middle">
                         THC: {product.thc}%
                     </textPath>
                 </text>
                 <text fill={colors.arcFill} fontSize="5.5" fontWeight="900"
                     style={{ fontFamily: 'var(--font-display)' }}>
-                    <textPath href={`#la-${id}`} startOffset="24%" textAnchor="middle">
+                    <textPath href={`#la-${id}`} startOffset="76%" textAnchor="middle">
                         THC: {product.thc}%
                     </textPath>
                 </text>
@@ -236,13 +239,13 @@ function ArcBadges({ product, r, strain }) {
                     strokeLinejoin="round" fill={colors.arcStroke2}
                     fontSize="5.5" fontWeight="900"
                     style={{ fontFamily: 'var(--font-display)' }}>
-                    <textPath href={`#la-${id}`} startOffset="78%" textAnchor="middle">
+                    <textPath href={`#la-${id}`} startOffset="22%" textAnchor="middle">
                         CBD: {product.cbd}%
                     </textPath>
                 </text>
                 <text fill={colors.arcFill} fontSize="5.5" fontWeight="900"
                     style={{ fontFamily: 'var(--font-display)' }}>
-                    <textPath href={`#la-${id}`} startOffset="78%" textAnchor="middle">
+                    <textPath href={`#la-${id}`} startOffset="22%" textAnchor="middle">
                         CBD: {product.cbd}%
                     </textPath>
                 </text>
