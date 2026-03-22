@@ -310,6 +310,7 @@ function HeroCard({ product }) {
             '--pal-grad1': pal.grad1, '--pal-grad2': pal.grad2, '--pal-bar': pal.bar,
         }}>
             <div className="ec-hero-topline" />
+            {product.badge && <span className="ec-badge">{product.badge}</span>}
 
             {/* Clean floating image — no rings, no dark circle */}
             <div className="ec-hero-img-area">
@@ -378,6 +379,7 @@ function SideCard({ product }) {
             '--pal-grad1': pal.grad1, '--pal-grad2': pal.grad2,
         }}>
             <div className="ec-side-topline" />
+            {product.badge && <span className="ec-badge ec-badge--sm">{product.badge}</span>}
             <div className="ec-side-img-area">
                 {product.imageUrl
                     ? <img src={product.imageUrl} alt={product.name} className="ec-side-img" />
