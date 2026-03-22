@@ -296,6 +296,7 @@ function HeroCard({ product }) {
     const strain = getStrain(product);
     const extracted = useImagePalette(product.imageUrl);
     const pal = extracted || PALETTES[strain];
+    const strainLabel = PALETTES[strain].label;
     const effects = (product.effects || []).slice(0, 4);
     const thcMg = product.thcMg || product.thc || 0;
     const pieces = product.pieceCount;
@@ -323,7 +324,7 @@ function HeroCard({ product }) {
             {/* Divider with centred strain pill straddling the line */}
             <div className="ec-hero-divider-wrap">
                 <div className="ec-hero-divider" />
-                <span className="ec-hero-strain-pill">{pal.label}</span>
+                <span className="ec-hero-strain-pill">{strainLabel}</span>
             </div>
 
             {/* Text content */}
@@ -365,6 +366,7 @@ function SideCard({ product }) {
     const strain = getStrain(product);
     const extracted = useImagePalette(product.imageUrl);
     const pal = extracted || PALETTES[strain];
+    const strainLabel = PALETTES[strain].label;
     const thcMg = product.thcMg || product.thc || 0;
     const pieces = product.pieceCount;
     const price = Number(product.price || 0).toFixed(2);
@@ -384,7 +386,7 @@ function SideCard({ product }) {
             </div>
             <div className="ec-side-divider-wrap">
                 <div className="ec-side-divider" />
-                <span className="ec-side-strain">{pal.label}</span>
+                <span className="ec-side-strain">{strainLabel}</span>
             </div>
             <div className="ec-side-content">
                 {product.brand && <div className="ec-side-brand">{product.brand}</div>}
