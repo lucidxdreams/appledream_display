@@ -134,7 +134,7 @@
 .ec-hero-divider-wrap {
     position: relative;
     flex-shrink: 0;
-    height: 30px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -145,9 +145,14 @@
     top: 50%;
     left: 18px;
     right: 18px;
-    height: 1px;
+    height: 1.5px;
     transform: translateY(-50%);
-    background: linear-gradient(90deg, transparent, var(--pal-border, rgba(139,92,246,0.38)) 30%, var(--pal-border, rgba(139,92,246,0.38)) 70%, transparent);
+    background: linear-gradient(90deg,
+        transparent 0%,
+        var(--pal-halo, rgba(139,92,246,0.70)) 28%,
+        var(--pal-halo, rgba(139,92,246,0.70)) 72%,
+        transparent 100%);
+    box-shadow: 0 0 6px var(--pal-glow, rgba(139,92,246,0.45));
 }
 
 /* ── Text Content ─────────────────────────────────────────────────── */
@@ -243,11 +248,11 @@
 .ec-hero-strain-pill {
     position: relative;
     z-index: 1;
-    font-size: 11.5px;
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    padding: 5px 13px;
+    padding: 5px 14px;
     border-radius: 20px;
     background: rgba(8,4,20,0.95);
     border: 1px solid var(--pal-border, rgba(139,92,246,0.38));
