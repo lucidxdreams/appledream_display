@@ -1,0 +1,141 @@
+/* ============================================
+   BubbleCard.css — 3D iridescent bubble card
+   ============================================ */
+
+.bubble-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: bubble-appear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes bubble-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.4);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ── Product Info Overlay ─────────────────── */
+.bubble-card__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+.bubble-card__overlay--fade {
+    opacity: 0;
+}
+
+.bubble-layer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    text-align: center;
+    padding: 12px;
+    width: 100%;
+}
+
+/* ── Product Image ────────────────────────── */
+.bubble-img {
+    width: 38%;
+    height: 38%;
+    object-fit: contain;
+    border-radius: 50%;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+
+/* ── Typography ───────────────────────────── */
+.bubble-name {
+    font-family: var(--font-display, sans-serif);
+    font-weight: 700;
+    font-size: clamp(0.62rem, 1.2vw, 1rem);
+    color: #fff;
+    text-shadow:
+        0 1px 6px rgba(0, 0, 0, 0.7),
+        0 0 12px rgba(0, 0, 0, 0.4);
+    line-height: 1.2;
+    text-align: center;
+}
+
+.bubble-price {
+    font-family: var(--font-stat, monospace);
+    font-size: clamp(0.9rem, 1.8vw, 1.5rem);
+    color: #f0c96e;
+    text-shadow:
+        0 0 10px rgba(240, 201, 110, 0.5),
+        0 1px 4px rgba(0, 0, 0, 0.6);
+    letter-spacing: 0.04em;
+}
+
+/* ── Stats ───────────────────────────────── */
+.bubble-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+
+.bubble-stat__label {
+    font-family: var(--font-body, sans-serif);
+    font-size: 0.58rem;
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.bubble-stat__value {
+    font-family: var(--font-stat, monospace);
+    font-size: clamp(0.95rem, 1.9vw, 1.55rem);
+    color: #f0c96e;
+    text-shadow:
+        0 0 8px rgba(240, 201, 110, 0.4),
+        0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Badge ───────────────────────────────── */
+.bubble-badge {
+    font-family: var(--font-display, sans-serif);
+    font-weight: 600;
+    font-size: clamp(0.48rem, 0.8vw, 0.68rem);
+    background: rgba(106, 176, 76, 0.9);
+    color: #000;
+    padding: 2px 9px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Terpenes / Effects ──────────────────── */
+.bubble-terpenes {
+    font-family: var(--font-body, sans-serif);
+    font-size: clamp(0.5rem, 0.85vw, 0.7rem);
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    line-height: 1.45;
+    text-align: center;
+}
+
+.bubble-effects {
+    font-family: var(--font-body, sans-serif);
+    font-size: clamp(0.45rem, 0.75vw, 0.65rem);
+    color: rgba(255, 255, 255, 0.75);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}

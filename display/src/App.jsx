@@ -69,7 +69,7 @@ function CategoryLayout({ category, products, variantGroups, theme, onAllShown }
   }
 
   const id = (category.id || '').toLowerCase();
-  if (id.includes('flower')) return <CloudBubbles products={products} categoryTheme={theme} />;
+  if (id.includes('flower')) return <FlowersLayout products={products} categoryTheme={theme} />;
   if (id.includes('edible')) return <NeuralConstellation products={products} categoryTheme={theme} onAllShown={onAllShown} />;
   if (id.includes('vape') || id.includes('disposable')) return <VapesLayout products={products} categoryTheme={theme} />;
   if (id.includes('cart')) return <CartridgesLayout products={products} categoryTheme={theme} />;
