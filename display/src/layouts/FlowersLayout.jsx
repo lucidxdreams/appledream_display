@@ -15,17 +15,127 @@
  */
 
 import { useMemo, useState, useEffect, useRef } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { Environment, MeshDistortMaterial, Float } from '@react-three/drei';
+import { Vector3, AdditiveBlending, CanvasTexture } from 'three';
 import './FlowersLayout.css';
 
-/* ── Strain → CSS class ─────────────────────────────────────── */
+/* ── Strain → WebGL glass tint colour ───────────────────────── */
 
-function getStrainClass(product) {
+const STRAIN_TINT = {
+    sativa: '#bbff44',
+    indica: '#8844ff',
+    hybrid: '#ff6644',
+    cbd:    '#44ddff',
+    default:'#99ffcc',
+};
+
+function getStrainTint(product) {
     const s = ((product.type || '') + ' ' + (product.name || '')).toLowerCase();
-    if (s.includes('sativa')) return 'fl-bubble--sativa';
-    if (s.includes('indica')) return 'fl-bubble--indica';
-    if (s.includes('hybrid')) return 'fl-bubble--hybrid';
-    if (s.includes('cbd'))    return 'fl-bubble--cbd';
-    return 'fl-bubble--default';
+    if (s.includes('sativa')) return STRAIN_TINT.sativa;
+    if (s.includes('indica')) return STRAIN_TINT.indica;
+    if (s.includes('hybrid')) return STRAIN_TINT.hybrid;
+    if (s.includes('cbd'))    return STRAIN_TINT.cbd;
+    return STRAIN_TINT.default;
+}
+
+/* ── Radial glow texture — cached per strain colour ─────────── */
+
+const _glowCache = new Map();
+function getGlowTexture(hexColor) {
+    if (_glowCache.has(hexColor)) return _glowCache.get(hexColor);
+    const size = 256;
+    const cv   = document.createElement('canvas');
+    cv.width   = cv.height = size;
+    const ctx  = cv.getContext('2d');
+    const c    = size / 2;
+    const rv   = parseInt(hexColor.slice(1, 3), 16);
+    const gv   = parseInt(hexColor.slice(3, 5), 16);
+    const bv   = parseInt(hexColor.slice(5, 7), 16);
+    // transparent centre → opaque at bubble edge → transparent at sprite edge
+    // sprite scale = r*2.10; bubble fills r/(r*1.05)=0.952 of sprite half → stop at 0.95
+    const grad = ctx.createRadialGradient(c, c, 0, c, c, c);
+    grad.addColorStop(0,    `rgba(${rv},${gv},${bv},0)`);
+    grad.addColorStop(0.95, `rgba(${rv},${gv},${bv},1)`);
+    grad.addColorStop(1,    `rgba(${rv},${gv},${bv},0)`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+    const tex = new CanvasTexture(cv);
+    _glowCache.set(hexColor, tex);
+    return tex;
+}
+
+/* ── 3D glass-sphere scene (inside R3F Canvas) ───────────────── */
+
+function Scene({ positions, products, slotRefs }) {
+    const { camera, size } = useThree();
+    const groupRefs = useRef([]);
+    const vec       = useRef(new Vector3());
+
+    useFrame(() => {
+        for (let i = 0; i < positions.length; i++) {
+            const group = groupRefs.current[i];
+            const slot  = slotRefs.current[i];
+            if (!group || !slot) continue;
+            group.getWorldPosition(vec.current);
+            vec.current.project(camera);
+            const x = (vec.current.x  + 1) / 2 * size.width;
+            const y = (-vec.current.y + 1) / 2 * size.height;
+            slot.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%))`;
+        }
+    });
+
+    return (
+        <>
+            <Environment preset="city" />
+            {positions.map((pos, i) => {
+                const product = products[i];
+                if (!product || !pos) return null;
+                const x     = pos.x - size.width  / 2;
+                const y     = size.height / 2 - pos.y;
+                const speed = 1.2 + (i * 0.17) % 0.9;
+                return (
+                    <Float
+                        key={`f-${product.id}`}
+                        speed={speed}
+                        rotationIntensity={0}
+                        floatIntensity={0.5}
+                    >
+                        <group
+                            ref={el => { groupRefs.current[i] = el; }}
+                            position={[x, y, 0]}
+                        >
+                            <sprite scale={[pos.r * 2.10, pos.r * 2.10, 1]}>
+                                <spriteMaterial
+                                    map={getGlowTexture(getStrainTint(product))}
+                                    transparent
+                                    depthWrite={false}
+                                    blending={AdditiveBlending}
+                                />
+                            </sprite>
+                            <mesh scale={pos.r}>
+                                <sphereGeometry args={[1, 32, 32]} />
+                                <MeshDistortMaterial
+                                    color={getStrainTint(product)}
+                                    distort={0.20}
+                                    speed={2}
+                                    transmission={1}
+                                    thickness={0.4}
+                                    roughness={0}
+                                    iridescence={1}
+                                    iridescenceIOR={1.2}
+                                    iridescenceThicknessRange={[0, 1200]}
+                                    clearcoat={1}
+                                    clearcoatRoughness={0}
+                                    envMapIntensity={1.2}
+                                />
+                            </mesh>
+                        </group>
+                    </Float>
+                );
+            })}
+        </>
+    );
 }
 
 /* ── Layout math ────────────────────────────────────────────── */
@@ -137,32 +247,39 @@ function buildPositions(count, W, H, r, safeTop, products = []) {
 
 const STRAIN_PALETTES = {
     sativa: {
-        /* Deep brown pill on amber-orange sphere; warm cream text + gold price */
-        thcBg:     '#3d1200',   cbdBg:     '#320e00',
-        strainBg:  '#451500',   lblBg:     '#220a00',
-        textFill:  '#fff0c0',   priceFill: '#ffe040',
+        thcBg:          '#3d1200',   cbdBg:     '#320e00',
+        strainBg:       '#6b2a00',   lblBg:     '#220a00',
+        textFill:       '#fff0c0',   priceFill: '#ffe040',
+        strainTextFill: '#ffcc00',
+        badgeBg:        '#0a2200',   badgeGrad1:'#aaff00',  badgeGrad2:'#55cc00',
     },
     indica: {
-        /* Deep purple pill on royal-violet sphere; soft lavender text + lilac price */
-        thcBg:     '#1e0038',   cbdBg:     '#18002e',
-        strainBg:  '#240044',   lblBg:     '#0e0020',
-        textFill:  '#e8c8ff',   priceFill: '#d080ff',
+        thcBg:          '#1e0038',   cbdBg:     '#18002e',
+        strainBg:       '#2e0055',   lblBg:     '#0e0020',
+        textFill:       '#e8c8ff',   priceFill: '#d080ff',
+        strainTextFill: '#cc44ff',
+        badgeBg:        '#12002e',   badgeGrad1:'#dd44ff',  badgeGrad2:'#8800cc',
     },
     hybrid: {
-        /* Deep maroon pill on hot-pink sphere; rose-white text + bright pink price */
-        thcBg:     '#3d0020',   cbdBg:     '#300018',
-        strainBg:  '#460026',   lblBg:     '#1e000f',
-        textFill:  '#ffcce8',   priceFill: '#ff80c0',
+        thcBg:          '#3d0020',   cbdBg:     '#300018',
+        strainBg:       '#500022',   lblBg:     '#1e000f',
+        textFill:       '#ffcce8',   priceFill: '#ff80c0',
+        strainTextFill: '#ff44aa',
+        badgeBg:        '#2e0c00',   badgeGrad1:'#ff6622',  badgeGrad2:'#ff2266',
     },
     cbd: {
-        thcBg:     '#004858',   cbdBg:     '#003845',
-        strainBg:  '#005568',   lblBg:     '#002535',
-        textFill:  '#b0ecff',   priceFill: '#60d8f0',
+        thcBg:          '#004858',   cbdBg:     '#003845',
+        strainBg:       '#001e5c',   lblBg:     '#002535',
+        textFill:       '#b0ecff',   priceFill: '#60d8f0',
+        strainTextFill: '#22ccff',
+        badgeBg:        '#001428',   badgeGrad1:'#00ddff',  badgeGrad2:'#0088cc',
     },
     default: {
-        thcBg:     '#1a5200',   cbdBg:     '#245800',
-        strainBg:  '#1e5c00',   lblBg:     '#0d3500',
-        textFill:  '#d0ff90',   priceFill: '#a8f040',
+        thcBg:          '#1a5200',   cbdBg:     '#245800',
+        strainBg:       '#1c4800',   lblBg:     '#0d3500',
+        textFill:       '#d0ff90',   priceFill: '#a8f040',
+        strainTextFill: '#88ff22',
+        badgeBg:        '#001408',   badgeGrad1:'#44ff88',  badgeGrad2:'#00bb55',
     },
 };
 
@@ -197,10 +314,14 @@ function ProductInfo({ product, diameter }) {
     const arcR     = r + 6;                            // arc radius: 6px outside circle edge
     const lblFs    = svgFs * 1.30;                     // title+price font: 30% larger than tags
     const lblArcR  = r - 7;                            // label arc: 7px inside bubble edge
-    const strArcR  = arcR + 8;                         // strain arc: 8px further outside bubble
-    const lblSw    = lblFs * 0.60;                     // pill stroke scaled to label font
-    const strain   = getStrainLabel(product);
-    const pal      = getStrainPalette(product);
+    const strArcR  = arcR - 4;                         // strain arc: hugs the bubble edge
+    const lblSw      = lblFs * 0.60;
+    const badgeArcR  = strArcR + 14;
+    const badgeFs    = svgFs * 1.65;
+    const badgeSw    = badgeFs * 0.65;
+    const strain     = getStrainLabel(product);
+    const pal        = getStrainPalette(product);
+    const badge      = product.badge;
 
     // Safe ID: strip non-alphanumeric characters
     const uid = String(product.id ?? product.name ?? Math.random())
@@ -240,13 +361,17 @@ function ProductInfo({ product, diameter }) {
                 xmlns="http://www.w3.org/2000/svg"
             >
                 <defs>
-                    {/* THC — 10 o'clock area, 293° centre; tight pair with CBD */}
                     {product.thc  != null && <path id={`thc-${uid}`}  d={arcPath(293, 44)} />}
-                    {/* CBD — 11 o'clock area, 332° centre; just above THC */}
                     {product.cbd  != null && <path id={`cbd-${uid}`}  d={arcPath(332, 38)} />}
-                    {/* Strain type — 1-2 o'clock, 48° centre */}
                     {strain               && <path id={`str-${uid}`}  d={arcPath( 48, 52, false, strArcR)} />}
-                    {/* Title+price — lower-right, 135° centre, reversed arc → L→R reading */}
+                    {badge                && <path id={`bdg-${uid}`}  d={arcPath( 48, 72, false, badgeArcR)} />}
+                    {badge && (
+                        <linearGradient id={`bdg-grad-${uid}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%"   stopColor={pal.badgeGrad1} />
+                            <stop offset="50%"  stopColor={pal.badgeGrad2} />
+                            <stop offset="100%" stopColor={pal.badgeGrad1} />
+                        </linearGradient>
+                    )}
                     <path id={`lbl-${uid}`} d={arcPath(135, 130, true, lblArcR)} />
                 </defs>
 
@@ -295,6 +420,20 @@ function ProductInfo({ product, diameter }) {
                         </textPath>
                     </text>
                 )}
+                {badge && (
+                    <text
+                        fontSize={badgeFs} fontWeight="900"
+                        fontFamily="var(--font-display, sans-serif)"
+                        dominantBaseline="central"
+                        fill="none"
+                        stroke={pal.badgeBg} strokeWidth={badgeSw}
+                        strokeLinejoin="round" strokeLinecap="round"
+                    >
+                        <textPath href={`#bdg-${uid}`} startOffset="50%" textAnchor="middle">
+                            {String(badge).toUpperCase()}
+                        </textPath>
+                    </text>
+                )}
 
                 {/* ── PASS 2: white text fills on top ───────────────── */}
                 {product.thc != null && (
@@ -326,10 +465,22 @@ function ProductInfo({ product, diameter }) {
                         fontSize={svgFs} fontWeight="800"
                         fontFamily="var(--font-display, sans-serif)"
                         dominantBaseline="central"
-                        fill={pal.textFill}
+                        fill={pal.strainTextFill || pal.textFill}
                     >
                         <textPath href={`#str-${uid}`} startOffset="50%" textAnchor="middle">
                             {strain.toUpperCase()}
+                        </textPath>
+                    </text>
+                )}
+                {badge && (
+                    <text
+                        fontSize={badgeFs} fontWeight="900"
+                        fontFamily="var(--font-display, sans-serif)"
+                        dominantBaseline="central"
+                        fill={`url(#bdg-grad-${uid})`}
+                    >
+                        <textPath href={`#bdg-${uid}`} startOffset="50%" textAnchor="middle">
+                            {String(badge).toUpperCase()}
                         </textPath>
                     </text>
                 )}
@@ -379,6 +530,7 @@ function ProductInfo({ product, diameter }) {
 
 export default function FlowersLayout({ products = [] }) {
     const containerRef = useRef(null);
+    const slotRefs     = useRef([]);
     const [dim, setDim] = useState({ W: 0, H: 0 });
     const [safeTop, setSafeTop] = useState(0);
 
@@ -411,97 +563,36 @@ export default function FlowersLayout({ products = [] }) {
     return (
         <div className="fl-root" ref={containerRef}>
 
-            {/* ── SVG goo filter definition ──────────────────── */}
-            <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-                <defs>
-                    <filter id="fl-goo" x="-30%" y="-30%" width="160%" height="160%">
-                        {/* Blur all bubble shapes together */}
-                        <feGaussianBlur in="SourceGraphic" stdDeviation="11" result="blur" />
-                        {/* Threshold alpha → hard goo edge; close bubbles merge */}
-                        <feColorMatrix in="blur" mode="matrix"
-                            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"
-                            result="goo" />
-                        {/* Restore original gradient colours inside the goo mask */}
-                        <feComposite in="SourceGraphic" in2="goo" operator="in" />
-                    </filter>
-                    {/* Lighter goo for text pill labels — smaller blur keeps text crisp */}
-                    <filter id="fl-text-goo" x="-40%" y="-40%" width="180%" height="180%">
-                        <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
-                        <feColorMatrix in="blur" mode="matrix"
-                            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 28 -12"
-                            result="goo" />
-                        <feComposite in="SourceGraphic" in2="goo" operator="in" />
-                    </filter>
-                </defs>
-            </svg>
+            {/* ── Back layer: WebGL glass spheres ───────────────── */}
+            <Canvas
+                orthographic
+                camera={{ zoom: 1, position: [0, 0, 100], near: 0.1, far: 200 }}
+                style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+                gl={{ alpha: true, antialias: true }}
+            >
+                <Scene positions={positions} products={products} slotRefs={slotRefs} />
+            </Canvas>
 
-            {/* ── Layer 1: bubble shapes with goo filter ──────── */}
-            <div className="fl-goo-layer">
+            {/* ── Front layer: always on top of canvas, positions driven by useFrame ─ */}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
                 {positions.map((pos, i) => {
                     const product  = products[i];
                     if (!product || !pos) return null;
                     const diameter = pos.r * 2;
-                    const floatDur = 6 + (i * 1.3) % 5;           // 6–11 s, spread across primes
-                    const floatDel = (i * 0.31).toFixed(2);
-                    const blobDur  = 12 + (i % 5) * 2;
-                    const blobDel  = -((i * 2.1) % blobDur).toFixed(2);
-                    // 2D float waypoints — deterministic per index, unique path per bubble
-                    const fx1 = ((i * 7  + 2) % 22) - 11;
-                    const fy1 = ((i * 5  + 1) % 20) - 10;
-                    const fx2 = ((i * 11 + 7) % 18) - 9;
-                    const fy2 = ((i * 3  + 4) % 20) - 10;
-                    const fx3 = ((i * 13 + 5) % 16) - 8;
-                    const fy3 = ((i * 6  + 3) % 18) - 9;
-                    return (
-                        <div
-                            key={`bg-${product.id}`}
-                            className={`fl-bubble-bg ${getStrainClass(product)}`}
-                            style={{
-                                left:            pos.x,
-                                top:             pos.y,
-                                width:           diameter,
-                                height:          diameter,
-                                '--fl-dur':      `${floatDur}s`,
-                                '--fl-del':      `${floatDel}s`,
-                                '--fl-blob-dur': `${blobDur}s`,
-                                '--fl-blob-del': `${blobDel}s`,
-                                '--fl-x1': `${fx1}px`, '--fl-y1': `${fy1}px`,
-                                '--fl-x2': `${fx2}px`, '--fl-y2': `${fy2}px`,
-                                '--fl-x3': `${fx3}px`, '--fl-y3': `${fy3}px`,
-                            }}
-                        />
-                    );
-                })}
-            </div>
-
-            {/* ── Layer 2: product text with text-scale goo filter ─ */}
-            <div className="fl-text-goo-layer">
-                {positions.map((pos, i) => {
-                    const product  = products[i];
-                    if (!product || !pos) return null;
-                    const diameter = pos.r * 2;
-                    const floatDur = 6 + (i * 1.3) % 5;           // must match BG layer exactly
-                    const floatDel = (i * 0.31).toFixed(2);
-                    const fx1 = ((i * 7  + 2) % 22) - 11;
-                    const fy1 = ((i * 5  + 1) % 20) - 10;
-                    const fx2 = ((i * 11 + 7) % 18) - 9;
-                    const fy2 = ((i * 3  + 4) % 20) - 10;
-                    const fx3 = ((i * 13 + 5) % 16) - 8;
-                    const fy3 = ((i * 6  + 3) % 18) - 9;
                     return (
                         <div
                             key={`txt-${product.id}`}
-                            className="fl-bubble-slot"
+                            ref={el => { slotRefs.current[i] = el; }}
                             style={{
-                                left:       pos.x,
-                                top:        pos.y,
-                                width:      diameter,
-                                height:     diameter,
-                                '--fl-dur': `${floatDur}s`,
-                                '--fl-del': `${floatDel}s`,
-                                '--fl-x1': `${fx1}px`, '--fl-y1': `${fy1}px`,
-                                '--fl-x2': `${fx2}px`, '--fl-y2': `${fy2}px`,
-                                '--fl-x3': `${fx3}px`, '--fl-y3': `${fy3}px`,
+                                position:      'absolute',
+                                width:         diameter,
+                                height:        diameter,
+                                top:           0,
+                                left:          0,
+                                transform:     `translate(calc(${pos.x}px - 50%), calc(${pos.y}px - 50%))`,
+                                pointerEvents: 'none',
+                                userSelect:    'none',
+                                willChange:    'transform',
                             }}
                         >
                             <ProductInfo product={product} diameter={diameter} />
