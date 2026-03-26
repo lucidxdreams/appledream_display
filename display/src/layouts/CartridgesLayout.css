@@ -1,29 +1,22 @@
 /**
- * CartridgesLayout.css
- * 
- * High-end vertical display identical in aesthetic structure to VapesLayout (Neon Prism),
- * tailored to display rich cartridge extract data (Cannabinoids, Effects).
+ * CartridgesLayout.css — "Neon Drop" Cartridges
+ * Flex-wrap layout, big-image portrait-landscape cards, neon-tech palette.
  */
 
-/* ── Scene ─────────────────────────────────────────────────────── */
+/* ── Scene ── */
 .cg-scene {
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
     width: 100%;
     height: 100%;
+    overflow: hidden;
 }
 
 /* Dark tech base */
 .cg-bg {
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse 120% 120% at 50% 50%,
-            #0a0805 0%,
-            #050810 60%,
-            #020408 100%);
+    background: radial-gradient(ellipse 130% 130% at 50% 50%,
+        #060410 0%, #040208 55%, #020106 100%);
     z-index: 0;
 }
 
@@ -33,404 +26,231 @@
     border-radius: 50%;
     pointer-events: none;
     z-index: 0;
-    filter: blur(90px);
+    filter: blur(100px);
 }
-
 .cg-bloom--1 {
-    width: 50%;
-    height: 60%;
-    left: -15%;
-    top: 10%;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
-    animation: cg-bloom-drift 14s ease-in-out infinite;
+    width: 48%; height: 55%;
+    left: -12%; top: 12%;
+    background: radial-gradient(circle, rgba(168,85,247,0.10) 0%, transparent 70%);
+    animation: cg-bloom-drift 16s ease-in-out infinite;
 }
-
 .cg-bloom--2 {
-    width: 60%;
-    height: 50%;
-    right: -20%;
-    bottom: -10%;
-    background: radial-gradient(circle, rgba(234, 179, 8, 0.06) 0%, transparent 70%);
-    animation: cg-bloom-drift 18s ease-in-out 4s infinite reverse;
+    width: 52%; height: 48%;
+    right: -14%; bottom: -8%;
+    background: radial-gradient(circle, rgba(16,185,129,0.09) 0%, transparent 70%);
+    animation: cg-bloom-drift 21s ease-in-out 6s infinite reverse;
+}
+.cg-bloom--3 {
+    width: 35%; height: 40%;
+    left: 30%; top: -10%;
+    background: radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 70%);
+    animation: cg-bloom-drift 13s ease-in-out 2s infinite;
 }
 
 @keyframes cg-bloom-drift {
-
-    0%,
-    100% {
-        transform: translate(0, 0);
-    }
-
-    33% {
-        transform: translate(5%, 3%);
-    }
-
-    66% {
-        transform: translate(-3%, -5%);
-    }
+    0%,100% { transform: translate(0,0); }
+    33%      { transform: translate(4%, 3%); }
+    66%      { transform: translate(-3%,-4%); }
 }
 
-/* ── Floating Container ──────────────────────────────────────────────────────── */
-.cg-floating-container {
+/* ── Flex-wrap card container ── */
+.cg-cards {
     position: relative;
     z-index: 2;
     width: 100%;
     height: 100%;
-    overflow: visible;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
-.cg-card-wrapper {
-    position: absolute;
-    will-change: transform;
-}
-
-/* ── Card ──────────────────────────────────────────────────────── */
+/* ── Card base ── */
 .cg-card {
     position: relative;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    background: linear-gradient(170deg,
+        rgba(10,7,18,0.96) 0%,
+        rgba(6,4,12,0.98) 100%);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--pal-border);
     border-radius: 18px;
     overflow: hidden;
-    padding: 0 0 16px;
     box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px) saturate(150%);
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
-    border: 1px solid var(--pal-border, rgba(245, 158, 11, 0.4));
     box-shadow:
-        0 10px 50px rgba(0, 0, 0, 0.7),
-        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-        0 1px 0 rgba(255, 255, 255, 0.07) inset,
-        0 0 40px var(--pal-neon-dim, rgba(245, 158, 11, 0.08));
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    cursor: default;
-    will-change: transform;
-}
-
-/* hover removed — display-only screen */
-
-/* Animations */
-@keyframes cg-enter {
-    from {
-        opacity: 0;
-        transform: translateY(40px) scale(0.9);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-@keyframes cg-float-1 {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-6px);
-    }
-}
-
-@keyframes cg-float-2 {
-
-    0%,
-    100% {
-        transform: translateY(-3px);
-    }
-
-    50% {
-        transform: translateY(4px);
-    }
-}
-
-@keyframes cg-float-3 {
-
-    0%,
-    100% {
-        transform: translateY(2px);
-    }
-
-    50% {
-        transform: translateY(-7px);
-    }
-}
-
-.cg-card--in {
-    animation: cg-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--entrance-del, 0s) both;
-}
-
-.cg-card.cg-float-1 {
-    animation: cg-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--entrance-del, 0s) both, cg-float-1 5.2s ease-in-out var(--float-del, 0s) infinite;
-}
-
-.cg-card.cg-float-2 {
-    animation: cg-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--entrance-del, 0s) both, cg-float-2 4.8s ease-in-out var(--float-del, 0s) infinite;
-}
-
-.cg-card.cg-float-3 {
-    animation: cg-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) var(--entrance-del, 0s) both, cg-float-3 5.6s ease-in-out var(--float-del, 0s) infinite;
-}
-
-/* ── Top Neon Line ─────────────────────────────────────────────── */
-.cg-top-line {
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--pal-neon, #f59e0b) 30%, var(--pal-grad2, #fbbf24) 70%, transparent);
-    box-shadow: 0 0 14px var(--pal-neon-glow, rgba(245, 158, 11, 0.7));
+        0 10px 48px rgba(0,0,0,0.80),
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 0 32px var(--pal-dim);
+    opacity: 0;
     flex-shrink: 0;
 }
 
-/* ── Header ───────────────────────────────────────────────────── */
+/* ── Animations ── */
+@keyframes cg-enter {
+    from { opacity: 0; transform: translateY(30px) scale(0.92); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes cg-float-1 {
+    0%,100% { transform: translateY(0);   }
+    50%     { transform: translateY(-7px);}
+}
+@keyframes cg-float-2 {
+    0%,100% { transform: translateY(-4px);}
+    50%     { transform: translateY(5px); }
+}
+@keyframes cg-float-3 {
+    0%,100% { transform: translateY(3px); }
+    50%     { transform: translateY(-6px);}
+}
+@keyframes cg-glow-pulse {
+    0%,100% { opacity: 0.38; transform: scale(1);    }
+    50%     { opacity: 0.65; transform: scale(1.20); }
+}
+
+.cg-card.cg-float-1 {
+    animation:
+        cg-enter  0.65s cubic-bezier(0.16,1,0.3,1) var(--entrance-delay,0s) both,
+        cg-float-1 5.4s ease-in-out var(--float-delay,1s) infinite;
+}
+.cg-card.cg-float-2 {
+    animation:
+        cg-enter  0.65s cubic-bezier(0.16,1,0.3,1) var(--entrance-delay,0s) both,
+        cg-float-2 6.0s ease-in-out var(--float-delay,1s) infinite;
+}
+.cg-card.cg-float-3 {
+    animation:
+        cg-enter  0.65s cubic-bezier(0.16,1,0.3,1) var(--entrance-delay,0s) both,
+        cg-float-3 5.0s ease-in-out var(--float-delay,1s) infinite;
+}
+
+/* ── Accent line ── */
+.cg-accent-line {
+    width: 100%;
+    height: 3px;
+    flex-shrink: 0;
+    background: var(--pal-bar);
+    box-shadow: 0 0 16px var(--pal-glow);
+}
+
+/* ── Header row ── */
 .cg-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
-    padding: 8px 14px 4px;
-    box-sizing: border-box;
+    padding: 8px 14px 5px;
     flex-shrink: 0;
+    box-sizing: border-box;
+    width: 100%;
 }
 
-.cg-strain-label {
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.2em;
+.cg-strain {
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.20em;
     text-transform: uppercase;
-    color: var(--pal-neon, #f59e0b);
-    font-family: var(--font-display, 'Inter', sans-serif);
-    text-shadow: 0 0 12px var(--pal-neon-glow, rgba(245, 158, 11, 0.6));
+    color: var(--pal-primary);
+    text-shadow: 0 0 10px var(--pal-glow);
+    background: var(--pal-dim);
+    border: 1px solid var(--pal-border);
+    border-radius: 30px;
+    padding: 3px 10px 3px;
+    white-space: nowrap;
 }
 
 .cg-badges {
     display: flex;
-    gap: 6px;
+    gap: 5px;
+    align-items: center;
 }
 
-.cg-size-badge,
-.cg-extract-badge {
-    font-size: 9px;
+.cg-badge {
+    font-size: 0.48rem;
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     padding: 2px 7px;
     border-radius: 6px;
-    background: var(--pal-neon-dim, rgba(245, 158, 11, 0.18));
-    border: 1px solid var(--pal-border, rgba(245, 158, 11, 0.4));
-    color: var(--pal-chip-txt, #fde68a);
-    text-transform: uppercase;
+    white-space: nowrap;
 }
-
-.cg-badge--hot {
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    border-radius: 20px;
-    background: #ef4444;
+.cg-badge--size,
+.cg-badge--ext {
+    background: var(--pal-dim);
+    border: 1px solid var(--pal-border);
+    color: var(--pal-primary);
+}
+.cg-badge--new {
+    background: linear-gradient(135deg, #15803d, #22c55e);
     color: #fff;
+    box-shadow: 0 0 10px rgba(34,197,94,0.45);
+    border-radius: 20px;
 }
 
-/* ── Product Image ─────────────────────────────────────────────── */
+/* ── Image area ── */
 .cg-img-wrap {
     position: relative;
+    flex: 1 1 0;
+    min-height: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 4px auto 4px;
-    flex: 1 1 0;
-    min-height: 0;
     overflow: hidden;
 }
 
 .cg-img-glow {
     position: absolute;
-    width: 80%;
-    height: 90%;
-    top: 10%;
-    left: 10%;
-    background: radial-gradient(ellipse, var(--pal-neon-dim, rgba(245, 158, 11, 0.25)) 0%, transparent 70%);
-    border-radius: 50%;
+    width: 60%;
+    height: 70%;
+    background: radial-gradient(ellipse, var(--pal-glow) 0%, transparent 68%);
+    filter: blur(32px);
     pointer-events: none;
-    animation: cg-glow-pulse 3s ease-in-out infinite;
-}
-
-@keyframes cg-glow-pulse {
-
-    0%,
-    100% {
-        opacity: 0.6;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 1;
-        transform: scale(1.1);
-    }
+    animation: cg-glow-pulse 4.5s ease-in-out infinite;
 }
 
 .cg-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
     position: relative;
     z-index: 1;
-    filter: drop-shadow(0 8px 24px var(--pal-neon-glow, rgba(245, 158, 11, 0.5)));
+    max-width: 85%;
+    max-height: 90%;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 22px rgba(0,0,0,0.60));
 }
 
-/* ── Name & Brand ──────────────────────────────────────────────── */
-.cg-name {
-    font-family: var(--font-display, 'Inter', sans-serif);
-    font-size: 1.1em;
-    font-weight: 800;
-    text-align: center;
-    padding: 0 14px;
-    line-height: 1.25;
-    margin-bottom: 2px;
-    background: linear-gradient(135deg, var(--pal-grad1, #f59e0b) 0%, var(--pal-grad2, #fbbf24) 50%, #fff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+.cg-fallback {
+    font-size: 3.2rem;
+    opacity: 0.4;
+}
+
+/* ── Data panel ── */
+.cg-data {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 14px 14px;
+    flex-shrink: 0;
+    gap: 5px;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .cg-brand {
-    font-size: 0.75em;
-    color: rgba(255, 255, 255, 0.4);
-    text-align: center;
-    letter-spacing: 0.08em;
-    margin-bottom: 12px;
+    font-size: 0.52rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.30);
     text-transform: uppercase;
-    font-weight: 700;
+    letter-spacing: 0.14em;
 }
 
-/* ── Cannabinoids Section ──────────────────────────────────────── */
-.cg-c-bars {
-    width: 100%;
-    padding: 0 16px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.cg-c-row {
-    position: relative;
-    width: 100%;
-}
-
-.cg-c-labels {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 4px;
-}
-
-.cg-c-label {
-    font-size: 0.65em;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    color: rgba(255, 255, 255, 0.5);
-}
-
-.cg-c-val {
-    font-family: var(--font-display, 'Inter', sans-serif);
-    font-size: 0.85em;
+.cg-name {
+    font-size: 1.0rem;
     font-weight: 800;
-    color: var(--pal-chip-txt, #fde68a);
-    text-shadow: 0 0 10px var(--pal-neon-glow, rgba(245, 158, 11, 0.5));
-}
-
-.cg-c-track {
-    width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 4px;
-}
-
-.cg-c-fill {
-    height: 100%;
-    border-radius: 4px;
-    background: var(--pal-thc-bar, linear-gradient(90deg, #d97706, #f59e0b));
-    box-shadow: 0 0 8px var(--pal-neon-glow, rgba(245, 158, 11, 0.6));
-    position: relative;
-}
-
-.cg-c-fill::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translate(50%, -50%);
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--pal-chip-txt, #fde68a);
-    box-shadow: 0 0 8px 2px var(--pal-neon-glow, rgba(245, 158, 11, 0.8));
-}
-
-.cg-c-fill.minor {
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
-}
-
-.cg-c-fill.minor::after {
-    background: #bfdbfe;
-    box-shadow: 0 0 8px 2px rgba(59, 130, 246, 0.8);
-}
-
-/* Secondary Cannabinoids (CBG, CBN) - Smaller inline layout */
-.cg-c-minor-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.cg-c-minor-item {
-    flex: 1;
-}
-
-.cg-c-minor-item .cg-c-val {
-    font-size: 0.75em;
-    color: #bfdbfe;
-    text-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
-}
-
-/* ── Effects ───────────────────────────────────────────────────── */
-.cg-effects {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    justify-content: center;
-    padding: 0 12px;
-    margin-bottom: 12px;
-}
-
-.cg-chip {
-    font-size: 0.65em;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    padding: 3px 10px;
-    border-radius: 20px;
-    background: var(--pal-chip-bg, rgba(245, 158, 11, 0.15));
-    color: var(--pal-chip-txt, #fde68a);
-    border: 1px solid color-mix(in srgb, var(--pal-chip-txt, #fde68a) 25%, transparent);
-    backdrop-filter: blur(4px);
-    text-transform: uppercase;
-}
-
-/* ── Notes ─────────────────────────────────────────────────────── */
-.cg-notes {
-    font-size: 0.7em;
-    color: rgba(255, 255, 255, 0.4);
-    text-align: center;
-    padding: 0 16px;
-    margin-bottom: 12px;
-    line-height: 1.4;
-    font-style: italic;
+    line-height: 1.2;
+    background: linear-gradient(135deg, var(--pal-primary) 0%, var(--pal-secondary) 55%, rgba(255,255,255,0.88) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -438,15 +258,88 @@
     overflow: hidden;
 }
 
-/* ── Price ─────────────────────────────────────────────────────── */
+/* ── THC / CBD bars ── */
+.cg-thc-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.cg-thc-lbl {
+    font-size: 0.46rem;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    flex-shrink: 0;
+    width: 22px;
+}
+.cg-thc-row--cbd .cg-thc-lbl {
+    color: rgba(255,255,255,0.22);
+}
+
+.cg-thc-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.cg-thc-fill {
+    height: 100%;
+    background: var(--pal-bar);
+    border-radius: 4px;
+    box-shadow: 0 0 8px var(--pal-glow);
+}
+.cg-thc-fill--cbd {
+    background: linear-gradient(90deg, #1d4ed8, #3b82f6, #60a5fa);
+    box-shadow: 0 0 8px rgba(59,130,246,0.55);
+}
+
+.cg-thc-val {
+    font-size: 0.90rem;
+    font-weight: 900;
+    color: var(--pal-primary);
+    text-shadow: 0 0 10px var(--pal-glow);
+    flex-shrink: 0;
+    min-width: 34px;
+    text-align: right;
+}
+.cg-thc-val--cbd {
+    color: #60a5fa;
+    text-shadow: 0 0 8px rgba(59,130,246,0.50);
+}
+
+/* ── Effects chips ── */
+.cg-effects {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.cg-chip {
+    font-size: 0.44rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: var(--pal-dim);
+    color: var(--pal-primary);
+    border: 1px solid var(--pal-border);
+}
+
+/* ── Spacer + Price ── */
+.cg-spacer { flex: 1; min-height: 2px; }
+
 .cg-price {
-    font-family: var(--font-display, 'Inter', sans-serif);
-    font-size: 1.6em;
+    font-size: 1.8rem;
     font-weight: 900;
     letter-spacing: -0.02em;
     color: #fff;
-    margin-top: auto;
+    line-height: 1;
     text-shadow:
-        0 0 20px var(--pal-neon-glow, rgba(245, 158, 11, 0.55)),
-        0 0 40px var(--pal-neon-dim, rgba(245, 158, 11, 0.25));
+        0 0 22px var(--pal-glow),
+        0 0 50px var(--pal-dim);
 }

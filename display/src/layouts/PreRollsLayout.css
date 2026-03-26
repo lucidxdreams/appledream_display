@@ -1,362 +1,503 @@
 /* ============================================
-   PreRollsLayout.css — Premium Showcase Design
-   Large product images with elegant info cards
+   PreRollsLayout.css — "Ember" Pre-Rolls Display
+   Flex-wrap smart layout, glassmorphism cards,
+   badge products pulse larger with glowing border
    ============================================ */
 
-/* ── Scene Container ──────────────────────────────────────────────────── */
-.pr-scene {
+/* ── Scene ─────────────────────────────────────────────────────────── */
+.pr-c-scene {
     position: relative;
     width: 100%;
     height: 100%;
     overflow: hidden;
+}
+
+.pr-c-scene.pr-c-empty {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.pr-scene.pr-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.pr-empty-msg {
+.pr-c-empty-msg {
     font-family: var(--font-display);
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.22);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
 }
 
-/* Background */
-.pr-bg {
+/* ── Background ────────────────────────────────────────────────────── */
+.pr-c-bg {
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse 120% 120% at 50% 50%,
-        #0f0a15 0%,
-        #080510 60%,
-        #030208 100%);
     z-index: 0;
+    background: radial-gradient(
+        ellipse 130% 110% at 50% 55%,
+        #130c04 0%,
+        #0c0802 55%,
+        #050302 100%
+    );
 }
 
-/* Ambient bloom effects */
-.pr-bloom {
+.pr-c-bloom {
     position: absolute;
     border-radius: 50%;
     pointer-events: none;
-    z-index: 0;
-    filter: blur(100px);
+    z-index: 1;
+    filter: blur(90px);
 }
 
-.pr-bloom--1 {
-    width: 50%;
-    height: 60%;
-    left: -10%;
-    top: 15%;
-    background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
-    animation: pr-bloom-drift 16s ease-in-out infinite;
-}
-
-.pr-bloom--2 {
+.pr-c-bloom--1 {
     width: 55%;
-    height: 55%;
-    right: -15%;
-    bottom: 10%;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
-    animation: pr-bloom-drift 20s ease-in-out 5s infinite reverse;
+    height: 65%;
+    left: -8%;
+    top: 10%;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.10) 0%, transparent 70%);
+    animation: pr-c-bloom-drift 18s ease-in-out infinite;
 }
 
-@keyframes pr-bloom-drift {
-    0%, 100% { transform: translate(0, 0); }
-    33% { transform: translate(6%, 4%); }
-    66% { transform: translate(-4%, -6%); }
+.pr-c-bloom--2 {
+    width: 50%;
+    height: 58%;
+    right: -10%;
+    bottom: 8%;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.09) 0%, transparent 70%);
+    animation: pr-c-bloom-drift 22s ease-in-out 6s infinite reverse;
 }
 
-/* ── Floating Container ──────────────────────────────────────────────────── */
-.pr-floating-container {
+@keyframes pr-c-bloom-drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    40%       { transform: translate(5%, 3%) scale(1.06); }
+    70%       { transform: translate(-3%, -5%) scale(0.97); }
+}
+
+/* ── Flex-wrap card container ──────────────────────────────────────── */
+.pr-c-cards {
     position: relative;
     z-index: 2;
     width: 100%;
     height: 100%;
-    overflow: visible;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--pr-gap, 16px);
+    padding: var(--pr-pad, 22px);
+    align-content: center;
+    justify-content: center;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
-.pr-card-wrapper {
-    position: absolute;
-    will-change: transform;
-}
-
-/* ── Card Container ──────────────────────────────────────────────────── */
-.pr-card {
+/* ── Card base — horizontal 2-column layout ───────────────────────── */
+.pr-c-card {
     position: relative;
     display: flex;
-    flex-direction: column;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px) saturate(150%);
+    flex-direction: row;
+    background: linear-gradient(
+        105deg,
+        rgba(10, 7, 3, 0.97) 0%,
+        rgba(18, 13, 6, 0.94) 38%,
+        rgba(12, 9, 4, 0.96) 100%
+    );
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
     border: 1px solid var(--pal-border);
-    border-radius: 20px;
+    border-radius: 18px;
     overflow: hidden;
-    padding: 0 0 18px;
     box-sizing: border-box;
-    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.7),
-                0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-                0 1px 0 rgba(255, 255, 255, 0.08) inset,
-                0 0 30px var(--pal-glow);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-    cursor: default;
-    will-change: transform;
+    box-shadow:
+        0 8px 40px rgba(0, 0, 0, 0.72),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 0 28px var(--pal-dim);
     opacity: 0;
-    animation: pr-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both;
+    animation: pr-c-enter 0.65s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both;
 }
 
-/* hover removed — display-only screen */
+/* ── Badge card — glowing border + pulse ──────────────────────────── */
+.pr-c-card--badge {
+    border-color: var(--pal-primary);
+    box-shadow:
+        0 12px 56px rgba(0, 0, 0, 0.78),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 0 36px var(--pal-glow),
+        0 0 80px var(--pal-dim);
+}
 
-@keyframes pr-enter {
-    from {
-        opacity: 0;
-        transform: translateY(40px) scale(0.9);
+/* ── Animations ────────────────────────────────────────────────────── */
+@keyframes pr-c-enter {
+    from { opacity: 0; transform: translateY(30px) scale(0.93); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+@keyframes pr-c-float-1 {
+    0%, 100% { transform: translateY(0px);  }
+    50%       { transform: translateY(-6px); }
+}
+@keyframes pr-c-float-2 {
+    0%, 100% { transform: translateY(-3px); }
+    50%       { transform: translateY(5px);  }
+}
+@keyframes pr-c-float-3 {
+    0%, 100% { transform: translateY(4px);  }
+    50%       { transform: translateY(-7px); }
+}
+
+@keyframes pr-c-badge-pulse {
+    0%, 100% {
+        box-shadow:
+            0 12px 56px rgba(0, 0, 0, 0.78),
+            0 0 36px var(--pal-glow),
+            0 0 80px var(--pal-dim);
     }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
+    50% {
+        box-shadow:
+            0 16px 64px rgba(0, 0, 0, 0.80),
+            0 0 56px var(--pal-glow),
+            0 0 110px var(--pal-dim);
     }
 }
 
-/* Floating animations */
-@keyframes pr-float-1 {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+@keyframes pr-c-glow-pulse {
+    0%, 100% { opacity: 0.32; transform: scale(1);    }
+    50%       { opacity: 0.58; transform: scale(1.15); }
 }
 
-@keyframes pr-float-2 {
-    0%, 100% { transform: translateY(-4px); }
-    50% { transform: translateY(6px); }
+.pr-c-card.pr-c-float-1 {
+    animation:
+        pr-c-enter   0.65s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both,
+        pr-c-float-1 5.6s  ease-in-out var(--float-delay, 1s) infinite;
+}
+.pr-c-card.pr-c-float-2 {
+    animation:
+        pr-c-enter   0.65s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both,
+        pr-c-float-2 6.2s  ease-in-out var(--float-delay, 1s) infinite;
+}
+.pr-c-card.pr-c-float-3 {
+    animation:
+        pr-c-enter   0.65s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both,
+        pr-c-float-3 5.0s  ease-in-out var(--float-delay, 1s) infinite;
 }
 
-@keyframes pr-float-3 {
-    0%, 100% { transform: translateY(3px); }
-    50% { transform: translateY(-9px); }
+.pr-c-card--badge.pr-c-float-1 {
+    animation:
+        pr-c-enter        0.65s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both,
+        pr-c-float-1       5.6s ease-in-out var(--float-delay, 1s) infinite,
+        pr-c-badge-pulse   3.2s ease-in-out 1.5s infinite;
+}
+.pr-c-card--badge.pr-c-float-2 {
+    animation:
+        pr-c-enter        0.65s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both,
+        pr-c-float-2       6.2s ease-in-out var(--float-delay, 1s) infinite,
+        pr-c-badge-pulse   3.2s ease-in-out 1.5s infinite;
+}
+.pr-c-card--badge.pr-c-float-3 {
+    animation:
+        pr-c-enter        0.65s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both,
+        pr-c-float-3       5.0s ease-in-out var(--float-delay, 1s) infinite,
+        pr-c-badge-pulse   3.2s ease-in-out 1.5s infinite;
 }
 
-.pr-card.pr-float-1 {
-    animation: pr-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both,
-               pr-float-1 5.5s ease-in-out var(--float-delay, 1s) infinite;
-}
-
-.pr-card.pr-float-2 {
-    animation: pr-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both,
-               pr-float-2 6s ease-in-out var(--float-delay, 1s) infinite;
-}
-
-.pr-card.pr-float-3 {
-    animation: pr-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both,
-               pr-float-3 5.2s ease-in-out var(--float-delay, 1s) infinite;
-}
-
-/* ── Top Accent Line ──────────────────────────────────────────────────── */
-.pr-accent-line {
-    width: 100%;
-    height: 3px;
-    background: var(--pal-gradient);
-    box-shadow: 0 0 16px var(--pal-glow);
+/* ══════════════════════════════════════════════════════════════════════
+   LEFT COLUMN — Image panel
+   ══════════════════════════════════════════════════════════════════════ */
+.pr-c-img-panel {
+    position: relative;
+    width: 37%;
+    height: 100%;
     flex-shrink: 0;
+    overflow: hidden;
+    background: radial-gradient(
+        ellipse 130% 90% at 50% 55%,
+        var(--pal-dim) 0%,
+        rgba(6, 4, 2, 0.98) 70%
+    );
 }
 
-/* ── Header ──────────────────────────────────────────────────────────── */
-.pr-header {
+/* Strain-coloured glow aura behind the product */
+.pr-c-img-aura {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        ellipse 80% 65% at 50% 52%,
+        var(--pal-glow) 0%,
+        transparent 62%
+    );
+    opacity: 0.38;
+    pointer-events: none;
+    animation: pr-c-glow-pulse 4.5s ease-in-out infinite;
+}
+
+.pr-c-card--badge .pr-c-img-aura {
+    opacity: 0.55;
+}
+
+/* Product image — full panel, tight contain */
+.pr-c-img {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 12px 10px;
+    box-sizing: border-box;
+    filter: drop-shadow(0 6px 22px rgba(0, 0, 0, 0.60));
+}
+
+.pr-c-card--badge .pr-c-img {
+    padding: 16px 12px;
+    filter: drop-shadow(0 8px 30px rgba(0, 0, 0, 0.65));
+}
+
+/* Emoji fallback centred in panel */
+.pr-c-fallback {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 3.8rem;
+    opacity: 0.42;
+}
+
+.pr-c-card--badge .pr-c-fallback {
+    font-size: 5rem;
+}
+
+/* Right-edge fade — image bleeds softly into the divider */
+.pr-c-img-fade {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 52px;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(8, 5, 2, 0.82) 100%);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DIVIDER — glowing vertical accent line
+   ══════════════════════════════════════════════════════════════════════ */
+.pr-c-divider {
+    width: 1px;
+    height: 76%;
+    align-self: center;
+    flex-shrink: 0;
+    background: linear-gradient(
+        180deg,
+        transparent       0%,
+        var(--pal-border) 18%,
+        var(--pal-primary) 50%,
+        var(--pal-border) 82%,
+        transparent       100%
+    );
+    box-shadow: 0 0 10px var(--pal-glow);
+    opacity: 0.80;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   RIGHT COLUMN — Data panel
+   ══════════════════════════════════════════════════════════════════════ */
+.pr-c-data {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px 16px 16px;
+    gap: 6px;
+}
+
+.pr-c-card--badge .pr-c-data {
+    padding: 20px 24px 20px 20px;
+    gap: 9px;
+}
+
+/* Top row: strain pill + badge chip */
+.pr-c-data-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px 8px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
-.pr-strain-badge {
+/* Strain type pill */
+.pr-c-strain {
     font-family: var(--font-display);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.2em;
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.20em;
     text-transform: uppercase;
     color: var(--pal-primary);
-    text-shadow: 0 0 12px var(--pal-glow);
-}
-
-.pr-badge {
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 20px;
-    line-height: 1.5;
-}
-
-.pr-badge--new {
-    background: #22c55e;
-    color: #fff;
-    box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
-}
-
-.pr-badge--hot {
-    background: #ef4444;
-    color: #fff;
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
-}
-
-/* ── Image Section ──────────────────────────────────────────────────── */
-.pr-image-wrap {
-    position: relative;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 8px 0 8px;
-    flex: 1 1 0;
-    min-height: 0;
-    overflow: hidden;
-}
-
-.pr-image-glow {
-    position: absolute;
-    width: 70%;
-    height: 80%;
-    background: radial-gradient(ellipse, var(--pal-glow) 0%, transparent 70%);
-    filter: blur(40px);
-    pointer-events: none;
-    animation: pr-glow-pulse 4s ease-in-out infinite;
-}
-
-@keyframes pr-glow-pulse {
-    0%, 100% {
-        opacity: 0.4;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.7;
-        transform: scale(1.15);
-    }
-}
-
-.pr-image-inner {
-    position: relative;
-    width: 85%;
-    height: 85%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1;
-}
-
-.pr-image {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.6));
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* hover removed — display-only screen */
-
-.pr-placeholder {
-    font-size: 5rem;
-    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
-    opacity: 0.5;
-}
-
-/* ── Info Section ──────────────────────────────────────────────────── */
-.pr-info {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 0 16px;
+    text-shadow: 0 0 10px var(--pal-glow);
+    background: var(--pal-dim);
+    border: 1px solid var(--pal-border);
+    border-radius: 30px;
+    padding: 3px 10px 4px;
     flex-shrink: 0;
 }
 
-.pr-brand {
-    font-family: var(--font-body);
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.45);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    text-align: center;
+.pr-c-card--badge .pr-c-strain {
+    font-size: 0.70rem;
+    padding: 4px 13px 5px;
 }
 
-.pr-name {
+/* Badge chip (NEW / HOT / etc.) */
+.pr-c-chip {
     font-family: var(--font-display);
-    font-size: 1.1rem;
-    font-weight: 800;
+    font-size: 0.50rem;
+    font-weight: 900;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    padding: 3px 8px 4px;
+    border-radius: 20px;
+    line-height: 1.6;
+    flex-shrink: 0;
+}
+
+.pr-c-card--badge .pr-c-chip {
+    font-size: 0.62rem;
+    padding: 4px 11px 5px;
+}
+
+.pr-c-chip--new {
+    background: linear-gradient(135deg, #15803d, #22c55e);
     color: #fff;
-    text-align: center;
-    line-height: 1.25;
-    margin: 0;
-    background: linear-gradient(135deg, var(--pal-primary), var(--pal-secondary), #fff 95%);
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.55);
+}
+
+.pr-c-chip--hot {
+    background: linear-gradient(135deg, #b91c1c, #f97316);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.55);
+}
+
+.pr-c-chip--feat {
+    background: linear-gradient(135deg, var(--pal-primary), var(--pal-secondary));
+    color: #0a0804;
+    box-shadow: 0 0 14px var(--pal-glow);
+}
+
+/* Brand */
+.pr-c-brand {
+    font-family: var(--font-body);
+    font-size: 0.56rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.32);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    flex-shrink: 0;
+}
+
+.pr-c-card--badge .pr-c-brand {
+    font-size: 0.68rem;
+}
+
+/* Product name — gradient text, up to 3 lines */
+.pr-c-name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.22;
+    background: linear-gradient(
+        135deg,
+        var(--pal-primary)    0%,
+        var(--pal-secondary)  55%,
+        rgba(255,255,255,0.90) 100%
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
-/* ── Stats Row ──────────────────────────────────────────────────── */
-.pr-stats {
+.pr-c-card--badge .pr-c-name {
+    font-size: 1.28rem;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+}
+
+/* Spacer — pushes stats + price to the bottom */
+.pr-c-spacer {
+    flex: 1;
+    min-height: 4px;
+}
+
+/* Stat pills row */
+.pr-c-stats {
     display: flex;
-    gap: 8px;
-    justify-content: center;
+    gap: 6px;
     flex-wrap: wrap;
-    margin-top: 6px;
+    flex-shrink: 0;
 }
 
-.pr-stat {
+.pr-c-stat {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    min-width: 60px;
-    transition: all 0.2s ease;
+    align-items: baseline;
+    gap: 5px;
+    padding: 5px 11px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 8px;
 }
 
-.pr-stat:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: var(--pal-border);
+.pr-c-card--badge .pr-c-stat {
+    padding: 6px 14px;
+    border-radius: 10px;
 }
 
-.pr-stat-label {
+.pr-c-stat-lbl {
     font-family: var(--font-body);
-    font-size: 0.6rem;
+    font-size: 0.46rem;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.36);
 }
 
-.pr-stat-value {
+.pr-c-card--badge .pr-c-stat-lbl {
+    font-size: 0.54rem;
+}
+
+.pr-c-stat-val {
     font-family: var(--font-stat);
-    font-size: 1.2rem;
+    font-size: 0.98rem;
     font-weight: 900;
-    color: var(--pal-primary);
     line-height: 1;
+    color: var(--pal-primary);
+    text-shadow: 0 0 10px var(--pal-glow);
+}
+
+.pr-c-card--badge .pr-c-stat-val {
+    font-size: 1.18rem;
     text-shadow: 0 0 14px var(--pal-glow);
 }
 
-/* ── Price ──────────────────────────────────────────────────── */
-.pr-price {
+/* Price — anchored to bottom, large + glowing */
+.pr-c-price {
     font-family: var(--font-stat);
-    font-size: 2rem;
+    font-size: 1.90rem;
     font-weight: 900;
     letter-spacing: -0.02em;
-    color: #fff;
-    text-align: center;
-    margin-top: auto;
-    padding-top: 12px;
-    text-shadow: 0 0 28px var(--pal-glow),
-                 0 0 48px var(--pal-glow);
+    color: #ffffff;
+    line-height: 1;
+    flex-shrink: 0;
+    text-shadow:
+        0 0 22px var(--pal-glow),
+        0 0 48px var(--pal-dim);
+}
+
+.pr-c-card--badge .pr-c-price {
+    font-size: 2.35rem;
+    text-shadow:
+        0 0 28px var(--pal-glow),
+        0 0 58px var(--pal-glow),
+        0 0 90px var(--pal-dim);
 }

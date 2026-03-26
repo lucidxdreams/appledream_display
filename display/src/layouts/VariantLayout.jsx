@@ -1,14 +1,31 @@
 /**
  * VariantLayout.jsx — Category display when variant groups are configured.
  *
- * Renders variant group cards (wide, hero + flavor list) alongside any
- * standalone products (products not assigned to any group) using a
- * responsive CSS grid. No D3 force needed — the grid handles placement.
+ * Renders variant group cards (double-wide) alongside standalone product
+ * cards using flex-wrap. Card sizes are computed from available space so
+ * cards never stretch to fill empty rows.
  */
 
 import { useRef, useState, useEffect } from 'react';
 import VariantGroupCard from './VariantGroupCard';
 import './VariantLayout.css';
+
+/* ── Logo-safe top offset (same pattern as CartridgesLayout) ── */
+function getSafeTop(container) {
+    if (!container) return 0;
+    const stable = container.closest('main, .app-content')
+        || container.parentElement?.parentElement
+        || container.parentElement;
+    const refTop = stable ? stable.getBoundingClientRect().top : 0;
+    let max = 0;
+    ['.app-header-center', '.app-logo', '.app-header-meta'].forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+            const b = el.getBoundingClientRect().bottom;
+            if (b > refTop) max = Math.max(max, b - refTop);
+        });
+    });
+    return max > 0 ? max + 20 : 0;
+}
 
 /* ── Standalone card — mirrors CartridgesLayout card visuals ── */
 const PALETTES = {
@@ -71,27 +88,45 @@ function StandaloneCard({ product, index }) {
     );
 }
 
+const GAP     = 10;
+const PAD_H   = 16;
+const PAD_BOT = 16;
+const PAD_TOP = 14;
+
 /* ── Main layout ── */
 export default function VariantLayout({ products = [], variantGroups = [], categoryTheme }) {
-    const containerRef = useRef(null);
-    const [cols, setCols] = useState(3);
+    const containerRef             = useRef(null);
+    const [dimW, setDimW]          = useState(0);
+    const [dimH, setDimH]          = useState(0);
+    const [safeTop, setSafeTop]    = useState(0);
 
-    // Measure container width to decide column count
     useEffect(() => {
-        if (!containerRef.current) return;
+        const el = containerRef.current;
+        if (!el) return;
+
         const measure = () => {
-            if (!containerRef.current) return;
-            const w = containerRef.current.clientWidth || 1280;
-            // Each solo card ~165px, group card ~2x = 330px. Pick cols to fill.
-            setCols(w < 900 ? 2 : w < 1400 ? 4 : 5);
+            let W = el.offsetWidth;
+            let H = el.offsetHeight;
+            const stable = el.closest('main, .app-content') || el.parentElement;
+            if (W < 10 || H < 10) {
+                if (stable) { W = stable.offsetWidth; H = stable.offsetHeight; }
+            }
+            if (W > 10 && H > 10) {
+                setDimW(W);
+                setDimH(H);
+                setSafeTop(getSafeTop(el));
+            }
         };
-        measure();
+
+        const t  = setTimeout(measure, 120);
         const ro = new ResizeObserver(measure);
-        ro.observe(containerRef.current);
-        return () => ro.disconnect();
+        ro.observe(el);
+        const stable = el.closest('main, .app-content');
+        if (stable) ro.observe(stable);
+        return () => { clearTimeout(t); ro.disconnect(); };
     }, []);
 
-    // Collect product IDs that are assigned to an enabled group
+    // Collect product IDs assigned to an enabled group
     const groupedIds = new Set();
     variantGroups.forEach(g => {
         if (g.enabled === false) return;
@@ -99,10 +134,8 @@ export default function VariantLayout({ products = [], variantGroups = [], categ
         (g.variantIds || []).forEach(id => groupedIds.add(id));
     });
 
-    // Standalone products (not in any active group)
     const standalone = products.filter(p => !groupedIds.has(p.id));
 
-    // Resolve active groups to real product objects
     const resolvedGroups = variantGroups
         .filter(g => g.enabled !== false && g.mainProductId)
         .map(g => ({
@@ -112,16 +145,35 @@ export default function VariantLayout({ products = [], variantGroups = [], categ
         }))
         .filter(g => g.mainProduct);
 
+    // ── Compute card sizes from available space (no grid, no stretching) ──
+    const totalSlots = resolvedGroups.length * 2 + standalone.length;
+    const cols       = dimW < 900 ? 2 : dimW < 1400 ? 4 : 5;
+    const availW     = Math.max(0, dimW - 2 * PAD_H);
+    const availH     = Math.max(0, dimH - safeTop - PAD_TOP - PAD_BOT);
+    const rows       = Math.max(1, Math.ceil(totalSlots / cols));
+
+    // card width: divide available width evenly
+    const cardW  = dimW > 0 ? Math.floor((availW - GAP * (cols - 1)) / cols) : 200;
+    // group card is exactly 2 solo columns wide
+    const groupW = 2 * cardW + GAP;
+    // card height: divide available height by number of rows — no min clamp
+    const cardH  = dimH > 0
+        ? Math.min(260, Math.floor((availH - GAP * Math.max(0, rows - 1)) / rows))
+        : 200;
+
     return (
-        <div className="vl-scene" ref={containerRef} style={{ '--vl-cols': cols }}>
+        <div className="vl-scene" ref={containerRef}>
             <div className="vl-bg" />
             <div className="vl-bloom vl-bloom--1" />
             <div className="vl-bloom vl-bloom--2" />
 
-            <div className="vl-grid">
-                {/* Variant group cards — each spans 2 columns */}
+            <div className="vl-cards" style={{ paddingTop: safeTop + PAD_TOP }}>
                 {resolvedGroups.map(({ group, mainProduct, variants }, i) => (
-                    <div key={group.id} className="vl-group-cell">
+                    <div
+                        key={group.id}
+                        className="vl-group-cell"
+                        style={{ width: groupW, height: cardH }}
+                    >
                         <VariantGroupCard
                             group={group}
                             mainProduct={mainProduct}
@@ -131,9 +183,12 @@ export default function VariantLayout({ products = [], variantGroups = [], categ
                     </div>
                 ))}
 
-                {/* Standalone product cards — each spans 1 column */}
                 {standalone.map((product, i) => (
-                    <div key={product.id} className="vl-solo-cell">
+                    <div
+                        key={product.id}
+                        className="vl-solo-cell"
+                        style={{ width: cardW, height: cardH }}
+                    >
                         <StandaloneCard
                             product={product}
                             index={resolvedGroups.length + i}

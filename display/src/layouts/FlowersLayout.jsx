@@ -67,10 +67,22 @@ function getGlowTexture(hexColor) {
 
 /* ── 3D glass-sphere scene (inside R3F Canvas) ───────────────── */
 
-function Scene({ positions, products, slotRefs }) {
-    const { camera, size } = useThree();
+function Scene({ positions, products, slotRefs, W, H }) {
+    const { camera, gl } = useThree();
     const groupRefs = useRef([]);
     const vec       = useRef(new Vector3());
+
+    // Force correct renderer size + camera frustum when W/H are first known.
+    // R3F may initialise with 0×0 while GSAP has scale:0 on the container
+    // (getBoundingClientRect returns 0 for transformed elements), so we override.
+    useEffect(() => {
+        gl.setSize(W, H);
+        camera.left   = -W / 2;
+        camera.right  =  W / 2;
+        camera.top    =  H / 2;
+        camera.bottom = -H / 2;
+        camera.updateProjectionMatrix();
+    }, [W, H, camera, gl]);
 
     useFrame(() => {
         for (let i = 0; i < positions.length; i++) {
@@ -79,8 +91,8 @@ function Scene({ positions, products, slotRefs }) {
             if (!group || !slot) continue;
             group.getWorldPosition(vec.current);
             vec.current.project(camera);
-            const x = (vec.current.x  + 1) / 2 * size.width;
-            const y = (-vec.current.y + 1) / 2 * size.height;
+            const x = (vec.current.x  + 1) / 2 * W;
+            const y = (-vec.current.y + 1) / 2 * H;
             slot.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%))`;
         }
     });
@@ -91,8 +103,8 @@ function Scene({ positions, products, slotRefs }) {
             {positions.map((pos, i) => {
                 const product = products[i];
                 if (!product || !pos) return null;
-                const x     = pos.x - size.width  / 2;
-                const y     = size.height / 2 - pos.y;
+                const x     = pos.x - W / 2;
+                const y     = H / 2 - pos.y;
                 const speed = 1.2 + (i * 0.17) % 0.9;
                 return (
                     <Float
@@ -564,14 +576,27 @@ export default function FlowersLayout({ products = [] }) {
         <div className="fl-root" ref={containerRef}>
 
             {/* ── Back layer: WebGL glass spheres ───────────────── */}
-            <Canvas
-                orthographic
-                camera={{ zoom: 1, position: [0, 0, 100], near: 0.1, far: 200 }}
-                style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-                gl={{ alpha: true, antialias: true }}
-            >
-                <Scene positions={positions} products={products} slotRefs={slotRefs} />
-            </Canvas>
+            {W > 0 && H > 0 && (
+                <Canvas
+                    orthographic
+                    camera={{ zoom: 1, position: [0, 0, 100], near: 0.1, far: 200 }}
+                    style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+                    gl={{ alpha: true, antialias: true }}
+                    onCreated={({ camera, gl }) => {
+                        // R3F initialises camera from getBoundingClientRect which returns
+                        // 0×0 while GSAP has scale:0 on the container.  Override here
+                        // because onCreated fires AFTER R3F's own init, so it wins.
+                        gl.setSize(W, H);
+                        camera.left   = -W / 2;
+                        camera.right  =  W / 2;
+                        camera.top    =  H / 2;
+                        camera.bottom = -H / 2;
+                        camera.updateProjectionMatrix();
+                    }}
+                >
+                    <Scene positions={positions} products={products} slotRefs={slotRefs} W={W} H={H} />
+                </Canvas>
+            )}
 
             {/* ── Front layer: always on top of canvas, positions driven by useFrame ─ */}
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>

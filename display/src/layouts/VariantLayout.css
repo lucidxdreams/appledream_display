@@ -42,44 +42,45 @@
     right: -40px;
 }
 
-/* ── Grid ── */
-.vl-grid {
+/* ── Flex-wrap card container ── */
+.vl-cards {
     position: relative;
     z-index: 1;
-    display: grid;
-    grid-template-columns: repeat(var(--vl-cols, 4), 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 10px;
-    padding: 14px 16px;
+    padding: 0 16px 16px;
     width: 100%;
-    align-content: start;
-    overflow-y: auto;
-    max-height: 100%;
+    box-sizing: border-box;
+    align-content: flex-start;
+    overflow: hidden;
 }
 
-/* Group cells span 2 columns */
 .vl-group-cell {
-    grid-column: span 2;
-    display: flex;
+    flex-shrink: 0;
+    overflow: hidden;
 }
 
 .vl-group-cell .vgc {
-    flex: 1;
     width: 100%;
+    height: 100%;
 }
 
-/* Solo cells span 1 column */
 .vl-solo-cell {
-    grid-column: span 1;
-    display: flex;
+    flex-shrink: 0;
+    overflow: hidden;
 }
 
 /* ── Standalone card ── */
 .vl-solo {
-    flex: 1;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 12px 10px;
+    justify-content: flex-start;
+    padding: 10px 8px;
+    box-sizing: border-box;
     background: rgba(10, 12, 16, 0.82);
     border: 1px solid var(--vl-border);
     border-radius: 12px;
@@ -135,8 +136,11 @@
 
 .vl-solo-img-wrap {
     position: relative;
-    width: 56px;
-    height: 56px;
+    flex: 1 1 0;
+    min-height: 28px;
+    max-height: 100px;
+    width: 72%;
+    max-width: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -152,8 +156,8 @@
 }
 
 .vl-solo-img {
-    width: 56px;
-    height: 56px;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
     position: relative;
     z-index: 1;

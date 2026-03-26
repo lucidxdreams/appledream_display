@@ -1,228 +1,244 @@
 /**
- * CartridgesLayout.jsx
+ * CartridgesLayout.jsx — "Neon Drop" Cartridges Display
  *
- * Rewritten to precisely mirror the successful vertical design of VapesLayout ("Neon Prism" style),
- * applying large images and robust grids, but retaining extra cartridge details (Extract Type, CBG, CBN, Effects).
+ * Flex-wrap layout with binary-search card sizing and safeTop offset.
+ * Mirrors PreRollsLayout pattern. Cards: landscape with large image,
+ * THC/CBD bars, effects chips, and prominent price.
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { useFloatingLayout } from './useFloatingLayout';
+import { useRef, useState, useEffect } from 'react';
 import './CartridgesLayout.css';
 
-/* ── Palettes (Mapped by Strain) ── */
+/* ── Layout constants ── */
+const GAP    = 16;
+const PAD    = 22;
+const ASPECT = 1.42; // cardW / cardH
+
+/* ── Strain palettes ── */
 const PALETTES = {
     indica: {
-        '--pal-neon': '#a855f7',
-        '--pal-neon-glow': 'rgba(168, 85, 247, 0.5)',
-        '--pal-neon-dim': 'rgba(168, 85, 247, 0.15)',
-        '--pal-grad1': '#a855f7',
-        '--pal-grad2': '#e879f9',
-        '--pal-border': 'rgba(168, 85, 247, 0.5)',
-        '--pal-thc-bar': 'linear-gradient(90deg, #7c3aed, #c084fc)',
-        '--pal-chip-bg': 'rgba(168, 85, 247, 0.2)',
-        '--pal-chip-txt': '#d8b4fe',
+        primary:   '#a855f7',
+        secondary: '#e879f9',
+        dim:       'rgba(168,85,247,0.14)',
+        glow:      'rgba(168,85,247,0.52)',
+        border:    'rgba(192,132,252,0.38)',
+        bar:       'linear-gradient(90deg,#6d28d9,#a855f7,#e879f9)',
+        label:     'Indica',
     },
     sativa: {
-        '--pal-neon': '#f59e0b',
-        '--pal-neon-glow': 'rgba(245, 158, 11, 0.5)',
-        '--pal-neon-dim': 'rgba(245, 158, 11, 0.15)',
-        '--pal-grad1': '#f59e0b',
-        '--pal-grad2': '#fbbf24',
-        '--pal-border': 'rgba(245, 158, 11, 0.5)',
-        '--pal-thc-bar': 'linear-gradient(90deg, #d97706, #fbbf24)',
-        '--pal-chip-bg': 'rgba(245, 158, 11, 0.2)',
-        '--pal-chip-txt': '#fde68a',
+        primary:   '#f59e0b',
+        secondary: '#fde68a',
+        dim:       'rgba(245,158,11,0.14)',
+        glow:      'rgba(245,158,11,0.52)',
+        border:    'rgba(251,191,36,0.38)',
+        bar:       'linear-gradient(90deg,#b45309,#f59e0b,#fde68a)',
+        label:     'Sativa',
     },
     hybrid: {
-        '--pal-neon': '#10b981',
-        '--pal-neon-glow': 'rgba(16, 185, 129, 0.5)',
-        '--pal-neon-dim': 'rgba(16, 185, 129, 0.15)',
-        '--pal-grad1': '#10b981',
-        '--pal-grad2': '#34d399',
-        '--pal-border': 'rgba(16, 185, 129, 0.5)',
-        '--pal-thc-bar': 'linear-gradient(90deg, #059669, #34d399)',
-        '--pal-chip-bg': 'rgba(16, 185, 129, 0.2)',
-        '--pal-chip-txt': '#a7f3d0',
-    }
+        primary:   '#10b981',
+        secondary: '#6ee7b7',
+        dim:       'rgba(16,185,129,0.14)',
+        glow:      'rgba(16,185,129,0.52)',
+        border:    'rgba(52,211,153,0.38)',
+        bar:       'linear-gradient(90deg,#065f46,#10b981,#6ee7b7)',
+        label:     'Hybrid',
+    },
 };
 
-function getStrain(product) {
-    const t = (product.type || '').toLowerCase();
+function getStrain(p) {
+    const t = ((p.type || '') + ' ' + (p.name || '')).toLowerCase();
     if (t.includes('indica')) return 'indica';
     if (t.includes('sativa')) return 'sativa';
     return 'hybrid';
 }
+function getPalette(p) { return PALETTES[getStrain(p)]; }
+
+/* ── Binary-search sizing ── */
+function calcSizes(W, H, count, safeTop) {
+    if (!W || !H || count === 0) return { cardW: 260, cardH: 183 };
+    const usableH = Math.max(80, H - safeTop - PAD * 2);
+    const usableW = Math.max(80, W - PAD * 2);
+    const targetRows = count <= 3 ? 1 : count <= 8 ? 2 : 3;
+    const cardH = Math.floor((usableH - GAP * (targetRows - 1)) / targetRows);
+    let lo = 80, hi = Math.round(cardH * ASPECT);
+    for (let iter = 0; iter < 20; iter++) {
+        const mid    = (lo + hi) >> 1;
+        const perRow = Math.floor((usableW + GAP) / (mid + GAP));
+        const rows   = Math.ceil(count / Math.max(1, perRow));
+        const fill   = rows * (cardH + GAP) - GAP;
+        (fill <= usableH && perRow >= 1) ? (lo = mid) : (hi = mid - 1);
+    }
+    const cardW = Math.max(120, Math.min(lo, Math.round(cardH * ASPECT)));
+    return { cardW, cardH };
+}
+
+/* ── Logo-safe top offset ── */
+function getSafeTop(container) {
+    if (!container) return 0;
+    const stable = container.closest('main, .app-content')
+        || container.parentElement?.parentElement
+        || container.parentElement;
+    const refTop = stable ? stable.getBoundingClientRect().top : 0;
+    let max = 0;
+    ['.app-header-center', '.app-logo', '.app-header-meta'].forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+            const b = el.getBoundingClientRect().bottom;
+            if (b > refTop) max = Math.max(max, b - refTop);
+        });
+    });
+    return max > 0 ? max + 20 : 0;
+}
 
 /* ── Single Cartridge Card ── */
-function CartridgeCard({ product, index, cardW, cardH }) {
-    const strain = getStrain(product);
-    const pal = PALETTES[strain];
-
-    const thc = Number(product.thc || 0);
-    const cbd = Number(product.cbd || 0);
-    const cbg = Number(product.cbg || 0);
-    const cbn = Number(product.cbn || 0);
-
-    // Safety to limit chips 
-    const effects = (product.effects || []).slice(0, 3);
-    const price = Number(product.price || 0).toFixed(2);
-    const cartSize = product.cartSize || '';
-    const extractType = product.extractType || '';
-    const isNew = (product.badge || '').toLowerCase() === 'new';
-
-    // Vary the float animation slightly so they don't sync
-    const floatV = (index % 3) + 1;
-
-    const imgW = cardW * 0.85;
+function CartridgeCard({ product, cardW, cardH, index }) {
+    const pal       = getPalette(product);
+    const thc       = product.thc  != null ? Number(product.thc)  : null;
+    const cbd       = product.cbd  != null ? Number(product.cbd)  : null;
+    const price     = product.price != null ? Number(product.price) : null;
+    const effects   = (product.effects || []).slice(0, 3);
+    const cartSize  = product.cartSize || product.size || '';
+    const extract   = product.extractType || '';
+    const isNew     = (product.badge || '').toLowerCase() === 'new';
+    const floatV    = (index % 3) + 1;
 
     return (
         <div
-            className={`cg-card cg-card--in cg-float-${floatV}`}
+            className={`cg-card cg-float-${floatV}`}
             style={{
-                width: cardW,
-                height: cardH,
-                '--entrance-del': `${index * 0.08}s`,
-                '--float-del': `${index * 0.2}s`,
-                ...pal
+                '--pal-primary':   pal.primary,
+                '--pal-secondary': pal.secondary,
+                '--pal-dim':       pal.dim,
+                '--pal-glow':      pal.glow,
+                '--pal-border':    pal.border,
+                '--pal-bar':       pal.bar,
+                '--entrance-delay': `${index * 0.07}s`,
+                '--float-delay':    `${0.9 + index * 0.14}s`,
+                width:   cardW,
+                height:  cardH,
+                flexShrink: 0,
             }}
         >
-            <div className="cg-top-line" />
+            {/* Top accent bar */}
+            <div className="cg-accent-line" />
 
+            {/* Header row */}
             <div className="cg-header">
-                <div className="cg-strain-label">{product.type || 'HYBRID'}</div>
+                <span className="cg-strain">{pal.label}</span>
                 <div className="cg-badges">
-                    {cartSize && <div className="cg-size-badge">{cartSize}</div>}
-                    {extractType && <div className="cg-extract-badge">{extractType}</div>}
-                    {isNew && <div className="cg-badge--hot">NEW</div>}
+                    {cartSize && <span className="cg-badge cg-badge--size">{cartSize}</span>}
+                    {extract  && <span className="cg-badge cg-badge--ext">{extract}</span>}
+                    {isNew    && <span className="cg-badge cg-badge--new">NEW</span>}
                 </div>
             </div>
 
-            <div className="cg-img-wrap" style={{ width: imgW }}>
+            {/* Product image */}
+            <div className="cg-img-wrap">
                 <div className="cg-img-glow" />
-                {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} className="cg-img" loading="lazy" />
-                ) : (
-                    <span className="cg-empty" style={{ fontSize: '2em' }}>💧</span>
-                )}
+                {product.imageUrl
+                    ? <img src={product.imageUrl} alt={product.name} className="cg-img" loading="lazy" />
+                    : <span className="cg-fallback">💧</span>
+                }
             </div>
 
-            <div style={{ flexShrink: 0, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div className="cg-brand">{product.brand || 'Premium Extract'}</div>
-            <div className="cg-name">
-                {product.name}
-            </div>
+            {/* Data panel */}
+            <div className="cg-data">
+                {product.brand && <div className="cg-brand">{product.brand}</div>}
+                <div className="cg-name">{product.name}</div>
 
-            {/* Cannabinoid Bars */}
-            <div className="cg-c-bars">
-                    <div className="cg-c-row">
-                        <div className="cg-c-labels">
-                            <span className="cg-c-label">THC</span>
-                            <span className="cg-c-val">{thc}%</span>
+                {thc != null && (
+                    <div className="cg-thc-row">
+                        <span className="cg-thc-lbl">THC</span>
+                        <div className="cg-thc-track">
+                            <div className="cg-thc-fill" style={{ width: `${Math.min(thc, 100)}%` }} />
                         </div>
-                        <div className="cg-c-track">
-                            <div className="cg-c-fill" style={{ width: `${Math.min(thc, 100)}%` }} />
-                        </div>
+                        <span className="cg-thc-val">{thc}%</span>
                     </div>
+                )}
 
-                    {cbd > 0 && (
-                        <div className="cg-c-row" style={{ marginTop: 4 }}>
-                            <div className="cg-c-labels">
-                                <span className="cg-c-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.6em' }}>CBD</span>
-                                <span className="cg-c-val" style={{ color: '#93c5fd', fontSize: '0.75em', textShadow: 'none' }}>{cbd}%</span>
-                            </div>
-                            <div className="cg-c-track" style={{ height: 3 }}>
-                                <div className="cg-c-fill minor" style={{ width: `${Math.min(cbd * 2, 100)}%` }} />
-                            </div>
+                {cbd != null && cbd > 0 && (
+                    <div className="cg-thc-row cg-thc-row--cbd">
+                        <span className="cg-thc-lbl">CBD</span>
+                        <div className="cg-thc-track">
+                            <div className="cg-thc-fill cg-thc-fill--cbd" style={{ width: `${Math.min(cbd * 2, 100)}%` }} />
                         </div>
-                    )}
+                        <span className="cg-thc-val cg-thc-val--cbd">{cbd}%</span>
+                    </div>
+                )}
 
-                    {(cbg > 0 || cbn > 0) && (
-                        <div className="cg-c-minor-row" style={{ marginTop: 4 }}>
-                            {cbg > 0 && (
-                                <div className="cg-c-minor-item">
-                                    <span className="cg-c-label" style={{ marginRight: 6 }}>CBG</span>
-                                    <span className="cg-c-val">{cbg}%</span>
-                                </div>
-                            )}
-                            {cbn > 0 && (
-                                <div className="cg-c-minor-item" style={{ textAlign: 'right' }}>
-                                    <span className="cg-c-label" style={{ marginRight: 6 }}>CBN</span>
-                                    <span className="cg-c-val">{cbn}%</span>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+                {effects.length > 0 && (
+                    <div className="cg-effects">
+                        {effects.map(e => <span key={e} className="cg-chip">{e}</span>)}
+                    </div>
+                )}
 
-            {/* Effects and Price */}
-            {effects.length > 0 && (
-                <div className="cg-effects">
-                    {effects.map(e => (
-                        <div key={e} className="cg-chip">{e}</div>
-                    ))}
-                </div>
-            )}
-
-            <div className="cg-price">${price}</div>
+                <div className="cg-spacer" />
+                {price != null && <div className="cg-price">${price.toFixed(2)}</div>}
             </div>
         </div>
     );
 }
 
-/* ── Main Layout Component ── */
+/* ── Main Layout ── */
 export default function CartridgesLayout({ products = [] }) {
-    const containerRef = useRef(null);
-    const [dim, setDim] = useState({ w: window.innerWidth, h: window.innerHeight * 0.84 });
+    const containerRef  = useRef(null);
+    const [dim, setDim]           = useState({ W: 0, H: 0 });
+    const [safeTop, setSafeTop]   = useState(0);
 
     useEffect(() => {
-        if (!containerRef.current) return;
-        const observer = new ResizeObserver((entries) => {
-            if (entries[0]) {
-                const { width, height } = entries[0].contentRect;
-                if (width > 0 && height > 0) {
-                    setDim({ w: width, h: height });
-                }
+        const el = containerRef.current;
+        if (!el) return;
+
+        const measure = () => {
+            let W = el.offsetWidth;
+            let H = el.offsetHeight;
+            if (W < 10 || H < 10) {
+                const stable = el.closest('main, .app-content')
+                    || el.parentElement?.parentElement
+                    || el.parentElement;
+                if (stable) { W = stable.offsetWidth; H = stable.offsetHeight; }
             }
-        });
-        observer.observe(containerRef.current);
-        return () => observer.disconnect();
+            if (W > 10 && H > 10) {
+                setDim({ W, H });
+                setSafeTop(getSafeTop(el));
+            }
+        };
+
+        const t  = setTimeout(measure, 120);
+        const ro = new ResizeObserver(measure);
+        ro.observe(el);
+        const stable = el.closest('main, .app-content');
+        if (stable) ro.observe(stable);
+        return () => { clearTimeout(t); ro.disconnect(); };
     }, []);
 
-    const { positions, cardW, cardH } = useFloatingLayout({
-        products,
-        containerW: dim.w,
-        containerH: dim.h,
-        baseCardW: 220,
-        baseCardH: 300,
-    });
+    const { cardW, cardH } = calcSizes(dim.W, dim.H, products.length, safeTop);
 
     return (
-        <div className="cg-scene" ref={containerRef}>
+        <div ref={containerRef} className="cg-scene">
             <div className="cg-bg" />
             <div className="cg-bloom cg-bloom--1" />
             <div className="cg-bloom cg-bloom--2" />
+            <div className="cg-bloom cg-bloom--3" />
 
-            <div className="cg-floating-container">
-                {products.map((p, i) => positions[i] ? (
-                    <div
+            <div
+                className="cg-cards"
+                style={{
+                    paddingTop: `${safeTop + PAD}px`,
+                    paddingLeft:  PAD,
+                    paddingRight: PAD,
+                    paddingBottom: PAD,
+                    gap: GAP,
+                }}
+            >
+                {products.map((p, i) => (
+                    <CartridgeCard
                         key={p.id}
-                        className="cg-card-wrapper"
-                        style={{
-                            position: 'absolute',
-                            left: positions[i].x - cardW / 2,
-                            top: positions[i].y - cardH / 2,
-                            width: cardW,
-                            height: cardH,
-                        }}
-                    >
-                        <CartridgeCard
-                            product={p}
-                            index={i}
-                            cardW={cardW}
-                            cardH={cardH}
-                        />
-                    </div>
-                ) : null)}
+                        product={p}
+                        cardW={cardW}
+                        cardH={cardH}
+                        index={i}
+                    />
+                ))}
             </div>
         </div>
     );

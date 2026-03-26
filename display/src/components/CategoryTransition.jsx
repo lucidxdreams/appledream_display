@@ -1,22 +1,26 @@
 /**
  * CategoryTransition.jsx
- * 
- * GSAP-powered transition wrapper between categories.
- * 
- * Exit  (0.6s): children implode to center → dissolve
- * Enter (0.9s): particle burst → category name flies in → children materialize
- * 
- * Usage: wrap the content area and pass categoryId as key to trigger transitions.
  *
- * HARDENED: Prior timeline is killed before building a new one to prevent
- * overlapping animations during rapid category switches.
+ * GSAP-powered transition wrapper between categories.
+ *
+ * Fix: useLayoutEffect fires before browser paint — new content is hidden
+ * immediately, preventing the products-visible-before-title flash bug.
+ *
+ * Enter sequence (≈1.8s):
+ *  1. Accent bars sweep in from opposite sides
+ *  2. Title rises from behind a hard clip (curtain reveal)
+ *  3. "NOW DISPLAYING" sub-label fades up
+ *  4. Hold
+ *  5. Title drops behind clip, bars collapse inward
+ *  6. Products materialize
+ *
+ * HARDENED: Prior timeline is killed before building a new one.
  */
 
-import { useRef, useEffect } from 'react';
+import { useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 
-/** Burst of DOM particles using CSS absolute divs */
-function burstParticles(container, accent, count = 24) {
+function burstParticles(container, accent, count = 20) {
     const cx = container.offsetWidth / 2;
     const cy = container.offsetHeight / 2;
 
@@ -26,8 +30,8 @@ function burstParticles(container, accent, count = 24) {
       position:absolute;
       left:${cx}px;
       top:${cy}px;
-      width:8px;
-      height:8px;
+      width:6px;
+      height:6px;
       border-radius:50%;
       background:${accent};
       pointer-events:none;
@@ -38,25 +42,19 @@ function burstParticles(container, accent, count = 24) {
         return el;
     });
 
-    const tl = gsap.timeline({
-        onComplete: () => particles.forEach((p) => p.remove()),
-    });
+    const tl = gsap.timeline({ onComplete: () => particles.forEach((p) => p.remove()) });
 
     particles.forEach((p, i) => {
         const angle = (i / count) * Math.PI * 2;
-        const dist = 150 + Math.random() * 250;
-        tl.to(
-            p,
-            {
-                x: Math.cos(angle) * dist,
-                y: Math.sin(angle) * dist,
-                opacity: 0,
-                scale: Math.random() * 2 + 0.5,
-                duration: 0.8,
-                ease: 'power2.out',
-            },
-            0
-        );
+        const dist = 120 + Math.random() * 240;
+        tl.to(p, {
+            x: Math.cos(angle) * dist,
+            y: Math.sin(angle) * dist,
+            opacity: 0,
+            scale: Math.random() * 2.5 + 0.5,
+            duration: 0.9,
+            ease: 'power2.out',
+        }, 0);
     });
 
     return tl;
@@ -70,31 +68,31 @@ export default function CategoryTransition({
     onTransitionComplete,
 }) {
     const containerRef = useRef(null);
-    const contentRef = useRef(null);
-    const labelRef = useRef(null);
-    const prevCategoryId = useRef(null);
-    const isFirstRender = useRef(true);
-    const masterTlRef = useRef(null);
+    const contentRef   = useRef(null);
+    const labelRef     = useRef(null);
+    const barTopRef    = useRef(null);
+    const barBotRef    = useRef(null);
+    const titleClipRef = useRef(null);
+    const titleRef     = useRef(null);
+    const subLabelRef  = useRef(null);
 
-    useEffect(() => {
+    const prevCategoryId = useRef(null);
+    const isFirstRender  = useRef(true);
+    const masterTlRef    = useRef(null);
+
+    // useLayoutEffect fires synchronously before the browser paints —
+    // this is what prevents new content from flashing into view.
+    useLayoutEffect(() => {
+        // ── First render: just materialize products ──────────────────────────
         if (isFirstRender.current) {
             isFirstRender.current = false;
             prevCategoryId.current = categoryId;
-            // Entrance animation for first load
             if (contentRef.current) {
-                const tween = gsap.fromTo(
+                masterTlRef.current = gsap.fromTo(
                     contentRef.current.children,
                     { opacity: 0, scale: 0.5, y: 60 },
-                    {
-                        opacity: 1,
-                        scale: 1,
-                        y: 0,
-                        duration: 0.9,
-                        stagger: 0.06,
-                        ease: 'back.out(1.4)',
-                    }
+                    { opacity: 1, scale: 1, y: 0, duration: 0.9, stagger: 0.06, ease: 'back.out(1.4)' }
                 );
-                masterTlRef.current = tween;
             }
             return;
         }
@@ -103,51 +101,118 @@ export default function CategoryTransition({
         prevCategoryId.current = categoryId;
 
         const container = containerRef.current;
-        const content = contentRef.current;
-        const label = labelRef.current;
+        const content   = contentRef.current;
+        const label     = labelRef.current;
+        const barTop    = barTopRef.current;
+        const barBot    = barBotRef.current;
+        const titleClip = titleClipRef.current;
+        const titleEl   = titleRef.current;
+        const subLabel  = subLabelRef.current;
+
         if (!container || !content) return;
 
-        // Kill any prior running timeline before building a new one
         if (masterTlRef.current) {
             masterTlRef.current.kill();
             masterTlRef.current = null;
         }
 
-        const masterTl = gsap.timeline({
-            onComplete: () => {
-                onTransitionComplete?.();
-            },
-        });
+        // CRITICAL: hide new products before browser paints
+        gsap.set(content, { opacity: 0 });
+        gsap.set(Array.from(content.children), { opacity: 0, scale: 0, x: 0, y: 0 });
+
+        // Reset label children to clean starting states
+        if (barTop)   gsap.set(barTop,   { scaleX: 0 });
+        if (barBot)   gsap.set(barBot,   { scaleX: 0 });
+        if (titleEl)  gsap.set(titleEl,  { y: '115%' });
+        if (subLabel) gsap.set(subLabel, { opacity: 0, y: 10 });
+
+        const masterTl = gsap.timeline({ onComplete: () => onTransitionComplete?.() });
         masterTlRef.current = masterTl;
 
-        // ── EXIT: implode + dissolve (0.6s) ──────────────────────────────────
-        masterTl.to(Array.from(content.children), {
-            scale: 0.1,
-            opacity: 0,
-            x: () => (Math.random() - 0.5) * 60,
-            y: () => (Math.random() - 0.5) * 60,
-            duration: 0.45,
-            stagger: { each: 0.04, from: 'random' },
-            ease: 'power3.in',
-        });
+        // ── REVEAL LABEL ──────────────────────────────────────────────────────
+        masterTl.set(label, { opacity: 1 }, 0);
 
-        // ── PARTICLE BURST ────────────────────────────────────────────────────
-        masterTl.add(() => {
-            burstParticles(container, categoryAccent);
-        });
+        // Particle burst
+        masterTl.add(() => burstParticles(container, categoryAccent), 0);
 
-        // ── LABEL FLIES IN ────────────────────────────────────────────────────
-        if (label) {
-            masterTl.fromTo(
-                label,
-                { x: -120, opacity: 0, scale: 0.8 },
-                { x: 0, opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.6)' }
-            );
-            masterTl.to(label, { opacity: 0, duration: 0.3, delay: 0.4 });
+        // Top bar sweeps in from the left
+        if (barTop) {
+            masterTl.to(barTop, {
+                scaleX: 1,
+                transformOrigin: 'left center',
+                duration: 0.42,
+                ease: 'power3.out',
+            }, 0.05);
         }
 
-        // ── ENTER: products materialize (0.9s) ────────────────────────────────
-        masterTl.set(Array.from(content.children), { scale: 0, opacity: 0, x: 0, y: 0 });
+        // Bottom bar sweeps in from the right
+        if (barBot) {
+            masterTl.to(barBot, {
+                scaleX: 1,
+                transformOrigin: 'right center',
+                duration: 0.42,
+                ease: 'power3.out',
+            }, 0.12);
+        }
+
+        // Title curtain-rise: parent overflow:hidden clips the upward travel
+        if (titleEl) {
+            masterTl.to(titleEl, {
+                y: '0%',
+                duration: 0.65,
+                ease: 'power4.out',
+            }, 0.18);
+        }
+
+        // Sub-label fades up once the title has settled
+        if (subLabel) {
+            masterTl.to(subLabel, {
+                opacity: 1,
+                y: 0,
+                duration: 0.35,
+                ease: 'power2.out',
+            }, 0.56);
+        }
+
+        // ── HOLD ─────────────────────────────────────────────────────────────
+        masterTl.addLabel('hold', '+=0.68');
+
+        // ── EXIT LABEL ────────────────────────────────────────────────────────
+        if (subLabel) {
+            masterTl.to(subLabel, { opacity: 0, duration: 0.2 }, 'hold');
+        }
+
+        // Title drops back behind the clip
+        if (titleEl) {
+            masterTl.to(titleEl, {
+                y: '-115%',
+                duration: 0.4,
+                ease: 'power3.in',
+            }, 'hold+=0.06');
+        }
+
+        // Bars collapse inward
+        if (barTop) {
+            masterTl.to(barTop, {
+                scaleX: 0,
+                transformOrigin: 'right center',
+                duration: 0.3,
+                ease: 'power2.in',
+            }, 'hold+=0.1');
+        }
+        if (barBot) {
+            masterTl.to(barBot, {
+                scaleX: 0,
+                transformOrigin: 'left center',
+                duration: 0.3,
+                ease: 'power2.in',
+            }, 'hold+=0.1');
+        }
+
+        masterTl.set(label, { opacity: 0 });
+
+        // ── PRODUCTS MATERIALIZE ──────────────────────────────────────────────
+        masterTl.set(content, { opacity: 1 });
         masterTl.to(Array.from(content.children), {
             scale: 1,
             opacity: 1,
@@ -169,35 +234,93 @@ export default function CategoryTransition({
             ref={containerRef}
             style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}
         >
-            {/* Flying category name label */}
+            {/* ── Cinematic title card ── */}
             <div
                 ref={labelRef}
                 style={{
                     position: 'absolute',
                     inset: 0,
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     pointerEvents: 'none',
                     zIndex: 50,
                     opacity: 0,
+                    background: 'radial-gradient(ellipse 90% 65% at 50% 50%, rgba(0,0,0,0.5) 0%, transparent 100%)',
                 }}
             >
-                <span
+                {/* Top accent bar */}
+                <div
+                    ref={barTopRef}
                     style={{
-                        fontFamily: 'var(--font-display)',
-                        fontWeight: 900,
-                        fontSize: 'clamp(3rem, 8vw, 7rem)',
+                        width: '36%',
+                        maxWidth: '400px',
+                        height: '3px',
+                        background: `linear-gradient(90deg, ${categoryAccent}, rgba(255,255,255,0.65))`,
+                        borderRadius: '2px',
+                        marginBottom: '1rem',
+                    }}
+                />
+
+                {/* Sub-label */}
+                <div
+                    ref={subLabelRef}
+                    style={{
+                        fontFamily: '"Barlow Condensed", "Plus Jakarta Sans", sans-serif',
+                        fontWeight: 700,
+                        fontSize: 'clamp(0.55rem, 1.1vw, 0.82rem)',
+                        letterSpacing: '0.45em',
                         color: categoryAccent,
-                        textShadow: `0 0 40px ${categoryAccent}, 0 0 80px ${categoryAccent}44`,
-                        letterSpacing: '-0.02em',
+                        textTransform: 'uppercase',
+                        marginBottom: '0.5rem',
+                        opacity: 0,
                     }}
                 >
-                    {categoryName}
-                </span>
+                    Now Displaying
+                </div>
+
+                {/* Title — hard clip via overflow:hidden on parent */}
+                <div
+                    ref={titleClipRef}
+                    style={{
+                        overflow: 'hidden',
+                        paddingBottom: '0.06em',
+                        paddingTop: '0.02em',
+                    }}
+                >
+                    <div
+                        ref={titleRef}
+                        style={{
+                            fontFamily: '"Barlow Condensed", sans-serif',
+                            fontWeight: 900,
+                            fontSize: 'clamp(5rem, 15vw, 12rem)',
+                            lineHeight: 0.9,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.02em',
+                            color: '#ffffff',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {categoryName}
+                    </div>
+                </div>
+
+                {/* Bottom accent bar */}
+                <div
+                    ref={barBotRef}
+                    style={{
+                        width: '36%',
+                        maxWidth: '400px',
+                        height: '3px',
+                        background: `linear-gradient(90deg, rgba(255,255,255,0.65), ${categoryAccent})`,
+                        borderRadius: '2px',
+                        marginTop: '1rem',
+                    }}
+                />
             </div>
 
-            {/* Content that gets transitioned */}
+            {/* Product content */}
             <div ref={contentRef} style={{ width: '100%', height: '100%' }}>
                 {children}
             </div>
