@@ -34,6 +34,7 @@ jobs:
           echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
           echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> .env
           echo "VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}" >> .env
+          echo "VITE_OPENWEATHER_API_KEY=${{ secrets.VITE_OPENWEATHER_API_KEY || '2fc9a0a62a726a918c4b4a30d33bf641' }}" >> .env
         working-directory: display
 
       - name: Build
