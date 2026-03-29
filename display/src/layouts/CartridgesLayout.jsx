@@ -1,47 +1,46 @@
 /**
- * CartridgesLayout.jsx — "Neon Drop" Cartridges Display
+ * CartridgesLayout.jsx — "Holo-Fluid Glass" Cartridges Display
  *
- * Flex-wrap layout with binary-search card sizing and safeTop offset.
- * Mirrors PreRollsLayout pattern. Cards: landscape with large image,
- * THC/CBD bars, effects chips, and prominent price.
+ * Completely redesigned:
+ * - Fluid gradient orbs morphing inside a deeply frosted glass pane
+ * - Continuous zero-gravity float for the main product image
+ * - Laser-thin sleek typography and minimalist data presentation
  */
 
 import { useRef, useState, useEffect } from 'react';
 import './CartridgesLayout.css';
 
 /* ── Layout constants ── */
-const GAP    = 16;
-const PAD    = 22;
-const ASPECT = 1.42; // cardW / cardH
+const GAP    = 22;
+const PAD_H  = 28;
+const PAD_V  = 28;
+const ASPECT = 0.62; // cardW / cardH  → portrait
 
-/* ── Strain palettes ── */
+/* ── Fluid Strain Palettes ── */
 const PALETTES = {
     indica: {
-        primary:   '#a855f7',
-        secondary: '#e879f9',
-        dim:       'rgba(168,85,247,0.14)',
-        glow:      'rgba(168,85,247,0.52)',
-        border:    'rgba(192,132,252,0.38)',
-        bar:       'linear-gradient(90deg,#6d28d9,#a855f7,#e879f9)',
-        label:     'Indica',
+        orb1: '#a855f7',
+        orb2: '#c084fc',
+        orb3: '#7e22ce',
+        text: '#f3e8ff',
+        primary: '#d8b4fe',
+        label: 'Indica',
     },
     sativa: {
-        primary:   '#f59e0b',
-        secondary: '#fde68a',
-        dim:       'rgba(245,158,11,0.14)',
-        glow:      'rgba(245,158,11,0.52)',
-        border:    'rgba(251,191,36,0.38)',
-        bar:       'linear-gradient(90deg,#b45309,#f59e0b,#fde68a)',
-        label:     'Sativa',
+        orb1: '#f59e0b',
+        orb2: '#fcd34d',
+        orb3: '#b45309',
+        text: '#fef3c7',
+        primary: '#fcd34d',
+        label: 'Sativa',
     },
     hybrid: {
-        primary:   '#10b981',
-        secondary: '#6ee7b7',
-        dim:       'rgba(16,185,129,0.14)',
-        glow:      'rgba(16,185,129,0.52)',
-        border:    'rgba(52,211,153,0.38)',
-        bar:       'linear-gradient(90deg,#065f46,#10b981,#6ee7b7)',
-        label:     'Hybrid',
+        orb1: '#14b8a6',
+        orb2: '#5eead4',
+        orb3: '#0f766e',
+        text: '#ccfbf1',
+        primary: '#5eead4',
+        label: 'Hybrid',
     },
 };
 
@@ -53,23 +52,33 @@ function getStrain(p) {
 }
 function getPalette(p) { return PALETTES[getStrain(p)]; }
 
-/* ── Binary-search sizing ── */
+/* ── Fixed card sizing — guaranteed portrait, no stretching ── */
 function calcSizes(W, H, count, safeTop) {
-    if (!W || !H || count === 0) return { cardW: 260, cardH: 183 };
-    const usableH = Math.max(80, H - safeTop - PAD * 2);
-    const usableW = Math.max(80, W - PAD * 2);
-    const targetRows = count <= 3 ? 1 : count <= 8 ? 2 : 3;
-    const cardH = Math.floor((usableH - GAP * (targetRows - 1)) / targetRows);
-    let lo = 80, hi = Math.round(cardH * ASPECT);
-    for (let iter = 0; iter < 20; iter++) {
-        const mid    = (lo + hi) >> 1;
-        const perRow = Math.floor((usableW + GAP) / (mid + GAP));
-        const rows   = Math.ceil(count / Math.max(1, perRow));
-        const fill   = rows * (cardH + GAP) - GAP;
-        (fill <= usableH && perRow >= 1) ? (lo = mid) : (hi = mid - 1);
+    if (!W || !H || count === 0) return { cardW: 200, cardH: 323 };
+
+    const availW = Math.max(80, W - PAD_H * 2);
+    const availH = Math.max(80, H - safeTop - PAD_V * 2);
+
+    const maxCols = Math.min(count, 8);
+    let bestCols = Math.max(1, Math.min(count, 2));
+    for (let c = 1; c <= maxCols; c++) {
+        const rows = Math.ceil(count / c);
+        const cW   = Math.floor((availW - GAP * (c - 1)) / c);
+        const cH   = Math.floor((availH - GAP * (rows - 1)) / rows);
+        bestCols = c;
+        if (cH >= cW) break;
     }
-    const cardW = Math.max(120, Math.min(lo, Math.round(cardH * ASPECT)));
-    return { cardW, cardH };
+
+    const cols  = bestCols;
+    const rows  = Math.ceil(count / cols);
+    const cardW = Math.floor((availW - GAP * (cols - 1)) / cols);
+    const rowH  = Math.floor((availH - GAP * (rows - 1)) / rows);
+    const cardH = Math.max(rowH, Math.round(cardW * 1.1));
+
+    return {
+        cardW: Math.max(120, cardW),
+        cardH: Math.max(190, Math.min(cardH, Math.round(cardW / ASPECT))),
+    };
 }
 
 /* ── Logo-safe top offset ── */
@@ -86,93 +95,123 @@ function getSafeTop(container) {
             if (b > refTop) max = Math.max(max, b - refTop);
         });
     });
-    return max > 0 ? max + 20 : 0;
+    return max > 0 ? max + 16 : 0;
 }
+
+/* ── Float parameters for cards ── */
+const FLOAT_CONFIGS = [
+    { dur: '8s',  delay: '0s' },
+    { dur: '9.5s', delay: '-3s' },
+    { dur: '7.2s', delay: '-1s' },
+    { dur: '8.8s', delay: '-5s' },
+];
 
 /* ── Single Cartridge Card ── */
 function CartridgeCard({ product, cardW, cardH, index }) {
-    const pal       = getPalette(product);
-    const thc       = product.thc  != null ? Number(product.thc)  : null;
-    const cbd       = product.cbd  != null ? Number(product.cbd)  : null;
-    const price     = product.price != null ? Number(product.price) : null;
-    const effects   = (product.effects || []).slice(0, 3);
-    const cartSize  = product.cartSize || product.size || '';
-    const extract   = product.extractType || '';
-    const isNew     = (product.badge || '').toLowerCase() === 'new';
-    const floatV    = (index % 3) + 1;
+    const pal      = getPalette(product);
+    const thc      = product.thc  != null ? Number(product.thc)  : null;
+    const cbd      = product.cbd  != null ? Number(product.cbd)  : null;
+    const price    = product.price != null ? Number(product.price) : null;
+    const effects  = (product.effects || []).slice(0, 3);
+    const cartSize = product.cartSize || product.size || '';
+    const extract  = product.extractType || '';
+    const isNew    = (product.badge || '').toLowerCase() === 'new';
+
+    const floatCfg = FLOAT_CONFIGS[index % 4];
+
+    /* Metadata details joined */
+    const metaTags = [extract, cartSize, isNew ? 'NEW' : ''].filter(Boolean);
 
     return (
         <div
-            className={`cg-card cg-float-${floatV}`}
+            className="holo-card"
             style={{
+                '--pal-o1':        pal.orb1,
+                '--pal-o2':        pal.orb2,
+                '--pal-o3':        pal.orb3,
+                '--pal-text':      pal.text,
                 '--pal-primary':   pal.primary,
-                '--pal-secondary': pal.secondary,
-                '--pal-dim':       pal.dim,
-                '--pal-glow':      pal.glow,
-                '--pal-border':    pal.border,
-                '--pal-bar':       pal.bar,
-                '--entrance-delay': `${index * 0.07}s`,
-                '--float-delay':    `${0.9 + index * 0.14}s`,
-                width:   cardW,
-                height:  cardH,
+                '--entrance-delay': `${index * 0.08}s`,
+                '--float-dur':     floatCfg.dur,
+                '--float-delay':   floatCfg.delay,
+                width:  cardW,
+                height: cardH,
                 flexShrink: 0,
             }}
         >
-            {/* Top accent bar */}
-            <div className="cg-accent-line" />
+            {/* Fluid Orbs layered inside the card */}
+            <div className="holo-orbs">
+                <div className="holo-orb holo-orb-1" />
+                <div className="holo-orb holo-orb-2" />
+                <div className="holo-orb holo-orb-3" />
+            </div>
 
-            {/* Header row */}
-            <div className="cg-header">
-                <span className="cg-strain">{pal.label}</span>
-                <div className="cg-badges">
-                    {cartSize && <span className="cg-badge cg-badge--size">{cartSize}</span>}
-                    {extract  && <span className="cg-badge cg-badge--ext">{extract}</span>}
-                    {isNew    && <span className="cg-badge cg-badge--new">NEW</span>}
+            {/* Inner Glossy Glass Overlay */}
+            <div className="holo-glass-pane" />
+
+            {/* Floating content wrapper */}
+            <div className="holo-content-wrapper">
+
+                {/* Top Meta Area */}
+                <div className="holo-meta-top">
+                    <span className="holo-strain-pill">{pal.label}</span>
+                    {metaTags.length > 0 && (
+                        <div className="holo-meta-tags">
+                            {metaTags.join(' • ')}
+                        </div>
+                    )}
                 </div>
-            </div>
 
-            {/* Product image */}
-            <div className="cg-img-wrap">
-                <div className="cg-img-glow" />
-                {product.imageUrl
-                    ? <img src={product.imageUrl} alt={product.name} className="cg-img" loading="lazy" />
-                    : <span className="cg-fallback">💧</span>
-                }
-            </div>
+                {/* Hero Product Image (Zero-G Float) */}
+                <div className="holo-hero">
+                    <div className="holo-hero-shadow" />
+                    <div className="holo-img-container">
+                        {product.imageUrl
+                            ? <img src={product.imageUrl} alt={product.name} className="holo-img" loading="lazy" />
+                            : <span className="holo-fallback">💧</span>
+                        }
+                    </div>
+                </div>
 
-            {/* Data panel */}
-            <div className="cg-data">
-                {product.brand && <div className="cg-brand">{product.brand}</div>}
-                <div className="cg-name">{product.name}</div>
+                {/* Bottom info section */}
+                <div className="holo-info">
+                    {/* Brand line */}
+                    {product.brand && <div className="holo-brand">{product.brand}</div>}
 
-                {thc != null && (
-                    <div className="cg-thc-row">
-                        <span className="cg-thc-lbl">THC</span>
-                        <div className="cg-thc-track">
-                            <div className="cg-thc-fill" style={{ width: `${Math.min(thc, 100)}%` }} />
+                    {/* Product Name */}
+                    <div className="holo-name" title={product.name}>{product.name}</div>
+
+                    {/* Minimalist Effects */}
+                    {effects.length > 0 && (
+                        <div className="holo-effects">
+                            {effects.map(e => <span key={e} className="holo-chip">{e}</span>)}
                         </div>
-                        <span className="cg-thc-val">{thc}%</span>
-                    </div>
-                )}
+                    )}
 
-                {cbd != null && cbd > 0 && (
-                    <div className="cg-thc-row cg-thc-row--cbd">
-                        <span className="cg-thc-lbl">CBD</span>
-                        <div className="cg-thc-track">
-                            <div className="cg-thc-fill cg-thc-fill--cbd" style={{ width: `${Math.min(cbd * 2, 100)}%` }} />
+                    {/* Sleek Laser Data Pane */}
+                    <div className="holo-data-pane">
+                        <div className="holo-data-stats">
+                            {thc != null && (
+                                <div className="holo-stat-col">
+                                    <span className="holo-stat-lbl">THC</span>
+                                    <span className="holo-stat-val">{thc}%</span>
+                                </div>
+                            )}
+                            {cbd != null && cbd > 0 && (
+                                <div className="holo-stat-col">
+                                    <span className="holo-stat-lbl holo-stat-lbl--cbd">CBD</span>
+                                    <span className="holo-stat-val holo-stat-val--cbd">{cbd}%</span>
+                                </div>
+                            )}
                         </div>
-                        <span className="cg-thc-val cg-thc-val--cbd">{cbd}%</span>
+                        {price != null && (
+                            <div className="holo-price">
+                                ${price.toFixed(0)}
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
 
-                {effects.length > 0 && (
-                    <div className="cg-effects">
-                        {effects.map(e => <span key={e} className="cg-chip">{e}</span>)}
-                    </div>
-                )}
-
-                <div className="cg-spacer" />
-                {price != null && <div className="cg-price">${price.toFixed(2)}</div>}
             </div>
         </div>
     );
@@ -180,9 +219,9 @@ function CartridgeCard({ product, cardW, cardH, index }) {
 
 /* ── Main Layout ── */
 export default function CartridgesLayout({ products = [] }) {
-    const containerRef  = useRef(null);
-    const [dim, setDim]           = useState({ W: 0, H: 0 });
-    const [safeTop, setSafeTop]   = useState(0);
+    const containerRef = useRef(null);
+    const [dim, setDim]         = useState({ W: 0, H: 0 });
+    const [safeTop, setSafeTop] = useState(0);
 
     useEffect(() => {
         const el = containerRef.current;
@@ -214,20 +253,21 @@ export default function CartridgesLayout({ products = [] }) {
     const { cardW, cardH } = calcSizes(dim.W, dim.H, products.length, safeTop);
 
     return (
-        <div ref={containerRef} className="cg-scene">
-            <div className="cg-bg" />
-            <div className="cg-bloom cg-bloom--1" />
-            <div className="cg-bloom cg-bloom--2" />
-            <div className="cg-bloom cg-bloom--3" />
+        <div ref={containerRef} className="holo-scene">
+            {/* Deep Ambient Space */}
+            <div className="holo-bg" />
+            <div className="holo-ambient-1" />
+            <div className="holo-ambient-2" />
 
+            {/* Grid */}
             <div
-                className="cg-cards"
+                className="holo-grid"
                 style={{
-                    paddingTop: `${safeTop + PAD}px`,
-                    paddingLeft:  PAD,
-                    paddingRight: PAD,
-                    paddingBottom: PAD,
-                    gap: GAP,
+                    paddingTop:    safeTop + PAD_V,
+                    paddingBottom: PAD_V,
+                    paddingLeft:   PAD_H,
+                    paddingRight:  PAD_H,
+                    gap:           GAP,
                 }}
             >
                 {products.map((p, i) => (

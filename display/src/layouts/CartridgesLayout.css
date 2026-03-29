@@ -1,60 +1,62 @@
 /**
- * CartridgesLayout.css — "Neon Drop" Cartridges
- * Flex-wrap layout, big-image portrait-landscape cards, neon-tech palette.
+ * CartridgesLayout.css — "Holo-Fluid Glass" Cartridges
+ *
+ * Implements borderless deep-frosted glass cards with fluid neon orb layers 
+ * behind a zero-g floating product image.
  */
 
-/* ── Scene ── */
-.cg-scene {
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Outfit:wght@300;500;700;900&display=swap');
+
+/* ── Scene Background ── */
+.holo-scene {
     position: relative;
     width: 100%;
     height: 100%;
     overflow: hidden;
+    background: #020108; /* Extremely deep abyssal base */
+    font-family: 'Outfit', sans-serif;
 }
 
-/* Dark tech base */
-.cg-bg {
+/* Base deep space gradient */
+.holo-bg {
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse 130% 130% at 50% 50%,
-        #060410 0%, #040208 55%, #020106 100%);
+    background: radial-gradient(ellipse 130% 120% at 50% 10%, #060212 0%, #010005 100%);
     z-index: 0;
 }
 
-/* Ambient bloom lights (Liquid Gold style) */
-.cg-bloom {
+/* Ambient room bloom */
+.holo-ambient-1, .holo-ambient-2 {
     position: absolute;
     border-radius: 50%;
+    filter: blur(140px);
     pointer-events: none;
     z-index: 0;
-    filter: blur(100px);
 }
-.cg-bloom--1 {
-    width: 48%; height: 55%;
-    left: -12%; top: 12%;
-    background: radial-gradient(circle, rgba(168,85,247,0.10) 0%, transparent 70%);
-    animation: cg-bloom-drift 16s ease-in-out infinite;
+.holo-ambient-1 {
+    width: 60%;
+    height: 60%;
+    left: -15%;
+    top: -10%;
+    background: radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 60%);
+    animation: holo-drift 24s ease-in-out infinite alternate;
 }
-.cg-bloom--2 {
-    width: 52%; height: 48%;
-    right: -14%; bottom: -8%;
-    background: radial-gradient(circle, rgba(16,185,129,0.09) 0%, transparent 70%);
-    animation: cg-bloom-drift 21s ease-in-out 6s infinite reverse;
-}
-.cg-bloom--3 {
-    width: 35%; height: 40%;
-    left: 30%; top: -10%;
-    background: radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 70%);
-    animation: cg-bloom-drift 13s ease-in-out 2s infinite;
+.holo-ambient-2 {
+    width: 50%;
+    height: 50%;
+    right: -10%;
+    bottom: -15%;
+    background: radial-gradient(circle, rgba(20,184,166,0.05) 0%, transparent 60%);
+    animation: holo-drift 18s ease-in-out infinite alternate-reverse;
 }
 
-@keyframes cg-bloom-drift {
-    0%,100% { transform: translate(0,0); }
-    33%      { transform: translate(4%, 3%); }
-    66%      { transform: translate(-3%,-4%); }
+@keyframes holo-drift {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(10%, 15%); }
 }
 
-/* ── Flex-wrap card container ── */
-.cg-cards {
+/* Container Grid */
+.holo-grid {
     position: relative;
     z-index: 2;
     width: 100%;
@@ -67,190 +69,219 @@
     overflow: hidden;
 }
 
-/* ── Card base ── */
-.cg-card {
+/* ══════════════════════════════════════════
+   HOLO-FLUID CARD
+══════════════════════════════════════════ */
+.holo-card {
     position: relative;
+    border-radius: 20px;
+    background: transparent;
+    overflow: hidden; /* Contains the fluid orbs */
+    box-shadow: 
+        0 24px 70px rgba(0, 0, 0, 0.9), 
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset; /* Ghost border */
     display: flex;
     flex-direction: column;
-    background: linear-gradient(170deg,
-        rgba(10,7,18,0.96) 0%,
-        rgba(6,4,12,0.98) 100%);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid var(--pal-border);
-    border-radius: 18px;
-    overflow: hidden;
-    box-sizing: border-box;
-    box-shadow:
-        0 10px 48px rgba(0,0,0,0.80),
-        0 0 0 1px rgba(255,255,255,0.04) inset,
-        0 0 32px var(--pal-dim);
-    opacity: 0;
-    flex-shrink: 0;
+    animation: holo-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both;
+    transform-style: preserve-3d;
 }
 
-/* ── Animations ── */
-@keyframes cg-enter {
-    from { opacity: 0; transform: translateY(30px) scale(0.92); }
+@keyframes holo-enter {
+    from { opacity: 0; transform: translateY(40px) scale(0.95); }
     to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
-@keyframes cg-float-1 {
-    0%,100% { transform: translateY(0);   }
-    50%     { transform: translateY(-7px);}
-}
-@keyframes cg-float-2 {
-    0%,100% { transform: translateY(-4px);}
-    50%     { transform: translateY(5px); }
-}
-@keyframes cg-float-3 {
-    0%,100% { transform: translateY(3px); }
-    50%     { transform: translateY(-6px);}
-}
-@keyframes cg-glow-pulse {
-    0%,100% { opacity: 0.38; transform: scale(1);    }
-    50%     { opacity: 0.65; transform: scale(1.20); }
+
+/* Background Fluid Orbs */
+.holo-orbs {
+    position: absolute;
+    inset: -30px; /* Allow bleed */
+    z-index: 0;
+    pointer-events: none;
 }
 
-.cg-card.cg-float-1 {
-    animation:
-        cg-enter  0.65s cubic-bezier(0.16,1,0.3,1) var(--entrance-delay,0s) both,
-        cg-float-1 5.4s ease-in-out var(--float-delay,1s) infinite;
-}
-.cg-card.cg-float-2 {
-    animation:
-        cg-enter  0.65s cubic-bezier(0.16,1,0.3,1) var(--entrance-delay,0s) both,
-        cg-float-2 6.0s ease-in-out var(--float-delay,1s) infinite;
-}
-.cg-card.cg-float-3 {
-    animation:
-        cg-enter  0.65s cubic-bezier(0.16,1,0.3,1) var(--entrance-delay,0s) both,
-        cg-float-3 5.0s ease-in-out var(--float-delay,1s) infinite;
+/* Three highly-blurred colored orbs moving smoothly inside the card */
+.holo-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.85;
+    mix-blend-mode: screen;
 }
 
-/* ── Accent line ── */
-.cg-accent-line {
+.holo-orb-1 {
+    width: 120%;
+    height: 120%;
+    top: -40%;
+    left: -20%;
+    background: radial-gradient(circle, var(--pal-o1) 0%, transparent 70%);
+    animation: orb-spin 12s linear infinite;
+}
+.holo-orb-2 {
     width: 100%;
-    height: 3px;
-    flex-shrink: 0;
-    background: var(--pal-bar);
-    box-shadow: 0 0 16px var(--pal-glow);
+    height: 100%;
+    bottom: -30%;
+    right: -20%;
+    background: radial-gradient(circle, var(--pal-o2) 0%, transparent 70%);
+    animation: orb-spin 15s linear infinite reverse;
+}
+.holo-orb-3 {
+    width: 90%;
+    height: 90%;
+    top: 20%;
+    left: 30%;
+    background: radial-gradient(circle, var(--pal-o3) 0%, transparent 70%);
+    animation: orb-slosh 9s ease-in-out infinite alternate;
 }
 
-/* ── Header row ── */
-.cg-header {
+@keyframes orb-spin {
+    from { transform: rotate(0deg) scale(1.1); }
+    to   { transform: rotate(360deg) scale(1.1); }
+}
+@keyframes orb-slosh {
+    0%   { transform: translate(-10%, -10%) scale(0.9); }
+    100% { transform: translate(15%, 20%) scale(1.3); }
+}
+
+/* Deep Frosted Glass Pane — Sits directly above the orbs */
+.holo-glass-pane {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgba(4, 2, 10, 0.72);
+    /* Massive blur diffuses the orbs completely into a cloudy soft gradient field */
+    backdrop-filter: blur(60px) saturate(180%);
+    -webkit-backdrop-filter: blur(60px) saturate(180%);
+    /* Inner subtle glint */
+    box-shadow: inset 0 2px 30px rgba(255, 255, 255, 0.05);
+}
+
+/* ── Content Wrapper ── */
+.holo-content-wrapper {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Top Meta Area ── */
+.holo-meta-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 14px 5px;
+    padding: 18px 20px 0;
     flex-shrink: 0;
-    box-sizing: border-box;
-    width: 100%;
 }
 
-.cg-strain {
-    font-size: 0.58rem;
+.holo-strain-pill {
+    font-size: 0.55rem;
     font-weight: 900;
-    letter-spacing: 0.20em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--pal-primary);
-    text-shadow: 0 0 10px var(--pal-glow);
-    background: var(--pal-dim);
-    border: 1px solid var(--pal-border);
-    border-radius: 30px;
-    padding: 3px 10px 3px;
-    white-space: nowrap;
+    padding: 2px 10px;
+    border-radius: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
 }
 
-.cg-badges {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-}
-
-.cg-badge {
-    font-size: 0.48rem;
+.holo-meta-tags {
+    font-size: 0.50rem;
+    font-family: 'Manrope', sans-serif;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.45);
     text-transform: uppercase;
-    padding: 2px 7px;
-    border-radius: 6px;
-    white-space: nowrap;
-}
-.cg-badge--size,
-.cg-badge--ext {
-    background: var(--pal-dim);
-    border: 1px solid var(--pal-border);
-    color: var(--pal-primary);
-}
-.cg-badge--new {
-    background: linear-gradient(135deg, #15803d, #22c55e);
-    color: #fff;
-    box-shadow: 0 0 10px rgba(34,197,94,0.45);
-    border-radius: 20px;
 }
 
-/* ── Image area ── */
-.cg-img-wrap {
-    position: relative;
+/* ── Hero Image with Zero-G Float ── */
+.holo-hero {
     flex: 1 1 0;
     min-height: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-}
-
-.cg-img-glow {
-    position: absolute;
-    width: 60%;
-    height: 70%;
-    background: radial-gradient(ellipse, var(--pal-glow) 0%, transparent 68%);
-    filter: blur(32px);
-    pointer-events: none;
-    animation: cg-glow-pulse 4.5s ease-in-out infinite;
-}
-
-.cg-img {
     position: relative;
-    z-index: 1;
-    max-width: 85%;
-    max-height: 90%;
+    /* Soft glowing laser pad horizontally underneath the product */
+    background: radial-gradient(ellipse 60% 8% at 50% 85%, rgba(255,255,255,0.08) 0%, transparent 100%);
+    padding: 10px 0;
+}
+
+/* Drop shadow that bobs inversely to the float */
+.holo-hero-shadow {
+    position: absolute;
+    bottom: 12%;
+    width: 40px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.85);
+    filter: blur(4px);
+    animation: holo-shadow-bob var(--float-dur, 8s) ease-in-out var(--float-delay, 0s) infinite;
+}
+
+.holo-img-container {
+    height: 94%;
+    width: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Zero-gravity continuous float */
+    animation: holo-float var(--float-dur, 8s) ease-in-out var(--float-delay, 0s) infinite;
+}
+
+@keyframes holo-float {
+    0%, 100% { transform: translateY(0px); }
+    50%      { transform: translateY(-16px); }
+}
+
+@keyframes holo-shadow-bob {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50%      { transform: scale(0.6); opacity: 0.3; }
+}
+
+.holo-img {
+    max-height: 115%;
+    max-width: 115%;
     object-fit: contain;
-    filter: drop-shadow(0 6px 22px rgba(0,0,0,0.60));
+    transform: scale(1.28);
+    /* Ultra-crisp heavy physical drop shadow, distinct from the light bloom */
+    filter: drop-shadow(0 20px 24px rgba(0,0,0,0.85));
 }
 
-.cg-fallback {
-    font-size: 3.2rem;
-    opacity: 0.4;
+.holo-fallback {
+    font-size: 3rem;
+    opacity: 0.2;
 }
 
-/* ── Data panel ── */
-.cg-data {
+/* ── Info & Data Region (Bottom) ── */
+.holo-info {
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    padding: 8px 14px 14px;
-    flex-shrink: 0;
-    gap: 5px;
-    box-sizing: border-box;
-    width: 100%;
+    padding: 12px 20px 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
 }
 
-.cg-brand {
-    font-size: 0.52rem;
-    font-weight: 700;
-    color: rgba(255,255,255,0.30);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-}
-
-.cg-name {
-    font-size: 1.0rem;
+.holo-brand {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.55rem;
     font-weight: 800;
-    line-height: 1.2;
-    background: linear-gradient(135deg, var(--pal-primary) 0%, var(--pal-secondary) 55%, rgba(255,255,255,0.88) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 2px;
+}
+
+.holo-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+    /* text shadow removed */
+    text-shadow: none;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -258,88 +289,93 @@
     overflow: hidden;
 }
 
-/* ── THC / CBD bars ── */
-.cg-thc-row {
+/* Effects Wrapper */
+.holo-effects {
     display: flex;
-    align-items: center;
-    gap: 7px;
-}
-
-.cg-thc-lbl {
-    font-size: 0.46rem;
-    font-weight: 700;
-    letter-spacing: 0.10em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
-    flex-shrink: 0;
-    width: 22px;
-}
-.cg-thc-row--cbd .cg-thc-lbl {
-    color: rgba(255,255,255,0.22);
-}
-
-.cg-thc-track {
-    flex: 1;
-    height: 4px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.cg-thc-fill {
-    height: 100%;
-    background: var(--pal-bar);
-    border-radius: 4px;
-    box-shadow: 0 0 8px var(--pal-glow);
-}
-.cg-thc-fill--cbd {
-    background: linear-gradient(90deg, #1d4ed8, #3b82f6, #60a5fa);
-    box-shadow: 0 0 8px rgba(59,130,246,0.55);
-}
-
-.cg-thc-val {
-    font-size: 0.90rem;
-    font-weight: 900;
-    color: var(--pal-primary);
-    text-shadow: 0 0 10px var(--pal-glow);
-    flex-shrink: 0;
-    min-width: 34px;
-    text-align: right;
-}
-.cg-thc-val--cbd {
-    color: #60a5fa;
-    text-shadow: 0 0 8px rgba(59,130,246,0.50);
-}
-
-/* ── Effects chips ── */
-.cg-effects {
-    display: flex;
-    gap: 5px;
+    gap: 6px;
     flex-wrap: wrap;
+    margin-top: 8px;
+    margin-bottom: 12px;
 }
 
-.cg-chip {
-    font-size: 0.44rem;
+.holo-chip {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.45rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 20px;
-    background: var(--pal-dim);
-    color: var(--pal-primary);
-    border: 1px solid var(--pal-border);
+    padding: 3px 10px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.65);
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
-/* ── Spacer + Price ── */
-.cg-spacer { flex: 1; min-height: 2px; }
+/* ── Sleek Laser Data Pane ── */
+.holo-data-pane {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.06); /* Ghost border line */
+}
 
-.cg-price {
+.holo-data-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.holo-stat-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.holo-stat-lbl {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.50rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+}
+
+.holo-stat-lbl--cbd {
+    color: rgba(255,255,255,0.25);
+}
+
+.holo-stat-val {
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: var(--pal-primary);
+    text-shadow: none;
+}
+
+.holo-stat-val--cbd {
+    color: #4ade80; /* Neo green */
+    text-shadow: none;
+}
+
+.holo-price {
     font-size: 1.8rem;
     font-weight: 900;
-    letter-spacing: -0.02em;
+    line-height: 0.8;
     color: #fff;
-    line-height: 1;
-    text-shadow:
-        0 0 22px var(--pal-glow),
-        0 0 50px var(--pal-dim);
+    text-shadow: 0 4px 18px rgba(0,0,0,0.8), 0 0 25px rgba(255,255,255,0.3);
+}
+
+/* ══════════════════════════════════════════
+   DISPOSABLES (VAPES) SPECIFIC ENHANCEMENTS
+══════════════════════════════════════════ */
+.holo-card--disposable .holo-glass-pane {
+    backdrop-filter: blur(24px) saturate(220%);
+    -webkit-backdrop-filter: blur(24px) saturate(220%);
+    background: rgba(4, 2, 10, 0.45); /* Let bright image colors through */
+    box-shadow: inset 0 2px 30px rgba(255, 255, 255, 0.15),
+                inset 0 0 0 1.5px rgba(255,255,255,0.1); /* Brighter rim */
+}
+
+.holo-card--disposable .holo-orb {
+    mix-blend-mode: screen; 
+    filter: blur(45px) brightness(1.3); /* Pop the image-extracted colors intensely */
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { logAuditEvent } from '../lib/auditLog'
 import {
     collection, getDocs, doc, updateDoc, setDoc, deleteDoc, addDoc,
-    serverTimestamp, onSnapshot,
+    serverTimestamp, onSnapshot, query, where
 } from 'firebase/firestore'
 import { db, auth } from '../firebase'
 import { useLocation } from '../contexts/LocationContext'

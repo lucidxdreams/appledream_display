@@ -136,8 +136,8 @@ function SortableCategoryCard({ cat, locationId, onUpdate }) {
                 onChange={(v) => handleUpdate('active', v)}
             />
 
-            {/* Products link */}
-            <Link to={`/products/${cat.slug || cat.id}`}>
+            {/* Products link (Deals uses a dedicated page instead of generic products layout) */}
+            <Link to={(cat.slug || cat.id) === 'deals' ? '/deals' : `/products/${cat.slug || cat.id}`}>
                 <button className="btn btn-ghost btn-sm" title="Manage Products">
                     <Package size={14} />
                 </button>

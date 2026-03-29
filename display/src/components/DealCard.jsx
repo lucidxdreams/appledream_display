@@ -1,150 +1,108 @@
 /**
- * DealCard.jsx - Bento Box Design
+ * DealCard.jsx — Compact Floating Card
  *
- * Renders the internal content of a deal item based on its `mode`.
- *
- * Modes:
- *   - "Full Image Banner" -> Just the image filling the space. Text visually hidden.
- *   - "Standard" -> Image + Text stacked or side-by-side bento card.
- *   - "Text Only" -> Clean typography-focused card, no image.
+ * "Smart Flex Center" Architecture.
+ * Fits many deals on-screen via a sleek portrait aspect ratio.
+ * Product PNG sits physically on top of the card bounds.
  */
 
+import { useState, useEffect } from 'react';
 import CountdownTimer from './CountdownTimer';
+import { useImagePalette } from '../lib/colorExtractor';
 import './DealCard.css';
 
-const BADGE_CONFIG = {
-    BOGO: { label: '🔁 BOGO', color: '#dc2626' }, // red-600
-    Discount: { label: '% OFF', color: '#ea580c' }, // orange-600
-    Bundle: { label: '📦 BUNDLE', color: '#7c3aed' }, // violet-600
-    'Flash Sale': { label: '⚡ FLASH', color: '#2563eb' }, // blue-600
-    Custom: { label: '⭐ DEAL', color: '#16a34a' }, // green-600
+const TYPE_LABELS = {
+    'BOGO':       'BOGO',
+    'Discount':   '% OFF',
+    'Bundle':     'BUNDLE',
+    'Flash Sale': '⚡ FLASH',
+    'Custom':     'DEAL',
 };
 
 function formatPrice(val) {
     if (val == null || val === '') return null;
-    return `$${Number(val).toFixed(2)}`;
+    const n = Number(val);
+    return isNaN(n) ? null : `$${n.toFixed(2)}`;
 }
 
-export default function DealCard({ deal, mode = 'Standard' }) {
-    // Determine Badge
-    const badge = BADGE_CONFIG[deal.dealType] || BADGE_CONFIG.Custom;
-    
-    // Formatting
-    const originalFmt = formatPrice(deal.originalPrice);
-    const dealPriceFmt = formatPrice(deal.dealPrice);
-    
-    // Auto Savings %
-    let savingsPercent = null;
-    if (deal.originalPrice && deal.dealPrice && deal.originalPrice > 0) {
-        savingsPercent = Math.round((1 - deal.dealPrice / deal.originalPrice) * 100);
-    }
+function calcSavings(original, deal) {
+    if (!original || !deal || Number(original) <= 0) return null;
+    const pct = Math.round((1 - Number(deal) / Number(original)) * 100);
+    return pct > 0 ? pct : null;
+}
 
-    /* ═══════════════════════════════════════════════════════════════════ */
-    /* MODE 1: FULL IMAGE BANNER                                           */
-    /* ═══════════════════════════════════════════════════════════════════ */
-    if (mode === 'Full Image Banner') {
-        return (
-            <div className="deal-card deal-card--banner">
-                {deal.imageUrl ? (
+export default function DealCard({ deal }) {
+    const savings = calcSavings(deal.originalPrice, deal.dealPrice);
+    const hasImg  = !!deal.imageUrl;
+    const typeLabel = TYPE_LABELS[deal.dealType] || deal.dealType || 'DEAL';
+    const origFmt = formatPrice(deal.originalPrice);
+    const dealFmt = formatPrice(deal.dealPrice);
+    
+    // Automatically extract harmonious theme from deal graphic
+    const palette = useImagePalette(deal.imageUrl);
+
+    return (
+        <div 
+            className={`ev-sc ${hasImg ? 'ev-sc--with-img' : 'ev-sc--no-img'}`}
+            style={{
+                '--dc-accent': palette?.accent || '#fbbf24',
+                '--dc-glow':   palette?.glow   || 'rgba(251, 191, 36, 0.05)',
+                '--dc-border': palette?.border || 'rgba(255, 255, 255, 0.25)',
+                '--dc-text':   palette?.text   || '#ffffff'
+            }}
+        >
+            
+            {/* ── THE HERO IMAGE (Hangs -10% out top, strictly 85% width) ── */}
+            {hasImg && (
+                <div className="ev-sc__hero-zone">
                     <img 
                         src={deal.imageUrl} 
                         alt={deal.title} 
-                        className="deal-card__banner-img" 
+                        className="ev-sc__hero-img" 
                     />
-                ) : (
-                    <div className="deal-card__banner-placeholder">
-                        <span>No Image Provided for Banner</span>
-                    </div>
-                )}
-                {/* Optional Timer Overlay */}
-                {deal.endTime && (
-                    <div className="deal-card__banner-timer">
-                        <span className="deal-card__ends-label">Ends In</span>
-                        <CountdownTimer endTime={deal.endTime} compact />
-                    </div>
-                )}
-            </div>
-        );
-    }
+                </div>
+            )}
 
-    /* ═══════════════════════════════════════════════════════════════════ */
-    /* MODE 2: TEXT ONLY                                                   */
-    /* ═══════════════════════════════════════════════════════════════════ */
-    if (mode === 'Text Only') {
-        return (
-            <div className="deal-card deal-card--text">
-                <div className="deal-card__top">
-                    <span className="deal-card__badge" style={{ background: badge.color }}>
-                        {savingsPercent ? `${savingsPercent}% OFF` : badge.label}
-                    </span>
+            {/* ── THE CARD CONTENT (Sits underneath the hero drop-shadow) ── */}
+            <div className="ev-sc__content">
+                
+                {/* Dynamic Header Space: Push text down when image acts as roof */}
+                <div className="ev-sc__header">
+                    <span className="ev-sc__type">{typeLabel}</span>
+                    
+                    {savings && (
+                        <div className="ev-sc__savings">
+                            <span className="sc-pct">{savings}%</span>
+                            <span className="sc-off">OFF</span>
+                        </div>
+                    )}
+                </div>
+
+                <div className="ev-sc__text-body">
+                    <h2 className="ev-sc__title">{deal.title}</h2>
+                    {deal.description && (
+                        <p className="ev-sc__desc">{deal.description}</p>
+                    )}
+                </div>
+
+                {/* Grow empty space to push pricing down */}
+                <div className="ev-spacer" />
+
+                {/* Bottom Bar: Pricing & Urgency */}
+                <div className="ev-sc__footer">
+                    <div className="ev-sc__pricing">
+                        {origFmt && <span className="sc-price--orig">{origFmt}</span>}
+                        {dealFmt && <span className="sc-price--deal">{dealFmt}</span>}
+                    </div>
+
                     {deal.endTime && (
-                        <div className="deal-card__timer">
+                        <div className="ev-sc__timer">
+                            <span className="sc-timer-dot" />
                             <CountdownTimer endTime={deal.endTime} compact />
                         </div>
                     )}
                 </div>
 
-                <div className="deal-card__body">
-                    <h3 className="deal-card__title">{deal.title}</h3>
-                    <p className="deal-card__desc">{deal.description}</p>
-                </div>
-
-                {(originalFmt || dealPriceFmt) && (
-                    <div className="deal-card__pricing">
-                        {originalFmt && <span className="deal-card__original">{originalFmt}</span>}
-                        {dealPriceFmt && <span className="deal-card__price">{dealPriceFmt}</span>}
-                    </div>
-                )}
-            </div>
-        );
-    }
-
-    /* ═══════════════════════════════════════════════════════════════════ */
-    /* MODE 3: STANDARD (Image + Text)                                     */
-    /* ═══════════════════════════════════════════════════════════════════ */
-    return (
-        <div className="deal-card deal-card--standard">
-            {deal.imageUrl && (
-                <div className="deal-card__std-img-wrap">
-                    <img 
-                        src={deal.imageUrl} 
-                        alt={deal.title} 
-                        className="deal-card__std-img" 
-                    />
-                    <span className="deal-card__badge deal-card__badge--floating" style={{ background: badge.color }}>
-                        {savingsPercent ? `${savingsPercent}% OFF` : badge.label}
-                    </span>
-                </div>
-            )}
-            
-            <div className="deal-card__std-content">
-                {/* Fallback badge if no image */}
-                {!deal.imageUrl && (
-                    <span className="deal-card__badge" style={{ background: badge.color, alignSelf: 'flex-start', marginBottom: '12px' }}>
-                        {savingsPercent ? `${savingsPercent}% OFF` : badge.label}
-                    </span>
-                )}
-
-                <div className="deal-card__row">
-                    <div className="deal-card__text-col">
-                        <h3 className="deal-card__title">{deal.title}</h3>
-                        <p className="deal-card__desc">{deal.description}</p>
-                    </div>
-
-                    {(originalFmt || dealPriceFmt) && (
-                        <div className="deal-card__price-col">
-                            {originalFmt && <span className="deal-card__original">{originalFmt}</span>}
-                            {dealPriceFmt && <span className="deal-card__price">{dealPriceFmt}</span>}
-                        </div>
-                    )}
-                </div>
-
-                {deal.endTime && (
-                    <div className="deal-card__timer deal-card__timer--standard">
-                        <span className="deal-card__ends-label">Ends In</span>
-                        <CountdownTimer endTime={deal.endTime} compact />
-                    </div>
-                )}
             </div>
         </div>
     );

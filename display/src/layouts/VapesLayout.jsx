@@ -1,69 +1,80 @@
 /**
- * VapesLayout.jsx — "Neon Prism" Vapes Display
+ * VapesLayout.jsx — "Holo-Fluid Glass" Vapes Display
  *
- * Follows the exact same container/grid/card pattern as NeuralConstellation.
- * Products come from Firestore via the `products` prop — no hardcoding.
- *
- *  · Dark background with animated tech-circuit canvas + neon bloom lights
- *  · Glassmorphism cards (same sizing logic as edibles)
- *  · Larger portrait image per card (bigger than edibles)
- *  · Strain-colored neon: Indica=violet, Sativa=amber, Hybrid=teal
- *  · THC% meter bar + cart size badge + flavor chips
- *  · Top neon accent line, staggered float animation
+ * Implements the same Holo-Fluid Glass design system as Cartridges,
+ * but retains the unique animated CircuitCanvas background layer
+ * and maps Vape specific properties (flavors, vapeType).
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { useFloatingLayout } from './useFloatingLayout';
-import './VapesLayout.css';
+import { useRef, useState, useEffect } from 'react';
+import { useImagePalette } from '../lib/colorExtractor';
+import './CartridgesLayout.css';
 
-/* ── Strain palettes ─────────────────────────────────────────── */
+/* ── Layout constants ── */
+const GAP    = 22;
+const PAD_H  = 28;
+const PAD_V  = 28;
+const ASPECT = 0.62;
+
+/* ── Fluid Strain Palettes ── */
 const PALETTES = {
-    indica: {
-        neon: '#a855f7',
-        neonDim: 'rgba(168,85,247,0.18)',
-        neonGlow: 'rgba(168,85,247,0.55)',
-        border: 'rgba(168,85,247,0.5)',
-        thcBar: 'linear-gradient(90deg,#7c3aed,#c084fc)',
-        grad1: '#a855f7',
-        grad2: '#e879f9',
-        chipBg: 'rgba(168,85,247,0.15)',
-        chipTxt: '#d8b4fe',
-        label: 'Indica',
-    },
-    sativa: {
-        neon: '#f59e0b',
-        neonDim: 'rgba(245,158,11,0.18)',
-        neonGlow: 'rgba(245,158,11,0.55)',
-        border: 'rgba(245,158,11,0.5)',
-        thcBar: 'linear-gradient(90deg,#d97706,#fbbf24)',
-        grad1: '#f59e0b',
-        grad2: '#fde68a',
-        chipBg: 'rgba(245,158,11,0.15)',
-        chipTxt: '#fde68a',
-        label: 'Sativa',
-    },
-    hybrid: {
-        neon: '#10b981',
-        neonDim: 'rgba(16,185,129,0.18)',
-        neonGlow: 'rgba(16,185,129,0.55)',
-        border: 'rgba(16,185,129,0.5)',
-        thcBar: 'linear-gradient(90deg,#059669,#34d399)',
-        grad1: '#10b981',
-        grad2: '#6ee7b7',
-        chipBg: 'rgba(16,185,129,0.15)',
-        chipTxt: '#6ee7b7',
-        label: 'Hybrid',
-    },
+    indica: { orb1: '#a855f7', orb2: '#c084fc', orb3: '#7e22ce', text: '#f3e8ff', primary: '#d8b4fe', label: 'Indica' },
+    sativa: { orb1: '#f59e0b', orb2: '#fcd34d', orb3: '#b45309', text: '#fef3c7', primary: '#fcd34d', label: 'Sativa' },
+    hybrid: { orb1: '#14b8a6', orb2: '#5eead4', orb3: '#0f766e', text: '#ccfbf1', primary: '#5eead4', label: 'Hybrid' },
 };
 
 function getStrain(p) {
-    const t = (p.type || '').toLowerCase();
+    const t = ((p.type || '') + ' ' + (p.name || '')).toLowerCase();
     if (t.includes('indica')) return 'indica';
     if (t.includes('sativa')) return 'sativa';
     return 'hybrid';
 }
+function getPalette(p) { return PALETTES[getStrain(p)]; }
 
-/* ── Animated circuit canvas ─────────────────────────────────── */
+/* ── Fixed card sizing — guaranteed portrait, no stretching ── */
+function calcSizes(W, H, count, safeTop) {
+    if (!W || !H || count === 0) return { cardW: 200, cardH: 323 };
+    const availW = Math.max(80, W - PAD_H * 2);
+    const availH = Math.max(80, H - safeTop - PAD_V * 2);
+
+    const maxCols = Math.min(count, 8);
+    let bestCols = Math.max(1, Math.min(count, 2));
+    for (let c = 1; c <= maxCols; c++) {
+        const rows = Math.ceil(count / c);
+        const cW   = Math.floor((availW - GAP * (c - 1)) / c);
+        const cH   = Math.floor((availH - GAP * (rows - 1)) / rows);
+        bestCols = c;
+        if (cH >= cW) break;
+    }
+
+    const cols  = bestCols;
+    const rows  = Math.ceil(count / cols);
+    const cardW = Math.floor((availW - GAP * (cols - 1)) / cols);
+    const rowH  = Math.floor((availH - GAP * (rows - 1)) / rows);
+    const cardH = Math.max(rowH, Math.round(cardW * 1.1));
+
+    return {
+        cardW: Math.max(120, cardW),
+        cardH: Math.max(190, Math.min(cardH, Math.round(cardW / ASPECT))),
+    };
+}
+
+/* ── Logo-safe top offset ── */
+function getSafeTop(container) {
+    if (!container) return 0;
+    const stable = container.closest('main, .app-content') || container.parentElement?.parentElement || container.parentElement;
+    const refTop = stable ? stable.getBoundingClientRect().top : 0;
+    let max = 0;
+    ['.app-header-center', '.app-logo', '.app-header-meta'].forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+            const b = el.getBoundingClientRect().bottom;
+            if (b > refTop) max = Math.max(max, b - refTop);
+        });
+    });
+    return max > 0 ? max + 16 : 0;
+}
+
+/* ── Animated circuit canvas (unique to Vapes) ── */
 function CircuitCanvas({ W, H }) {
     const ref = useRef(null);
     const raf = useRef(null);
@@ -94,7 +105,6 @@ function CircuitCanvas({ W, H }) {
 
         function draw() {
             ctx.clearRect(0, 0, W, H);
-
             ctx.fillStyle = 'rgba(255,255,255,0.04)';
             for (let col = 0; col <= cols; col++) {
                 for (let row = 0; row <= rows; row++) {
@@ -122,7 +132,6 @@ function CircuitCanvas({ W, H }) {
                 ctx.lineTo(s.x + s.len * Math.sign(s.vx), s.y);
                 ctx.stroke();
             }
-
             raf.current = requestAnimationFrame(draw);
         }
         draw();
@@ -132,166 +141,184 @@ function CircuitCanvas({ W, H }) {
     return <canvas ref={ref} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, width: W, height: H }} />;
 }
 
-/* ── Single vape card ─────────────────────────────────────────── */
-function VapeCard({ product, index, cardW, cardH }) {
-    const strain = getStrain(product);
-    const pal = PALETTES[strain];
-    const thc = Number(product.thc || 0);
-    const cbd = Number(product.cbd || 0);
-    const flavors = (product.flavors || product.terpenes || []).slice(0, 4);
-    const price = Number(product.price || 0).toFixed(2);
-    const cartSize = product.cartSize || '';
-    const vapeType = product.vapeType || '';
-    const isNew = (product.badge || '').toLowerCase() === 'new';
-    const floatV = (index % 4) + 1;
+/* ── Float parameters for cards ── */
+const FLOAT_CONFIGS = [
+    { dur: '8s',  delay: '0s' },
+    { dur: '9.5s', delay: '-3s' },
+    { dur: '7.2s', delay: '-1s' },
+    { dur: '8.8s', delay: '-5s' },
+];
 
+/* ── Single Vape Card ── */
+function VapeCard({ product, cardW, cardH, index }) {
+    const pal      = getPalette(product);
+    const imgPal   = useImagePalette(product.imageUrl);
+
+    const thc      = product.thc  != null ? Number(product.thc)  : null;
+    const cbd      = product.cbd  != null ? Number(product.cbd)  : null;
+    const price    = product.price != null ? Number(product.price) : null;
+    const flavors  = (product.flavors || product.terpenes || []).slice(0, 3);
+    const cartSize = product.cartSize || product.size || '';
+    const vapeType = product.vapeType || '';
+    const isNew    = (product.badge || '').toLowerCase() === 'new';
+
+    const floatCfg = FLOAT_CONFIGS[index % 4];
+
+    /* Metadata details joined for Vapes */
+    const metaTags = [vapeType !== 'Classic THC' ? vapeType : null, cartSize, isNew ? 'NEW' : ''].filter(Boolean);
+
+    /* Dynamic Color Blends: 
+     * Orb 1: Image Dominant Accent
+     * Orb 2: Strain Core Color (Preserves Strain Identity)
+     * Orb 3: Image Hyper-Saturated Hue
+     */
+    const orb1 = imgPal?.accent || pal.orb1;
+    const orb2 = pal.orb1; 
+    const orb3 = imgPal?.saturated || pal.orb3;
+    const textCol = imgPal?.text || pal.text;
+    const priCol = imgPal?.accent || pal.primary;
 
     return (
         <div
-            className={`vp-card vp-float-${floatV} vp-card--in`}
+            className="holo-card holo-card--disposable"
             style={{
-                '--pal-neon': pal.neon,
-                '--pal-neon-dim': pal.neonDim,
-                '--pal-neon-glow': pal.neonGlow,
-                '--pal-border': pal.border,
-                '--pal-thc-bar': pal.thcBar,
-                '--pal-grad1': pal.grad1,
-                '--pal-grad2': pal.grad2,
-                '--pal-chip-bg': pal.chipBg,
-                '--pal-chip-txt': pal.chipTxt,
-                '--entrance-del': `${index * 0.07}s`,
-                '--float-del': `${index * 0.18}s`,
-                width: cardW,
+                '--pal-o1':        orb1,
+                '--pal-o2':        orb2,
+                '--pal-o3':        orb3,
+                '--pal-text':      textCol,
+                '--pal-primary':   priCol,
+                '--entrance-delay': `${index * 0.08}s`,
+                '--float-dur':     floatCfg.dur,
+                '--float-delay':   floatCfg.delay,
+                width:  cardW,
                 height: cardH,
+                flexShrink: 0,
             }}
         >
-            {/* Top neon line */}
-            <div className="vp-top-line" />
+            <div className="holo-orbs">
+                <div className="holo-orb holo-orb-1" />
+                <div className="holo-orb holo-orb-2" />
+                <div className="holo-orb holo-orb-3" />
+            </div>
 
-            {/* Header: strain + cart size + badge */}
-            <div className="vp-header">
-                <span className="vp-strain-label">{pal.label}</span>
-                <div style={{ display: 'flex', gap: 4 }}>
-                    {cartSize && <span className="vp-size-badge">{cartSize}</span>}
-                    {product.badge && (
-                        <span className={`vp-badge ${isNew ? 'vp-badge--new' : 'vp-badge--hot'}`}>
-                            {product.badge}
-                        </span>
+            <div className="holo-glass-pane" />
+
+            <div className="holo-content-wrapper">
+                <div className="holo-meta-top">
+                    <span className="holo-strain-pill">{pal.label}</span>
+                    {metaTags.length > 0 && (
+                        <div className="holo-meta-tags">
+                            {metaTags.join(' • ')}
+                        </div>
                     )}
                 </div>
-            </div>
 
-            {/* Product image — portrait, intentionally larger than edibles */}
-            <div className="vp-img-wrap">
-                <div className="vp-img-glow" />
-                {product.imageUrl
-                    ? <img src={product.imageUrl} alt={product.name} className="vp-img" />
-                    : <span className="vp-emoji">💨</span>
-                }
-            </div>
-
-            <div style={{ flexShrink: 0, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {/* Name + brand */}
-            <div className="vp-name">{product.name}</div>
-            {product.brand && <div className="vp-brand">{product.brand}</div>}
-
-            {/* Vape type */}
-            {vapeType && vapeType !== 'Classic THC' && (
-                <div className="vp-type-tag">{vapeType}</div>
-            )}
-
-            {/* THC meter bar */}
-            {thc > 0 && (
-                <div className="vp-thc-wrap">
-                    <div className="vp-thc-label-row">
-                        <span className="vp-thc-label">THC</span>
-                        <span className="vp-thc-val">{thc}%</span>
+                <div className="holo-hero">
+                    <div className="holo-hero-shadow" />
+                    <div className="holo-img-container">
+                        {product.imageUrl
+                            ? <img src={product.imageUrl} alt={product.name} className="holo-img" loading="lazy" />
+                            : <span className="holo-fallback">💨</span>
+                        }
                     </div>
-                    <div className="vp-thc-track">
-                        <div className="vp-thc-fill" style={{ width: `${Math.min(thc, 100)}%` }} />
-                        <div className="vp-thc-glow" style={{ left: `${Math.min(thc, 100)}%` }} />
+                </div>
+
+                <div className="holo-info">
+                    {product.brand && <div className="holo-brand">{product.brand}</div>}
+                    <div className="holo-name" title={product.name}>{product.name}</div>
+
+                    {flavors.length > 0 && (
+                        <div className="holo-effects">
+                            {flavors.map(f => <span key={f} className="holo-chip">{f}</span>)}
+                        </div>
+                    )}
+
+                    <div className="holo-data-pane">
+                        <div className="holo-data-stats">
+                            {thc != null && (
+                                <div className="holo-stat-col">
+                                    <span className="holo-stat-lbl">THC</span>
+                                    <span className="holo-stat-val">{thc}%</span>
+                                </div>
+                            )}
+                            {cbd != null && cbd > 0 && (
+                                <div className="holo-stat-col">
+                                    <span className="holo-stat-lbl holo-stat-lbl--cbd">CBD</span>
+                                    <span className="holo-stat-val holo-stat-val--cbd">{cbd}%</span>
+                                </div>
+                            )}
+                        </div>
+                        {price != null && (
+                            <div className="holo-price">
+                                ${price.toFixed(0)}
+                            </div>
+                        )}
                     </div>
-                    {cbd > 0 && <div className="vp-cbd-row">CBD {cbd}%</div>}
                 </div>
-            )}
-
-            {/* Flavor chips */}
-            {flavors.length > 0 && (
-                <div className="vp-flavors">
-                    {flavors.map(f => <span key={f} className="vp-chip">{f}</span>)}
-                </div>
-            )}
-
-            {/* Notes */}
-            {product.notes && <div className="vp-notes">{product.notes}</div>}
-
-            {/* Price */}
-            <div className="vp-price">${price}</div>
             </div>
         </div>
     );
 }
 
-/* ── Main — same pattern as NeuralConstellation ──────────────── */
-export default function VapesLayout({ products = [], categoryTheme }) {
+/* ── Main Layout ── */
+export default function VapesLayout({ products = [] }) {
     const containerRef = useRef(null);
-    const [size, setSize] = useState({ W: 1280, H: 720 });
+    const [dim, setDim]         = useState({ W: 0, H: 0 });
+    const [safeTop, setSafeTop] = useState(0);
 
     useEffect(() => {
         const el = containerRef.current;
         if (!el) return;
-        const measure = () => setSize({ W: el.clientWidth || 1280, H: el.clientHeight || 720 });
-        measure();
+
+        const measure = () => {
+            let W = el.offsetWidth;
+            let H = el.offsetHeight;
+            if (W < 10 || H < 10) {
+                const stable = el.closest('main, .app-content') || el.parentElement?.parentElement || el.parentElement;
+                if (stable) { W = stable.offsetWidth; H = stable.offsetHeight; }
+            }
+            if (W > 10 && H > 10) {
+                setDim({ W, H });
+                setSafeTop(getSafeTop(el));
+            }
+        };
+
+        const t  = setTimeout(measure, 120);
         const ro = new ResizeObserver(measure);
         ro.observe(el);
-        return () => ro.disconnect();
+        const stable = el.closest('main, .app-content');
+        if (stable) ro.observe(stable);
+        return () => { clearTimeout(t); ro.disconnect(); };
     }, []);
 
-    const { W, H } = size;
-
-    const { positions, cardW, cardH } = useFloatingLayout({
-        products,
-        containerW: W,
-        containerH: H,
-        baseCardW: 200,
-        baseCardH: 300,
-    });
+    const { cardW, cardH } = calcSizes(dim.W, dim.H, products.length, safeTop);
 
     return (
-        <div ref={containerRef} className="vp-scene"
-            style={{ width: '100%', height: '100%', '--accent': categoryTheme?.accent || '#7c8cf8' }}>
+        <div ref={containerRef} className="holo-scene">
+            <div className="holo-bg" />
+            <CircuitCanvas W={dim.W} H={dim.H} />
+            <div className="holo-ambient-1" />
+            <div className="holo-ambient-2" />
 
-            {/* Background */}
-            <div className="vp-bg" />
-            <CircuitCanvas W={W} H={H} />
-
-            {/* Ambient bloom lights */}
-            <div className="vp-bloom vp-bloom--1" />
-            <div className="vp-bloom vp-bloom--2" />
-            <div className="vp-bloom vp-bloom--3" />
-
-            {/* Floating Cards */}
-            <div className="vp-floating-container">
-                {products.map((p, i) => positions[i] ? (
-                    <div
+            <div
+                className="holo-grid"
+                style={{
+                    paddingTop:    safeTop + PAD_V,
+                    paddingBottom: PAD_V,
+                    paddingLeft:   PAD_H,
+                    paddingRight:  PAD_H,
+                    gap:           GAP,
+                }}
+            >
+                {products.map((p, i) => (
+                    <VapeCard
                         key={p.id}
-                        className="vp-card-wrapper"
-                        style={{
-                            position: 'absolute',
-                            left: positions[i].x - cardW / 2,
-                            top: positions[i].y - cardH / 2,
-                            width: cardW,
-                            height: cardH,
-                        }}
-                    >
-                        <VapeCard
-                            product={p}
-                            index={i}
-                            cardW={cardW}
-                            cardH={cardH}
-                        />
-                    </div>
-                ) : null)}
+                        product={p}
+                        cardW={cardW}
+                        cardH={cardH}
+                        index={i}
+                    />
+                ))}
             </div>
         </div>
     );

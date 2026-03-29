@@ -25,6 +25,7 @@ import NeuralConstellation from './layouts/NeuralConstellation';
 import NeonTechGrid from './layouts/NeonTechGrid';
 import TheCollection from './layouts/TheCollection';
 import VariantLayout from './layouts/VariantLayout';
+import ConcentratesLayout from './layouts/ConcentratesLayout';
 import './App.css';
 
 /* ── Locations ───────────────────────────────────────────────────────────── */
@@ -42,6 +43,7 @@ const CATEGORY_THEMES = {
   vapes: { primary: '#101428', accent: '#7c8cf8', particle: '#7c8cf8' },
   disposables: { primary: '#101428', accent: '#7c8cf8', particle: '#7c8cf8' },
   cartridges: { primary: '#161616', accent: '#a8a8a8', particle: '#a8a8a8' },
+  concentrates: { primary: '#150d03', accent: '#f59e0b', particle: '#fcd34d' },
   prerolls: { primary: '#1e1408', accent: '#b8943e', particle: '#b8943e' },
   'pre-rolls': { primary: '#1e1408', accent: '#b8943e', particle: '#b8943e' },
   deals: { primary: '#221010', accent: '#e55039', particle: '#e55039' },
@@ -57,7 +59,11 @@ function getTheme(category) {
 }
 
 /* ── Layout selector ─────────────────────────────────────────────────────── */
-function CategoryLayout({ category, products, variantGroups, theme, onAllShown }) {
+function CategoryLayout({ category, products, variantGroups, theme, onAllShown, locationId }) {
+  const id = (category?.id || '').toLowerCase();
+  
+  if (id.includes('deal')) return <DealsLayout locationId={locationId} />;
+
   if (!category || products.length === 0) {
     return <div className="app-empty"><p>Waiting for products…</p></div>;
   }
@@ -65,16 +71,15 @@ function CategoryLayout({ category, products, variantGroups, theme, onAllShown }
   // If any enabled variant groups exist for this category, use VariantLayout
   const activeGroups = (variantGroups || []).filter(g => g.enabled !== false);
   if (activeGroups.length > 0) {
-    return <VariantLayout products={products} variantGroups={activeGroups} categoryTheme={theme} />;
+    return <VariantLayout products={products} variantGroups={activeGroups} categoryTheme={theme} categorySlug={id} />;
   }
 
-  const id = (category.id || '').toLowerCase();
   if (id.includes('flower')) return <FlowersLayout products={products} categoryTheme={theme} />;
   if (id.includes('edible')) return <NeuralConstellation products={products} categoryTheme={theme} onAllShown={onAllShown} />;
   if (id.includes('vape') || id.includes('disposable')) return <VapesLayout products={products} categoryTheme={theme} />;
   if (id.includes('cart')) return <CartridgesLayout products={products} categoryTheme={theme} />;
+  if (id.includes('concentrate')) return <ConcentratesLayout products={products} categoryTheme={theme} />;
   if (id.includes('pre')) return <PreRollsLayout products={products} categoryTheme={theme} />;
-  if (id.includes('deal')) return <DealsLayout products={products} />;
   return <CloudBubbles products={products} categoryTheme={theme} />;
 }
 
@@ -307,6 +312,7 @@ function Display() {
             variantGroups={variantGroups}
             theme={theme}
             onAllShown={isEdibles ? handleEdiblesComplete : undefined}
+            locationId={locationId}
           />
         </CategoryTransition>
       </main>

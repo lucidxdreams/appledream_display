@@ -1,129 +1,118 @@
-/* DealsLayout.css — Animated Modern Bento Box Layout */
+/* DealsLayout.css — "Smart Flex Center" Architecture */
 
-.bento-scene {
+/* ── Scene ── */
+.ev-scene {
     position: relative;
     width: 100%;
     height: 100%;
-    display: flex;
-    flex-direction: column;
     overflow: hidden;
-    background-color: #060608;
+    background: radial-gradient(ellipse 160% 140% at 50% 110%,
+        #0c0406 0%, #06020a 45%, #000004 100%);
 }
 
-/* Ambient dynamic glowing orbs moving in the background */
-.bento-ambient-glow {
+.ev-scene .ember-canvas {
+    opacity: 0.65 !important;
+    z-index: 1;
+}
+
+/* ── Plasma blooms ── */
+.ev-bloom {
     position: absolute;
     border-radius: 50%;
-    filter: blur(120px);
-    opacity: 0.4;
     pointer-events: none;
     z-index: 1;
-    animation: drift 20s infinite alternate ease-in-out;
+    filter: blur(120px);
+}
+.ev-bloom--1 {
+    width: 60%; height: 65%;
+    left: -15%; top: -10%;
+    background: radial-gradient(circle, rgba(220,38,38,0.12) 0%, transparent 70%);
+    animation: ev-drift 26s ease-in-out infinite;
+}
+.ev-bloom--2 {
+    width: 55%; height: 60%;
+    right: -15%; bottom: -15%;
+    background: radial-gradient(circle, rgba(245,158,11,0.10) 0%, transparent 70%);
+    animation: ev-drift 32s ease-in-out 12s infinite reverse;
+}
+@keyframes ev-drift {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33%      { transform: translate(5%,8%) scale(1.05); }
+    66%      { transform: translate(-6%,-4%) scale(0.95); }
 }
 
-.glow-1 {
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(220, 38, 38, 0.4) 0%, rgba(220, 38, 38, 0) 70%);
-    top: -200px;
-    left: -200px;
+.ev-vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: radial-gradient(ellipse 90% 80% at 50% 50%,
+        transparent 32%, rgba(2,0,6,0.55) 100%);
 }
 
-.glow-2 {
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, rgba(245, 158, 11, 0) 70%);
-    bottom: -100px;
-    right: -100px;
-    animation-delay: -10s;
-}
-
-@keyframes drift {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(25vw, 15vh) scale(1.2); }
-}
-
-/* Header */
-.bento-header {
+/* ── Main Layout (occupies exactly full screen) ── */
+.ev-layout {
     position: relative;
     z-index: 3;
-    padding: 32px 48px;
     width: 100%;
-}
-
-.bento-header__text {
-    font-family: 'Inter', system-ui, sans-serif;
-    font-size: 42px;
-    font-weight: 800;
-    color: #ffffff;
-    letter-spacing: -1px;
-    background: linear-gradient(90deg, #fff, #a1a1aa);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* Content Area */
-.bento-content {
-    position: relative;
-    z-index: 2;
-    flex: 1;
-    width: 100%;
-    padding: 0 48px 48px 48px;
+    height: 100%;
     box-sizing: border-box;
+}
+
+/* ── Smart Center Container ── 
+    The magic grid that aligns 2 deals as well as it aligns 8 deals.
+    This creates an elegant floating cluster right in the middle.
+*/
+.ev-smart-grid {
     display: flex;
-    justify-content: center;
-}
-
-/* Grid System */
-.bento-grid {
-    display: grid;
-    /* Flexible auto-fill columns, cards get at least 420px of width */
-    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-    align-items: start; /* Prevents vertical stretching, cards define their own height */
-    gap: 24px;
+    flex-wrap: wrap;         /* Allows 8 deals to wrap nicely */
+    justify-content: center; /* Centers horizontally on the screen */
+    align-content: center;   /* Centers the entire block vertically within 100vh! */
     width: 100%;
-    max-width: 1800px;
-    margin: 0 auto;
+    height: 100%;
+    
+    /* Extra big gap for the massive top overhanging PNG */
+    gap: 120px 48px;         /* 120px Vertical Gap, 48px Horizontal Gap */
+    padding: 100px 40px;     /* Safe margins from the screen edges */
+    box-sizing: border-box;
+    overflow-y: auto;        /* Fallback if somehow there's 16+ deals */
 }
 
-/* Item Wrapper */
-.bento-grid-item {
+/* ── The Wrapper ── */
+.ev-smart-item {
     position: relative;
-    border-radius: 28px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    overflow: hidden;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
-    display: block; /* Removed flex stretch */
+    
+    /* Compact dimensions fit many on screen. 4x columns easily fit 1080p width */
+    width: 320px;
+    height: max-content;     /* Dynamically collapses to remove any empty vertical space underneath the text */
+    
+    flex-shrink: 0;
+    border-radius: 20px;     /* Sleek curved container */
+    
+    overflow: visible;       /* ABSOLUTELY ESSENTIAL: The 10% overhang relies on this! */
+
+    /* Modern Luminous Glassmorphism */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
+    backdrop-filter: blur(32px) saturate(150%);
+    -webkit-backdrop-filter: blur(32px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow:
+        0 40px 80px rgba(0, 0, 0, 0.50),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        inset 0 0 30px rgba(255, 255, 255, 0.05);
 }
 
-.bento-grid-item:hover {
-    transform: translateY(-4px) scale(1.01);
-    border-color: rgba(255, 255, 255, 0.15);
+/* ── Entrance Animation ── */
+@keyframes ev-enter {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.ev-smart-item {
+    animation: ev-enter 0.6s cubic-bezier(0.16,1,0.3,1) var(--entrance-delay,0s) both;
 }
 
-/* Spanning Rules */
-
-/* Banner: Takes full width across all columns */
-.bento-grid-item--banner {
-    grid-column: 1 / -1;
-}
-
-/* Standard: Takes 1 column */
-.bento-grid-item--standard {
-    grid-column: span 1;
-}
-
-/* Text Only: Takes 1 column */
-.bento-grid-item--text {
-    grid-column: span 1;
-}
-
-/* Empty State Fallback */
-.bento-no-deals {
+/* ── Empty State ── */
+.ev-no-deals {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -132,37 +121,25 @@
     height: 100%;
     text-align: center;
 }
-
-.bento-no-deals__icon {
-    font-size: 80px;
-    margin-bottom: 24px;
-    opacity: 0.8;
-    filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
-}
-
-.bento-no-deals__heading {
-    font-size: 32px;
+.ev-no-deals__icon { font-size: 72px; margin-bottom: 24px; filter: drop-shadow(0 0 24px rgba(245,158,11,0.4)); }
+.ev-no-deals__heading {
+    font-family: 'Manrope', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
     color: #fff;
-    margin: 0 0 8px 0;
-    font-weight: 700;
+    margin: 0 0 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
-
-.bento-no-deals__sub {
-    font-size: 18px;
-    color: #a1a1aa;
-    margin: 0 0 32px 0;
-}
-
-.bento-no-deals__loyalty {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 100px;
-    padding: 12px 24px;
+.ev-no-deals__sub { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; color: #a1a1aa; margin: 0 0 32px; }
+.ev-no-deals__loyalty {
     display: flex;
     align-items: center;
     gap: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 100px;
+    padding: 14px 28px;
 }
-
-.bento-no-deals__loyalty-text {
-    color: #d4d4d8;
-    font-weight: 500;
-}
+.ev-no-deals__loyalty-text { font-size: 0.95rem; color: #d4d4d8; font-weight: 500; }

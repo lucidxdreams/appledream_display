@@ -1,220 +1,216 @@
-/* DealCard.css - Bento Typography & Internal Setup */
+/* DealCard.css — "Smart Flex Center" Architecture */
 
-.deal-card {
+/* ── Wrapper ── */
+.ev-sc {
+    position: relative;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
+    /* Match parent's border radius so inner glows curve properly */
+    border-radius: 20px; 
+    
+    /* Dynamically extracted ambient glow from the product image hue */
+    box-shadow: inset 0 30px 60px var(--dc-glow);
 }
 
-/* ═══════════════════════════════════════════════════════════════════ */
-/* 1. FULL IMAGE BANNER                                                */
-/* ═══════════════════════════════════════════════════════════════════ */
-.deal-card--banner {
-    position: relative;
-    border-radius: inherit;
-    overflow: hidden;
-}
-
-.deal-card__banner-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Fill the whole bento slot */
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.deal-card--banner:hover .deal-card__banner-img {
-    transform: scale(1.03); /* Subtle internal zoom */
-}
-
-.deal-card__banner-placeholder {
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.02);
+/* ════════════════════════════════════════════════════════════════
+   THE HERO IMAGE (In-Flow, pushing text naturally)
+   "Picture placed in top of it -> 15% smaller -> 10% showing over"
+════════════════════════════════════════════════════════════════ */
+.ev-sc__hero-zone {
+    /* Physically inside the card, but margin further out the top to elevate the graphic */
+    /* Added additional bottom margin to create breathing room between the image and the Deals text */
+    margin: -90px auto 16px auto; 
+    
+    /* Exactly 15% smaller than the card */
+    width: 85%; 
+    
+    /* Maximum height so tall products don't squish everything else out */
+    max-height: 190px;
+    
     display: flex;
-    align-items: center;
     justify-content: center;
-    color: #52525b; /* zinc-600 */
-    font-weight: 500;
-}
-
-.deal-card__banner-timer {
-    position: absolute;
-    bottom: 24px;
-    right: 24px;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 10px 16px;
-    border-radius: 100px;
-    display: flex;
     align-items: center;
-    gap: 12px;
+    z-index: 10;
+    pointer-events: none;
+    flex-shrink: 0;
 }
 
-.deal-card__ends-label {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #a1a1aa; /* zinc-400 */
-    letter-spacing: 1px;
+.ev-sc__hero-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Never stretch the product or the poster */
+    
+    /* ── SMART SHADOW ── */
+    filter: 
+        drop-shadow(0 20px 30px rgba(0, 0, 0, 0.85))
+        drop-shadow(0 8px 12px rgba(0, 0, 0, 0.50));
 }
 
-/* ═══════════════════════════════════════════════════════════════════ */
-/* 2. TEXT ONLY                                                        */
-/* ═══════════════════════════════════════════════════════════════════ */
-.deal-card--text {
-    padding: 32px;
-    justify-content: space-between;
+/* ════════════════════════════════════════════════════════════════
+   CARD CONTENT
+════════════════════════════════════════════════════════════════ */
+.ev-sc__content {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* take up remaining space below image natively */
+    box-sizing: border-box;
+    /* Uniform padding inside the card borders */
+    padding: 18px 20px 20px 20px;
 }
 
-.deal-card__top {
+/* If NO image exists, gracefully center the typography block */
+.ev-sc--no-img .ev-sc__content {
+    justify-content: center;
+}
+
+/* ── Dynamic Header ── */
+.ev-sc__header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 24px;
+    margin-bottom: 6px;
 }
 
-.deal-card__badge {
-    color: white;
-    font-size: 13px;
+.ev-sc__type {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.65rem;
     font-weight: 800;
-    padding: 6px 14px;
-    border-radius: 8px;
-    letter-spacing: 0.5px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--dc-accent, #fbbf24);
+    
+    /* Dynamically computed faint backgrounds from the extracted image hue */
+    background: color-mix(in srgb, var(--dc-accent, #fbbf24) 12%, transparent);
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid color-mix(in srgb, var(--dc-accent, #fbbf24) 30%, transparent);
 }
 
-.deal-card__body {
-    flex-grow: 1;
+.ev-sc__savings {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    line-height: 1;
+}
+
+.sc-pct {
+    font-family: 'Manrope', sans-serif;
+    /* Adjusted size for non-condensed width */
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--dc-accent, #fbbf24);
+    letter-spacing: -0.01em;
+}
+
+.sc-off {
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--dc-accent, #fbbf24);
+    letter-spacing: 0.1em;
+    opacity: 0.9;
+}
+
+/* ── Typography Body ── */
+.ev-sc__text-body {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    gap: 4px;
 }
 
-.deal-card__title {
-    font-size: 32px;
+.ev-sc__title {
+    font-family: 'Manrope', 'Plus Jakarta Sans', sans-serif;
+    /* Adjusted sizing down due to much wider glyphs */
+    font-size: 1.25rem;
     font-weight: 800;
-    color: white;
-    margin: 0 0 12px 0;
-    line-height: 1.1;
-    letter-spacing: -0.5px;
-}
-
-.deal-card__desc {
-    font-size: 16px;
-    color: #a1a1aa; /* zinc-400 */
-    line-height: 1.5;
+    color: #ffffff;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
     margin: 0;
+    
     display: -webkit-box;
-    -webkit-line-clamp: 4;
-    line-clamp: 4;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-.deal-card__pricing {
+.ev-sc__desc {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0;
+    line-height: 1.4;
+    
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Exact spacer gap for separation, no flexible inflation */
+.ev-spacer {
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* ── Footer / Pricing ── */
+.ev-sc__footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 12px;
+}
+
+.ev-sc__pricing {
     display: flex;
     align-items: baseline;
-    gap: 12px;
-    margin-top: 24px;
+    gap: 8px;
 }
 
-.deal-card__original {
-    font-size: 18px;
-    color: #71717a; /* zinc-500 */
-    text-decoration: line-through;
+.sc-price--orig {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.95rem;
     font-weight: 500;
+    color: rgba(255, 255, 255, 0.3);
+    text-decoration: line-through;
 }
 
-.deal-card__price {
-    font-size: 36px;
+.sc-price--deal {
+    font-family: 'Manrope', sans-serif;
+    /* Brought down size slightly since Manrope is wider */
+    font-size: 1.7rem;
     font-weight: 800;
-    color: #10b981; /* emerald-500 */
-    letter-spacing: -1px;
+    color: #ffffff;
+    line-height: 0.9;
 }
 
-/* ═══════════════════════════════════════════════════════════════════ */
-/* 3. STANDARD (Image + Text)                                          */
-/* ═══════════════════════════════════════════════════════════════════ */
-.deal-card--standard {
-    /* If there's an image, default to laying it out stacked (top/bottom) */
-    /* Natively CSS Grid items will flex stretch vertically */
+.ev-sc__timer {
     display: flex;
-    flex-direction: column;
-}
-
-.deal-card__std-img-wrap {
-    position: relative;
-    width: 100%;
-    /* Removed fixed height to let images expand completely */
-    overflow: hidden;
-    background: rgba(0, 0, 0, 0.2);
-    border-bottom: 1px solid rgba(255,255,255,0.05); /* optional divider */
-}
-
-.deal-card__std-img {
-    width: 100%;
-    height: auto; /* natural aspect ratio adjustment */
-    display: block; /* stop inline gap underneath */
-    transition: transform 0.5s ease;
-}
-
-.deal-card--standard:hover .deal-card__std-img {
-    transform: scale(1.05);
-}
-
-.deal-card__badge--floating {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 2;
-}
-
-.deal-card__std-content {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-}
-
-/* Side-by-side Row */
-.deal-card__row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 24px;
-}
-
-.deal-card__text-col {
-    flex: 1;
-    min-width: 0; /* Ensures truncation doesn't break flex layout */
-}
-
-.deal-card__price-col {
-    flex-shrink: 0;
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-}
-
-.deal-card__timer--standard {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     gap: 6px;
-    color: #a1a1aa;
 }
 
-.deal-card__timer .countdown-timer {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-weight: 600;
-    color: #e4e4e7;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 6px 10px;
-    border-radius: 6px;
+.sc-timer-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--dc-accent, #fbbf24);
+    animation: ev-blink 1.2s ease-in-out infinite;
+}
+@keyframes ev-blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+
+.ev-sc__timer .countdown-timer {
+    font-family: ui-monospace, 'SFMono-Regular', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.65);
+    background: none;
+    padding: 0;
 }

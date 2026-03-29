@@ -328,7 +328,7 @@ function ProductInfo({ product, diameter }) {
     const lblArcR  = r - 7;                            // label arc: 7px inside bubble edge
     const strArcR  = arcR - 4;                         // strain arc: hugs the bubble edge
     const lblSw      = lblFs * 0.60;
-    const badgeArcR  = strArcR + 14;
+    const badgeArcR  = strArcR + 26;
     const badgeFs    = svgFs * 1.65;
     const badgeSw    = badgeFs * 0.65;
     const strain     = getStrainLabel(product);
@@ -550,14 +550,31 @@ export default function FlowersLayout({ products = [] }) {
         const el = containerRef.current;
         if (!el) return;
         const update = () => {
-            setDim({ W: el.clientWidth, H: el.clientHeight });
-            setSafeTop(getSafeTop(el));
+            const W = el.clientWidth;
+            const H = el.clientHeight;
+            if (W > 0 && H > 0) {
+                setDim({ W, H });
+                setSafeTop(getSafeTop(el));
+            }
         };
         // Delay first measurement so header children have rendered
         const t = setTimeout(update, 120);
+        // Defensive fallback: re-measure at 600 ms in case the first measurement
+        // was taken while the container was in an unusual CSS state (e.g. mid-animation).
+        const t2 = setTimeout(() => {
+            setDim(prev => {
+                const W = el.clientWidth;
+                const H = el.clientHeight;
+                if (W > 0 && H > 0 && (prev.W !== W || prev.H !== H)) {
+                    setSafeTop(getSafeTop(el));
+                    return { W, H };
+                }
+                return prev;
+            });
+        }, 600);
         const ro = new ResizeObserver(update);
         ro.observe(el);
-        return () => { clearTimeout(t); ro.disconnect(); };
+        return () => { clearTimeout(t); clearTimeout(t2); ro.disconnect(); };
     }, []);
 
     const { W, H } = dim;

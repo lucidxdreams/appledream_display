@@ -116,9 +116,15 @@ export default function CategoryTransition({
             masterTlRef.current = null;
         }
 
-        // CRITICAL: hide new products before browser paints
+        // CRITICAL: hide new products before browser paints.
+        // NOTE: We must NOT set scale:0 here because R3F (used by FlowersLayout)
+        // measures the Canvas size via getBoundingClientRect(). If scale:0 is applied,
+        // R3F initialises the WebGL renderer at 0×0 and the spheres never appear.
+        // We hide with opacity:0 only (scale stays at 1) so R3F gets correct dimensions.
+        // The pop-in scale effect is applied later — just before the reveal — so the
+        // Canvas has already initialized at full size by then.
         gsap.set(content, { opacity: 0 });
-        gsap.set(Array.from(content.children), { opacity: 0, scale: 0, x: 0, y: 0 });
+        gsap.set(Array.from(content.children), { opacity: 0, scale: 1, x: 0, y: 0 });
 
         // Reset label children to clean starting states
         if (barTop)   gsap.set(barTop,   { scaleX: 0 });
@@ -212,6 +218,10 @@ export default function CategoryTransition({
         masterTl.set(label, { opacity: 0 });
 
         // ── PRODUCTS MATERIALIZE ──────────────────────────────────────────────
+        // Set scale just before reveal so the pop-in effect is preserved.
+        // By now the Canvas has already been initialised at full size (scale was 1
+        // during the entire title sequence), so this brief 0.8 start is safe.
+        masterTl.set(Array.from(content.children), { scale: 0.8 });
         masterTl.set(content, { opacity: 1 });
         masterTl.to(Array.from(content.children), {
             scale: 1,

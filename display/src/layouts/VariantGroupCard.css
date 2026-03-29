@@ -1,361 +1,97 @@
 /**
- * VariantGroupCard.css — "Neon Drop" card + 3D slot variant cycling
+ * VariantGroupCard.css — Holo-Fluid Glass for Variant Cards
+ * Includes 3D flip animation for variants at the bottom.
  */
 
-/* ── Card shell (same look as cg-card) ── */
-.vgc {
-    display: flex;
-    flex-direction: column;
+.vgc2 {
+    position: relative;
     width: 100%;
     height: 100%;
-    background: linear-gradient(170deg, rgba(10,7,18,0.96) 0%, rgba(6,4,12,0.98) 100%);
-    border: 1px solid var(--vgc-border);
-    border-radius: 18px;
+    border-radius: 20px;
+    background: transparent;
     overflow: hidden;
-    box-sizing: border-box;
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    box-shadow:
-        0 10px 48px rgba(0,0,0,0.80),
-        0 0 0 1px rgba(255,255,255,0.04) inset,
-        0 0 32px var(--vgc-dim);
-    opacity: 0;
-}
-
-/* ── Entrance + float animations ── */
-@keyframes vgc-enter {
-    from { opacity: 0; transform: translateY(24px) scale(0.95); }
-    to   { opacity: 1; transform: translateY(0)    scale(1);    }
-}
-@keyframes vgc-float-a { 0%,100% { transform: translateY(0);    } 50% { transform: translateY(-6px); } }
-@keyframes vgc-float-b { 0%,100% { transform: translateY(-3px); } 50% { transform: translateY(5px);  } }
-@keyframes vgc-float-c { 0%,100% { transform: translateY(2px);  } 50% { transform: translateY(-5px); } }
-@keyframes vgc-glow-pulse {
-    0%,100% { opacity: 0.38; transform: scale(1);    }
-    50%     { opacity: 0.62; transform: scale(1.20); }
-}
-
-.vgc-float-1 {
-    animation:
-        vgc-enter   0.60s cubic-bezier(0.16,1,0.3,1) var(--entrance-del,0s) both,
-        vgc-float-a 5.8s  ease-in-out var(--float-del,0.5s) infinite;
-}
-.vgc-float-2 {
-    animation:
-        vgc-enter   0.60s cubic-bezier(0.16,1,0.3,1) var(--entrance-del,0s) both,
-        vgc-float-b 7.2s  ease-in-out var(--float-del,0.5s) infinite;
-}
-.vgc-float-3 {
-    animation:
-        vgc-enter   0.60s cubic-bezier(0.16,1,0.3,1) var(--entrance-del,0s) both,
-        vgc-float-c 6.4s  ease-in-out var(--float-del,0.5s) infinite;
-}
-
-/* ── Accent bar ── */
-.vgc-accent {
-    width: 100%;
-    height: 3px;
-    flex-shrink: 0;
-    background: var(--vgc-bar);
-    box-shadow: 0 0 16px var(--vgc-glow);
-}
-
-/* ── Header ── */
-.vgc-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 14px 5px;
-    flex-shrink: 0;
-    box-sizing: border-box;
-}
-
-.vgc-strain {
-    font-size: 0.56rem;
-    font-weight: 900;
-    letter-spacing: 0.20em;
-    text-transform: uppercase;
-    color: var(--vgc-primary);
-    text-shadow: 0 0 10px var(--vgc-glow);
-    background: var(--vgc-dim);
-    border: 1px solid var(--vgc-border);
-    border-radius: 30px;
-    padding: 3px 10px;
-    white-space: nowrap;
-}
-
-.vgc-header-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.vgc-var-count {
-    font-size: 0.46rem;
-    font-weight: 700;
-    letter-spacing: 0.10em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.30);
-}
-
-.vgc-price-range {
-    font-size: 1.05rem;
-    font-weight: 900;
-    letter-spacing: -0.01em;
-    background: linear-gradient(135deg, var(--vgc-primary), var(--vgc-secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* ── Hero image ── */
-.vgc-img-wrap {
-    position: relative;
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.vgc-img-glow {
-    position: absolute;
-    width: 55%;
-    height: 65%;
-    background: radial-gradient(ellipse, var(--vgc-glow) 0%, transparent 68%);
-    filter: blur(30px);
-    pointer-events: none;
-    animation: vgc-glow-pulse 4.5s ease-in-out infinite;
-}
-
-.vgc-img {
-    position: relative;
-    z-index: 1;
-    max-width: 82%;
-    max-height: 88%;
-    object-fit: contain;
-    filter: drop-shadow(0 6px 20px rgba(0,0,0,0.55));
-}
-
-.vgc-fallback {
-    font-size: 3.4rem;
-    opacity: 0.38;
-}
-
-/* ── Data panel ── */
-.vgc-data {
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
     display: flex;
     flex-direction: column;
-    padding: 7px 14px 8px;
-    flex-shrink: 0;
-    gap: 5px;
-    box-sizing: border-box;
+    animation: holo-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-del, 0s) both;
+    transform-style: preserve-3d;
 }
 
-.vgc-brand {
-    font-size: 0.50rem;
-    font-weight: 700;
-    color: rgba(255,255,255,0.28);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
+.holo-orbs { position: absolute; inset: -30px; z-index: 0; pointer-events: none; }
+.holo-orb { position: absolute; border-radius: 50%; filter: blur(40px); opacity: 0.85; mix-blend-mode: screen; }
+.holo-orb-1 { width: 120%; height: 120%; top: -40%; left: -20%; background: radial-gradient(circle, var(--vgc-o1) 0%, transparent 70%); animation: orb-spin 12s linear infinite; }
+.holo-orb-2 { width: 100%; height: 100%; bottom: -30%; right: -20%; background: radial-gradient(circle, var(--vgc-o2) 0%, transparent 70%); animation: orb-spin 15s linear infinite reverse; }
+.holo-orb-3 { width: 90%; height: 90%; top: 20%; left: 30%; background: radial-gradient(circle, var(--vgc-o3) 0%, transparent 70%); animation: orb-slosh 9s ease-in-out infinite alternate; }
+
+.holo-glass-pane {
+    position: absolute; inset: 0; z-index: 1; background: rgba(4, 2, 10, 0.72);
+    backdrop-filter: blur(60px) saturate(180%); -webkit-backdrop-filter: blur(60px) saturate(180%);
+    box-shadow: inset 0 2px 30px rgba(255, 255, 255, 0.05);
 }
 
-.vgc-name {
-    font-size: 1.0rem;
-    font-weight: 800;
-    line-height: 1.2;
-    background: linear-gradient(135deg, var(--vgc-primary) 0%, var(--vgc-secondary) 55%, rgba(255,255,255,0.88) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+.holo-content-wrapper { position: relative; z-index: 10; width: 100%; height: 100%; display: flex; flex-direction: column; }
+
+.holo-meta-top { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 0; flex-shrink: 0; }
+.holo-strain-pill { font-size: 0.55rem; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; color: var(--vgc-primary); padding: 2px 10px; border-radius: 40px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 14px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+.holo-meta-tags { font-size: 0.50rem; font-family: 'Manrope', sans-serif; font-weight: 800; letter-spacing: 0.1em; color: rgba(255, 255, 255, 0.45); text-transform: uppercase; }
+
+.holo-hero { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; position: relative; background: radial-gradient(ellipse 60% 8% at 50% 85%, rgba(255,255,255,0.08) 0%, transparent 100%); padding: 10px 0; }
+.holo-hero-shadow { position: absolute; bottom: 12%; width: 40px; height: 6px; border-radius: 50%; background: rgba(0,0,0,0.85); filter: blur(4px); animation: holo-shadow-bob var(--float-dur, 8s) ease-in-out var(--float-delay, 0s) infinite; }
+.holo-img-container { height: 94%; width: 90%; display: flex; align-items: center; justify-content: center; animation: holo-float var(--float-dur, 8s) ease-in-out var(--float-delay, 0s) infinite; }
+.holo-img { max-height: 115%; max-width: 115%; object-fit: contain; transform: scale(1.28); filter: drop-shadow(0 20px 24px rgba(0,0,0,0.85)); }
+.vgc2-fallback { font-size: 3rem; opacity: 0.2; }
+
+.holo-info { flex-shrink: 0; display: flex; flex-direction: column; padding: 12px 20px; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%); }
+.vgc2-brand { font-family: 'Manrope', sans-serif; font-size: 0.55rem; font-weight: 800; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 2px; }
+.vgc2-name { font-size: 1.15rem; font-weight: 800; line-height: 1.15; color: #fff; text-shadow: none; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.holo-effects { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; margin-bottom: 8px; }
+.holo-chip { font-family: 'Manrope', sans-serif; font-size: 0.45rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 10px; border-radius: 4px; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.65); border: 1px solid rgba(255,255,255,0.1); }
+
+/* Range text for header */
+.vgc2-price-range { font-size: 0.6rem; font-family: 'Manrope', sans-serif; font-weight: 800; letter-spacing: 0.1em; color: rgba(255,255,255,0.35); text-transform: uppercase; margin-bottom: 4px; display: block;}
+
+/* ── 3D Variant Slot (Lives at the bottom edge) ── */
+.vgc2-slot {
+    position: relative; height: 38px; width: 100%; flex-shrink: 0; font-family: 'Outfit', sans-serif;
+    border-top: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.85); overflow: hidden;
+    perspective: 800px;
+}
+.vgc2-slot-mask { position: absolute; left: 0; right: 0; height: 10px; z-index: 5; pointer-events: none; }
+.vgc2-slot-mask--top { top: 0; background: linear-gradient(to bottom, rgba(0,0,0,1) 0%, transparent 100%); }
+.vgc2-slot-mask--bot { bottom: 0; background: linear-gradient(to top, rgba(0,0,0,1) 0%, transparent 100%); }
+
+.vgc2-slot-row {
+    position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; padding: 0 16px;
+    transform-origin: center center -19px; transform-style: preserve-3d; opacity: 1; margin-bottom: 4px; /* leaves room for pips */
+}
+.vgc2-slot-enter { animation: vgc2-flip-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.vgc2-slot-exit { animation: vgc2-flip-out 0.35s cubic-bezier(0.3, 0, 0.8, 0.15) forwards; }
+
+@keyframes vgc2-flip-in { from { transform: rotateX(-90deg); opacity: 0; } to { transform: rotateX(0deg); opacity: 1; } }
+@keyframes vgc2-flip-out { from { transform: rotateX(0deg); opacity: 1; } to { transform: rotateX(90deg); opacity: 0; } }
+
+.vgc2-vdot { width: 6px; height: 6px; border-radius: 50%; background: var(--dot); box-shadow: 0 0 8px var(--dot); flex-shrink: 0; }
+.vgc2-vname { flex: 1; font-size: 0.82rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.9; }
+.vgc2-vthc { font-size: 0.82rem; font-weight: 800; color: var(--vgc-primary); margin-left: auto; text-shadow: none; }
+.vgc2-vprice { font-size: 1.1rem; font-weight: 900; color: #fff; margin-left: 10px; text-shadow: 0 0 12px rgba(255,255,255,0.3); }
+
+.vgc2-pips { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; z-index: 10; }
+.vgc2-pip { width: 14px; height: 2px; border-radius: 2px; background: rgba(255,255,255,0.15); transition: background 0.3s; }
+.vgc2-pip--on { background: var(--vgc-primary); box-shadow: 0 0 6px var(--vgc-primary); }
+.vgc2-pip-more { font-size: 0.4rem; font-weight: 900; color: rgba(255,255,255,0.4); margin-left: 2px; line-height: 2px; }
+
+/* ══════════════════════════════════════════
+   DISPOSABLES (VAPES) SPECIFIC ENHANCEMENTS
+══════════════════════════════════════════ */
+.vgc2--disposable .holo-glass-pane {
+    backdrop-filter: blur(28px) saturate(220%);
+    -webkit-backdrop-filter: blur(28px) saturate(220%);
+    background: rgba(4, 2, 10, 0.45);
+    box-shadow: inset 0 2px 30px rgba(255, 255, 255, 0.15),
+                inset 0 0 0 1.5px rgba(255,255,255,0.1);
 }
 
-.vgc-thc-row {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-}
-
-.vgc-thc-lbl {
-    font-size: 0.44rem;
-    font-weight: 700;
-    letter-spacing: 0.10em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.30);
-    flex-shrink: 0;
-    width: 20px;
-}
-
-.vgc-thc-track {
-    flex: 1;
-    height: 4px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.vgc-thc-fill {
-    height: 100%;
-    background: var(--vgc-bar);
-    border-radius: 4px;
-    box-shadow: 0 0 7px var(--vgc-glow);
-}
-
-.vgc-thc-val {
-    font-size: 0.88rem;
-    font-weight: 900;
-    color: var(--vgc-primary);
-    text-shadow: 0 0 8px var(--vgc-glow);
-    flex-shrink: 0;
-    min-width: 30px;
-    text-align: right;
-}
-
-/* ════════════════════════════════════════
-   3-D VARIANT SLOT MACHINE
-   ════════════════════════════════════════ */
-
-.vgc-slot {
-    position: relative;
-    flex-shrink: 0;
-    border-top: 1px solid var(--vgc-border);
-    background: rgba(0,0,0,0.32);
-    overflow: hidden;
-    box-sizing: border-box;
-    padding: 0;
-}
-
-/* Edge fade masks — slot window illusion */
-.vgc-slot-mask {
-    position: absolute;
-    left: 0; right: 0;
-    height: 10px;
-    z-index: 3;
-    pointer-events: none;
-}
-.vgc-slot-mask--top {
-    top: 0;
-    background: linear-gradient(to bottom, rgba(4,2,8,0.90), transparent);
-}
-.vgc-slot-mask--bot {
-    bottom: 22px; /* just above pips */
-    background: linear-gradient(to top, rgba(4,2,8,0.80), transparent);
-}
-
-/* The cycling row */
-.vgc-slot-row {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 0 14px;
-    height: 38px;
-    box-sizing: border-box;
-    transform-origin: 50% 50%;
-    will-change: transform, opacity;
-}
-
-/* Idle state — fully visible */
-.vgc-slot-idle {
-    opacity: 1;
-    transform: perspective(380px) rotateX(0deg) translateY(0);
-}
-
-/* 3-D flip exit — rotates up and out */
-@keyframes vgc-flip-exit {
-    0%   { opacity: 1; transform: perspective(380px) rotateX(0deg)   translateY(0);    }
-    100% { opacity: 0; transform: perspective(380px) rotateX(-60deg) translateY(-9px); }
-}
-.vgc-slot-exit {
-    animation: vgc-flip-exit 0.32s cubic-bezier(0.55,0,1,0.45) forwards;
-}
-
-/* 3-D flip enter — comes up from below */
-@keyframes vgc-flip-enter {
-    0%   { opacity: 0; transform: perspective(380px) rotateX(60deg)  translateY(9px); }
-    100% { opacity: 1; transform: perspective(380px) rotateX(0deg)   translateY(0);   }
-}
-.vgc-slot-enter {
-    animation: vgc-flip-enter 0.40s cubic-bezier(0,0.55,0.45,1) forwards;
-}
-
-/* Variant dot (strain color) */
-.vgc-vdot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--dot, #10b981);
-    box-shadow: 0 0 8px var(--dot, #10b981), 0 0 16px var(--dot, #10b981);
-    flex-shrink: 0;
-    animation: vgc-dot-pulse 2s ease-in-out infinite;
-}
-@keyframes vgc-dot-pulse {
-    0%,100% { box-shadow: 0 0 6px var(--dot,#10b981), 0 0 12px var(--dot,#10b981); }
-    50%     { box-shadow: 0 0 12px var(--dot,#10b981), 0 0 24px var(--dot,#10b981); }
-}
-
-.vgc-vname {
-    flex: 1;
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: rgba(255,255,255,0.88);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
-}
-
-.vgc-vthc {
-    font-size: 0.62rem;
-    font-weight: 700;
-    color: rgba(255,255,255,0.38);
-    flex-shrink: 0;
-}
-
-.vgc-vprice {
-    font-size: 0.88rem;
-    font-weight: 900;
-    color: rgba(255,255,255,0.85);
-    flex-shrink: 0;
-    min-width: 30px;
-    text-align: right;
-    text-shadow: 0 0 10px var(--vgc-glow);
-}
-
-/* ── Progress pips ── */
-.vgc-pips {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    height: 20px;
-    padding: 0 10px;
-    box-sizing: border-box;
-}
-
-.vgc-pip {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.14);
-    transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
-    flex-shrink: 0;
-}
-
-.vgc-pip--on {
-    background: var(--vgc-primary);
-    transform: scale(1.35);
-    box-shadow: 0 0 8px var(--vgc-glow);
-}
-
-.vgc-pip-more {
-    font-size: 0.42rem;
-    font-weight: 700;
-    color: rgba(255,255,255,0.28);
-    letter-spacing: 0.06em;
+.vgc2--disposable .holo-orb {
+    mix-blend-mode: screen; 
+    filter: blur(45px) brightness(1.3);
 }
