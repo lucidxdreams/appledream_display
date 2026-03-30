@@ -104,7 +104,7 @@ function Weather() {
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+        const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY || '2fc9a0a62a726a918c4b4a30d33bf641';
         if (!API_KEY) {
           setWeather({ temp: '--', condition: 'Washington DC', icon: '🏛️' });
           return;
