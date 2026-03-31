@@ -1,162 +1,151 @@
 /**
- * CartridgesLayout.css — "Holo-Fluid Glass" Cartridges
+ * CartridgesLayout.css — Cartridges Display (independent)
  *
- * Implements borderless deep-frosted glass cards with fluid neon orb layers 
- * behind a zero-g floating product image.
+ * All classes prefixed with cart- to avoid collision with any other layout.
+ * Fixed card size. Simple centered flex container.
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Outfit:wght@300;500;700;900&display=swap');
 
-/* ── Scene Background ── */
-.holo-scene {
+/* ── Scene ── */
+.cart-scene {
     position: relative;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #020108; /* Extremely deep abyssal base */
+    background: #020108;
     font-family: 'Outfit', sans-serif;
 }
 
-/* Base deep space gradient */
-.holo-bg {
+.cart-bg {
     position: absolute;
     inset: 0;
     background: radial-gradient(ellipse 130% 120% at 50% 10%, #060212 0%, #010005 100%);
     z-index: 0;
 }
 
-/* Ambient room bloom */
-.holo-ambient-1, .holo-ambient-2 {
+.cart-ambient-1, .cart-ambient-2 {
     position: absolute;
     border-radius: 50%;
     filter: blur(140px);
     pointer-events: none;
     z-index: 0;
 }
-.holo-ambient-1 {
+.cart-ambient-1 {
     width: 60%;
     height: 60%;
     left: -15%;
     top: -10%;
     background: radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 60%);
-    animation: holo-drift 24s ease-in-out infinite alternate;
+    animation: cart-drift 24s ease-in-out infinite alternate;
 }
-.holo-ambient-2 {
+.cart-ambient-2 {
     width: 50%;
     height: 50%;
     right: -10%;
     bottom: -15%;
     background: radial-gradient(circle, rgba(20,184,166,0.05) 0%, transparent 60%);
-    animation: holo-drift 18s ease-in-out infinite alternate-reverse;
+    animation: cart-drift 18s ease-in-out infinite alternate-reverse;
 }
 
-@keyframes holo-drift {
+@keyframes cart-drift {
     0%   { transform: translate(0, 0); }
     100% { transform: translate(10%, 15%); }
 }
 
-/* Container Grid */
-.holo-grid {
+/* ── Container — simple centered flex, cards wrap naturally ── */
+.cart-container {
     position: relative;
     z-index: 2;
     width: 100%;
     height: 100%;
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     align-content: center;
     justify-content: center;
+    gap: 24px;
+    padding: 24px;
     box-sizing: border-box;
-    overflow: hidden;
 }
 
 /* ══════════════════════════════════════════
-   HOLO-FLUID CARD
+   CARD — fixed 280 × 400, never grows
 ══════════════════════════════════════════ */
-.holo-card {
+.cart-card {
+    width: 280px;
+    height: 400px;
+    flex-shrink: 0;
+    flex-grow: 0;
     position: relative;
     border-radius: 20px;
     background: transparent;
-    overflow: hidden; /* Contains the fluid orbs */
-    box-shadow: 
-        0 24px 70px rgba(0, 0, 0, 0.9), 
-        0 0 0 1px rgba(255, 255, 255, 0.05) inset; /* Ghost border */
+    overflow: hidden;
+    box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.9),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
     display: flex;
     flex-direction: column;
-    animation: holo-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both;
-    transform-style: preserve-3d;
+    animation: cart-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) var(--entrance-delay, 0s) both;
 }
 
-@keyframes holo-enter {
+@keyframes cart-enter {
     from { opacity: 0; transform: translateY(40px) scale(0.95); }
     to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
-/* Background Fluid Orbs */
-.holo-orbs {
+/* ── Orbs ── */
+.cart-orbs {
     position: absolute;
-    inset: -30px; /* Allow bleed */
+    inset: -30px;
     z-index: 0;
     pointer-events: none;
 }
-
-/* Three highly-blurred colored orbs moving smoothly inside the card */
-.holo-orb {
+.cart-orb {
     position: absolute;
     border-radius: 50%;
     filter: blur(40px);
     opacity: 0.85;
     mix-blend-mode: screen;
 }
-
-.holo-orb-1 {
-    width: 120%;
-    height: 120%;
-    top: -40%;
-    left: -20%;
+.cart-orb-1 {
+    width: 120%; height: 120%; top: -40%; left: -20%;
     background: radial-gradient(circle, var(--pal-o1) 0%, transparent 70%);
-    animation: orb-spin 12s linear infinite;
+    animation: cart-orb-spin 12s linear infinite;
 }
-.holo-orb-2 {
-    width: 100%;
-    height: 100%;
-    bottom: -30%;
-    right: -20%;
+.cart-orb-2 {
+    width: 100%; height: 100%; bottom: -30%; right: -20%;
     background: radial-gradient(circle, var(--pal-o2) 0%, transparent 70%);
-    animation: orb-spin 15s linear infinite reverse;
+    animation: cart-orb-spin 15s linear infinite reverse;
 }
-.holo-orb-3 {
-    width: 90%;
-    height: 90%;
-    top: 20%;
-    left: 30%;
+.cart-orb-3 {
+    width: 90%; height: 90%; top: 20%; left: 30%;
     background: radial-gradient(circle, var(--pal-o3) 0%, transparent 70%);
-    animation: orb-slosh 9s ease-in-out infinite alternate;
+    animation: cart-orb-slosh 9s ease-in-out infinite alternate;
 }
 
-@keyframes orb-spin {
+@keyframes cart-orb-spin {
     from { transform: rotate(0deg) scale(1.1); }
     to   { transform: rotate(360deg) scale(1.1); }
 }
-@keyframes orb-slosh {
+@keyframes cart-orb-slosh {
     0%   { transform: translate(-10%, -10%) scale(0.9); }
     100% { transform: translate(15%, 20%) scale(1.3); }
 }
 
-/* Deep Frosted Glass Pane — Sits directly above the orbs */
-.holo-glass-pane {
+/* ── Glass Pane ── */
+.cart-glass {
     position: absolute;
     inset: 0;
     z-index: 1;
     background: rgba(4, 2, 10, 0.72);
-    /* Massive blur diffuses the orbs completely into a cloudy soft gradient field */
     backdrop-filter: blur(60px) saturate(180%);
     -webkit-backdrop-filter: blur(60px) saturate(180%);
-    /* Inner subtle glint */
     box-shadow: inset 0 2px 30px rgba(255, 255, 255, 0.05);
 }
 
-/* ── Content Wrapper ── */
-.holo-content-wrapper {
+/* ── Content ── */
+.cart-content {
     position: relative;
     z-index: 10;
     width: 100%;
@@ -165,16 +154,16 @@
     flex-direction: column;
 }
 
-/* ── Top Meta Area ── */
-.holo-meta-top {
+/* ── Top Meta ── */
+.cart-meta-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 20px 0;
+    padding: 14px 16px 0;
     flex-shrink: 0;
 }
 
-.holo-strain-pill {
+.cart-strain-pill {
     font-size: 0.55rem;
     font-weight: 900;
     letter-spacing: 0.18em;
@@ -188,7 +177,7 @@
     backdrop-filter: blur(10px);
 }
 
-.holo-meta-tags {
+.cart-meta-tags {
     font-size: 0.50rem;
     font-family: 'Manrope', sans-serif;
     font-weight: 800;
@@ -197,75 +186,54 @@
     text-transform: uppercase;
 }
 
-/* ── Hero Image with Zero-G Float ── */
-.holo-hero {
+/* ── Hero Image — capped at 50% of card height ── */
+.cart-hero {
     flex: 1 1 0;
     min-height: 0;
-    max-height: 55%;
+    max-height: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    /* Soft glowing laser pad horizontally underneath the product */
-    background: radial-gradient(ellipse 60% 8% at 50% 85%, rgba(255,255,255,0.08) 0%, transparent 100%);
-    padding: 10px 0;
+    padding: 8px 0;
 }
 
-/* Drop shadow that bobs inversely to the float */
-.holo-hero-shadow {
-    position: absolute;
-    bottom: 12%;
-    width: 40px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.85);
-    filter: blur(4px);
-    animation: holo-shadow-bob var(--float-dur, 8s) ease-in-out var(--float-delay, 0s) infinite;
-}
-
-.holo-img-container {
-    height: 94%;
-    width: 90%;
+.cart-img-wrap {
+    height: 90%;
+    width: 85%;
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Zero-gravity continuous float */
-    animation: holo-float var(--float-dur, 8s) ease-in-out var(--float-delay, 0s) infinite;
+    animation: cart-float var(--float-dur, 8s) ease-in-out var(--float-delay, 0s) infinite;
 }
 
-@keyframes holo-float {
+@keyframes cart-float {
     0%, 100% { transform: translateY(0px); }
-    50%      { transform: translateY(-16px); }
+    50%      { transform: translateY(-10px); }
 }
 
-@keyframes holo-shadow-bob {
-    0%, 100% { transform: scale(1); opacity: 0.8; }
-    50%      { transform: scale(0.6); opacity: 0.3; }
-}
-
-.holo-img {
+.cart-img {
     max-height: 100%;
     max-width: 100%;
     object-fit: contain;
-    /* Ultra-crisp heavy physical drop shadow, distinct from the light bloom */
-    filter: drop-shadow(0 20px 24px rgba(0,0,0,0.85));
+    filter: drop-shadow(0 12px 20px rgba(0,0,0,0.85));
 }
 
-.holo-fallback {
-    font-size: 3rem;
+.cart-fallback {
+    font-size: 2.5rem;
     opacity: 0.2;
 }
 
-/* ── Info & Data Region (Bottom) ── */
-.holo-info {
+/* ── Info Section — always visible at bottom ── */
+.cart-info {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    padding: 12px 20px 20px;
+    padding: 10px 16px 16px;
     background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
 }
 
-.holo-brand {
+.cart-brand {
     font-family: 'Manrope', sans-serif;
     font-size: 0.55rem;
     font-weight: 800;
@@ -275,13 +243,11 @@
     margin-bottom: 2px;
 }
 
-.holo-name {
-    font-size: 1.15rem;
+.cart-name {
+    font-size: 1rem;
     font-weight: 800;
     line-height: 1.15;
     color: #fff;
-    /* text shadow removed */
-    text-shadow: none;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -289,49 +255,48 @@
     overflow: hidden;
 }
 
-/* Effects Wrapper */
-.holo-effects {
+.cart-effects {
     display: flex;
-    gap: 6px;
+    gap: 5px;
     flex-wrap: wrap;
-    margin-top: 8px;
-    margin-bottom: 12px;
+    margin-top: 6px;
+    margin-bottom: 8px;
 }
 
-.holo-chip {
+.cart-chip {
     font-family: 'Manrope', sans-serif;
     font-size: 0.45rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 3px 10px;
+    padding: 2px 8px;
     border-radius: 4px;
     background: rgba(255,255,255,0.06);
     color: rgba(255,255,255,0.65);
     border: 1px solid rgba(255,255,255,0.1);
 }
 
-/* ── Sleek Laser Data Pane ── */
-.holo-data-pane {
+/* ── Stats Row ── */
+.cart-stats-row {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    padding-top: 14px;
-    border-top: 1px solid rgba(255,255,255,0.06); /* Ghost border line */
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.06);
 }
 
-.holo-data-stats {
+.cart-stats {
     display: flex;
-    gap: 20px;
+    gap: 16px;
 }
 
-.holo-stat-col {
+.cart-stat {
     display: flex;
     flex-direction: column;
     gap: 1px;
 }
 
-.holo-stat-lbl {
+.cart-stat-lbl {
     font-family: 'Manrope', sans-serif;
     font-size: 0.50rem;
     font-weight: 800;
@@ -340,26 +305,24 @@
     text-transform: uppercase;
 }
 
-.holo-stat-lbl--cbd {
+.cart-stat-lbl--cbd {
     color: rgba(255,255,255,0.25);
 }
 
-.holo-stat-val {
-    font-size: 1.05rem;
+.cart-stat-val {
+    font-size: 1rem;
     font-weight: 900;
     color: var(--pal-primary);
-    text-shadow: none;
 }
 
-.holo-stat-val--cbd {
-    color: #4ade80; /* Neo green */
-    text-shadow: none;
+.cart-stat-val--cbd {
+    color: #4ade80;
 }
 
-.holo-price {
-    font-size: 1.8rem;
+.cart-price {
+    font-size: 1.5rem;
     font-weight: 900;
-    line-height: 0.8;
+    line-height: 0.9;
     color: #fff;
     text-shadow: 0 4px 18px rgba(0,0,0,0.8), 0 0 25px rgba(255,255,255,0.3);
 }
