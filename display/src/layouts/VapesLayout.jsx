@@ -11,10 +11,12 @@ import { useImagePalette } from '../lib/colorExtractor';
 import './CartridgesLayout.css';
 
 /* ── Layout constants ── */
-const GAP    = 22;
-const PAD_H  = 28;
-const PAD_V  = 28;
-const ASPECT = 0.62;
+const GAP         = 22;
+const PAD_H       = 28;
+const PAD_V       = 28;
+const ASPECT      = 0.62;
+const MAX_CARD_W  = 360;
+const MAX_CARD_H  = 580;
 
 /* ── Fluid Strain Palettes ── */
 const PALETTES = {
@@ -54,8 +56,8 @@ function calcSizes(W, H, count, safeTop) {
     const cardH = Math.max(rowH, Math.round(cardW * 1.1));
 
     return {
-        cardW: Math.max(120, cardW),
-        cardH: Math.max(190, Math.min(cardH, Math.round(cardW / ASPECT))),
+        cardW: Math.max(120, Math.min(cardW, MAX_CARD_W)),
+        cardH: Math.max(190, Math.min(cardH, MAX_CARD_H)),
     };
 }
 
