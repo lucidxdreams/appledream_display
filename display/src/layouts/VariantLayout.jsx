@@ -109,7 +109,7 @@ function StandaloneCard({ product, index, isDisposable }) {
     );
 }
 
-function calcSizes(W, H, count, safeTop) {
+function calcSizes(W, H, count, safeTop, maxW, maxH) {
     if (!W || !H || count === 0) return { cardW: 200, cardH: 323 };
     const availW = Math.max(80, W - PAD_H * 2);
     const availH = Math.max(80, H - safeTop - PAD_V * 2);
@@ -127,7 +127,12 @@ function calcSizes(W, H, count, safeTop) {
     const cardW = Math.floor((availW - GAP * (cols - 1)) / cols);
     const rowH  = Math.floor((availH - GAP * (rows - 1)) / rows);
     const cardH = Math.max(rowH, Math.round(cardW * 1.1));
-    return { cardW: Math.max(120, cardW), cardH: Math.max(190, Math.min(cardH, Math.round(cardW / ASPECT))) };
+    const clampedW = maxW ? Math.min(cardW, maxW) : cardW;
+    const clampedH = maxH ? Math.min(cardH, maxH, Math.round(availH * 0.78)) : Math.min(cardH, Math.round(cardW / ASPECT));
+    return {
+        cardW: Math.max(120, clampedW),
+        cardH: Math.max(190, clampedH),
+    };
 }
 
 export default function VariantLayout({ products = [], variantGroups = [], categorySlug }) {
@@ -171,8 +176,13 @@ export default function VariantLayout({ products = [], variantGroups = [], categ
         .filter(g => g.mainProduct);
 
     const totalCards = resolvedGroups.length + standalone.length;
-    const { cardW, cardH } = calcSizes(dim.W, dim.H, totalCards, safeTop);
     const isDisposable = categorySlug && (categorySlug.includes('disposable') || categorySlug.includes('vape'));
+    const isCartridge  = categorySlug && categorySlug.includes('cart');
+    const { cardW, cardH } = calcSizes(
+        dim.W, dim.H, totalCards, safeTop,
+        isCartridge ? 300 : undefined,
+        isCartridge ? 450 : undefined,
+    );
 
     return (
         <div className="vl2-scene" ref={containerRef}>

@@ -48,6 +48,11 @@ function CartridgeCard({ product, index }) {
         <div
             className="cart-card"
             style={{
+                width: 280,
+                height: 400,
+                flexShrink: 0,
+                flexGrow: 0,
+                overflow: 'hidden',
                 '--pal-o1':        pal.orb1,
                 '--pal-o2':        pal.orb2,
                 '--pal-o3':        pal.orb3,
@@ -73,10 +78,10 @@ function CartridgeCard({ product, index }) {
                     )}
                 </div>
 
-                <div className="cart-hero">
-                    <div className="cart-img-wrap">
+                <div className="cart-hero" style={{ flex: '1 1 0', minHeight: 0, maxHeight: '43%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                    <div className="cart-img-wrap" style={{ height: '90%', width: '85%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {product.imageUrl
-                            ? <img src={product.imageUrl} alt={product.name} className="cart-img" loading="lazy" />
+                            ? <img src={product.imageUrl} alt={product.name} className="cart-img" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} loading="lazy" />
                             : <span className="cart-fallback">💧</span>
                         }
                     </div>
@@ -120,12 +125,19 @@ function CartridgeCard({ product, index }) {
 /* ── Main Layout ── */
 export default function CartridgesLayout({ products = [] }) {
     return (
-        <div className="cart-scene">
+        <div className="cart-scene" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
             <div className="cart-bg" />
             <div className="cart-ambient-1" />
             <div className="cart-ambient-2" />
 
-            <div className="cart-container">
+            <div className="cart-container" style={{
+                position: 'relative', zIndex: 2,
+                width: '100%', height: '100%',
+                display: 'flex', flexWrap: 'wrap',
+                alignItems: 'center', alignContent: 'center',
+                justifyContent: 'center', gap: 24, padding: 24,
+                boxSizing: 'border-box',
+            }}>
                 {products.map((p, i) => (
                     <CartridgeCard key={p.id} product={p} index={i} />
                 ))}
