@@ -241,7 +241,7 @@ function VapesFields({ register, errors, flavors, setFlavors, setExtraDirty }) {
                 <div className="form-group">
                     <label className="form-label">Cartridge Size *</label>
                     <select className="form-select" {...register('cartSize')}>
-                        {CART_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+                        {CART_SIZES_VAPE.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                 </div>
                 <div className="form-group">

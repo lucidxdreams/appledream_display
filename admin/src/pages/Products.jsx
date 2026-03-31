@@ -200,6 +200,7 @@ export default function Products() {
             const flowhubItems = await fetchFlowhubInventory(selectedLocation, categorySlug);
             
             let addedCount = 0;
+            let skippedCount = 0;
             const flowhubSkus = new Set(flowhubItems.map(item => item.sku).filter(Boolean));
             
             // Delete stale products synced previously but missing from Flowhub
