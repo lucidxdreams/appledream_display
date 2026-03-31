@@ -79,7 +79,7 @@ function calcSizes(W, H, count, safeTop) {
 
     return {
         cardW: Math.max(120, Math.min(cardW, MAX_CARD_W)),
-        cardH: Math.max(190, Math.min(cardH, MAX_CARD_H)),
+        cardH: Math.max(190, Math.min(cardH, MAX_CARD_H, Math.round(availH * 0.78))),
     };
 }
 
