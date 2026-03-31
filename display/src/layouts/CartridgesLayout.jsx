@@ -15,8 +15,8 @@ const GAP         = 22;
 const PAD_H       = 28;
 const PAD_V       = 28;
 const ASPECT      = 0.62; // cardW / cardH  → portrait
-const MAX_CARD_W  = 360;  // cap so 1–3 products never fill the screen
-const MAX_CARD_H  = 580;
+const MAX_CARD_W  = 300;  // cap so 1–3 products never fill the screen
+const MAX_CARD_H  = 450;
 
 /* ── Fluid Strain Palettes ── */
 const PALETTES = {

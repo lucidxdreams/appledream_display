@@ -1,8 +1,8 @@
 /**
- * CartridgesLayout.css — "Holo-Fluid Glass" Cartridges
+ * VapesLayout.css — "Holo-Fluid Glass" Vapes / Disposables
  *
- * Implements borderless deep-frosted glass cards with fluid neon orb layers 
- * behind a zero-g floating product image.
+ * Independent copy of the Holo-Fluid Glass design system for Vapes.
+ * Modifications here do NOT affect CartridgesLayout.
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Outfit:wght@300;500;700;900&display=swap');
@@ -13,7 +13,7 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #020108; /* Extremely deep abyssal base */
+    background: #020108;
     font-family: 'Outfit', sans-serif;
 }
 
@@ -148,10 +148,8 @@
     inset: 0;
     z-index: 1;
     background: rgba(4, 2, 10, 0.72);
-    /* Massive blur diffuses the orbs completely into a cloudy soft gradient field */
     backdrop-filter: blur(60px) saturate(180%);
     -webkit-backdrop-filter: blur(60px) saturate(180%);
-    /* Inner subtle glint */
     box-shadow: inset 0 2px 30px rgba(255, 255, 255, 0.05);
 }
 
@@ -201,12 +199,10 @@
 .holo-hero {
     flex: 1 1 0;
     min-height: 0;
-    max-height: 55%;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    /* Soft glowing laser pad horizontally underneath the product */
     background: radial-gradient(ellipse 60% 8% at 50% 85%, rgba(255,255,255,0.08) 0%, transparent 100%);
     padding: 10px 0;
 }
@@ -229,7 +225,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Zero-gravity continuous float */
     animation: holo-float var(--float-dur, 8s) ease-in-out var(--float-delay, 0s) infinite;
 }
 
@@ -244,10 +239,10 @@
 }
 
 .holo-img {
-    max-height: 100%;
-    max-width: 100%;
+    max-height: 115%;
+    max-width: 115%;
     object-fit: contain;
-    /* Ultra-crisp heavy physical drop shadow, distinct from the light bloom */
+    transform: scale(1.28);
     filter: drop-shadow(0 20px 24px rgba(0,0,0,0.85));
 }
 
@@ -280,7 +275,6 @@
     font-weight: 800;
     line-height: 1.15;
     color: #fff;
-    /* text shadow removed */
     text-shadow: none;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -317,7 +311,7 @@
     align-items: flex-end;
     justify-content: space-between;
     padding-top: 14px;
-    border-top: 1px solid rgba(255,255,255,0.06); /* Ghost border line */
+    border-top: 1px solid rgba(255,255,255,0.06);
 }
 
 .holo-data-stats {
@@ -352,7 +346,7 @@
 }
 
 .holo-stat-val--cbd {
-    color: #4ade80; /* Neo green */
+    color: #4ade80;
     text-shadow: none;
 }
 
@@ -362,4 +356,20 @@
     line-height: 0.8;
     color: #fff;
     text-shadow: 0 4px 18px rgba(0,0,0,0.8), 0 0 25px rgba(255,255,255,0.3);
+}
+
+/* ══════════════════════════════════════════
+   VAPES / DISPOSABLES SPECIFIC ENHANCEMENTS
+══════════════════════════════════════════ */
+.holo-card--disposable .holo-glass-pane {
+    backdrop-filter: blur(24px) saturate(220%);
+    -webkit-backdrop-filter: blur(24px) saturate(220%);
+    background: rgba(4, 2, 10, 0.45); /* Let bright image colors through */
+    box-shadow: inset 0 2px 30px rgba(255, 255, 255, 0.15),
+                inset 0 0 0 1.5px rgba(255,255,255,0.1); /* Brighter rim */
+}
+
+.holo-card--disposable .holo-orb {
+    mix-blend-mode: screen; 
+    filter: blur(45px) brightness(1.3); /* Pop the image-extracted colors intensely */
 }

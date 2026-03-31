@@ -8,7 +8,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { useImagePalette } from '../lib/colorExtractor';
-import './CartridgesLayout.css';
+import './VapesLayout.css';
 
 /* ── Layout constants ── */
 const GAP    = 22;
