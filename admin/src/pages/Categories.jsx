@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { logAuditEvent } from '../lib/auditLog'
 import {
-    collection, getDocs, doc, updateDoc, writeBatch
+    collection, getDocs, doc, updateDoc, writeBatch, setDoc, deleteDoc
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useLocation } from '../contexts/LocationContext'
@@ -14,7 +14,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { HexColorPicker } from 'react-colorful'
-import { GripVertical, ChevronDown, ChevronUp, Package } from 'lucide-react'
+import { GripVertical, ChevronDown, ChevronUp, Package, Plus, Copy, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 function ColorPickerField({ label, value, onChange }) {
@@ -143,6 +143,24 @@ function SortableCategoryCard({ cat, locationId, onUpdate }) {
                 </button>
             </Link>
 
+            {/* Delete */}
+            <button
+                className="btn btn-ghost btn-sm"
+                title="Delete category"
+                style={{ padding: '6px', color: 'var(--danger, #ef4444)' }}
+                onClick={async () => {
+                    if (!window.confirm(`Delete "${cat.name}"? This cannot be undone.`)) return
+                    try {
+                        await deleteDoc(doc(db, 'locations', locationId, 'categories', cat.id))
+                        logAuditEvent({ action: 'category.deleted', entity: 'category', entityId: cat.id, details: { name: cat.name, location: locationId } })
+                        toast.success(`Deleted "${cat.name}"`)
+                        onUpdate(cat.id, '__deleted', true)
+                    } catch { toast.error('Failed to delete') }
+                }}
+            >
+                <Trash2 size={14} />
+            </button>
+
             {/* Expand settings */}
             <button
                 className="btn btn-ghost btn-sm"
@@ -202,11 +220,30 @@ function SortableCategoryCard({ cat, locationId, onUpdate }) {
     )
 }
 
+const LOCATIONS = [
+    { id: 'north-capitol', name: 'North Capitol' },
+    { id: 'mt-pleasant', name: 'Mt Pleasant' },
+    { id: 'georgia-ave', name: 'Georgia Ave' },
+    { id: 'columbia-rd', name: 'Columbia Rd' },
+]
+
+const DEFAULT_CATEGORY = {
+    active: true,
+    order: 99,
+    displayDuration: 15,
+    duration: 15,
+    themeColor: '#4a7c59',
+    accentColor: '#6ab04c',
+}
+
 export default function Categories() {
     const { selectedLocation } = useLocation()
     const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [showAddForm, setShowAddForm] = useState(false)
+    const [newCatName, setNewCatName] = useState('')
+    const [copying, setCopying] = useState(false)
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -259,9 +296,48 @@ export default function Categories() {
     }
 
     const handleFieldUpdate = (id, field, value) => {
+        if (field === '__deleted') {
+            setCategories((prev) => prev.filter((c) => c.id !== id))
+            return
+        }
         setCategories((prev) =>
             prev.map((c) => (c.id === id ? { ...c, [field]: value } : c))
         )
+    }
+
+    const handleAddCategory = async () => {
+        const name = newCatName.trim()
+        if (!name) { toast.error('Name is required'); return }
+        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        setSaving(true)
+        try {
+            const catDoc = { ...DEFAULT_CATEGORY, name, slug, order: categories.length }
+            await setDoc(doc(db, 'locations', selectedLocation, 'categories', slug), catDoc)
+            logAuditEvent({ action: 'category.created', entity: 'category', entityId: slug, details: { name, location: selectedLocation } })
+            toast.success(`Created "${name}"`)
+            setNewCatName('')
+            setShowAddForm(false)
+            loadCategories()
+        } catch { toast.error('Failed to create category') }
+        finally { setSaving(false) }
+    }
+
+    const handleCopyFrom = async (sourceLocationId) => {
+        if (!window.confirm(`Copy all categories from "${LOCATIONS.find(l => l.id === sourceLocationId)?.name}" to the current location? Existing categories with the same ID will be overwritten.`)) return
+        setCopying(true)
+        try {
+            const srcSnap = await getDocs(collection(db, 'locations', sourceLocationId, 'categories'))
+            if (srcSnap.empty) { toast.error('Source location has no categories'); setCopying(false); return }
+            const batch = writeBatch(db)
+            srcSnap.docs.forEach((d) => {
+                batch.set(doc(db, 'locations', selectedLocation, 'categories', d.id), d.data())
+            })
+            await batch.commit()
+            logAuditEvent({ action: 'category.copied', entity: 'category', details: { from: sourceLocationId, to: selectedLocation, count: srcSnap.size } })
+            toast.success(`Copied ${srcSnap.size} categories`)
+            loadCategories()
+        } catch { toast.error('Failed to copy categories') }
+        finally { setCopying(false) }
     }
 
     return (
@@ -271,13 +347,53 @@ export default function Categories() {
                     <h1 className="page-title">Categories</h1>
                     <p className="page-subtitle">Drag to reorder · Toggle to activate · Expand to configure</p>
                 </div>
-                {saving && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', fontSize: 13 }}>
-                        <div className="spinner" style={{ width: 14, height: 14 }} />
-                        Saving…
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {saving && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', fontSize: 13 }}>
+                            <div className="spinner" style={{ width: 14, height: 14 }} />
+                            Saving…
+                        </div>
+                    )}
+                    <button className="btn btn-primary btn-sm" onClick={() => setShowAddForm(s => !s)}>
+                        <Plus size={14} /> Add Category
+                    </button>
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <select
+                            className="form-select"
+                            style={{ fontSize: 13, padding: '6px 10px', minWidth: 160 }}
+                            value=""
+                            disabled={copying}
+                            onChange={(e) => { if (e.target.value) handleCopyFrom(e.target.value) }}
+                        >
+                            <option value="">{copying ? 'Copying…' : '⬇ Copy from location'}</option>
+                            {LOCATIONS.filter(l => l.id !== selectedLocation).map(l => (
+                                <option key={l.id} value={l.id}>{l.name}</option>
+                            ))}
+                        </select>
                     </div>
-                )}
+                </div>
             </div>
+
+            {showAddForm && (
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16, padding: 16, background: 'var(--surface)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                    <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Category name (e.g. Disposables)"
+                        value={newCatName}
+                        onChange={e => setNewCatName(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleAddCategory() }}
+                        style={{ flex: 1 }}
+                        autoFocus
+                    />
+                    <button className="btn btn-primary btn-sm" onClick={handleAddCategory} disabled={saving}>
+                        {saving ? 'Creating…' : 'Create'}
+                    </button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => { setShowAddForm(false); setNewCatName('') }}>
+                        Cancel
+                    </button>
+                </div>
+            )}
 
             {loading ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
