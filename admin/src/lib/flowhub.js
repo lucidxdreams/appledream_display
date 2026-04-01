@@ -25,19 +25,26 @@ export async function fetchFlowhubInventory(locationId, categorySlug) {
 
     const validCategories = CATEGORY_MAP[categorySlug] || [];
 
-    // During dev, we use our Vite proxy to avoid CORS. In prod, we use the free cors.eu.org community proxy.
-    const baseUrl = import.meta.env.PROD ? 'https://cors.eu.org/https://api.flowhub.com' : '/flowhub-api';
-    const url = `${baseUrl}/v0/inventoryNonZero`;
+    // In dev, use Vite proxy. In prod, use our Firebase Cloud Function proxy (no CORS issues).
+    const isDev = !import.meta.env.PROD;
+
+    let url;
+    let fetchOpts;
+
+    if (isDev) {
+        url = '/flowhub-api/v0/inventoryNonZero';
+        fetchOpts = {
+            method: 'GET',
+            headers: { 'clientId': CLIENT_ID, 'key': API_KEY, 'Accept': 'application/json' },
+        };
+    } else {
+        const fnBase = 'https://us-central1-apple-dream-advertising-model.cloudfunctions.net/flowhubProxy';
+        url = `${fnBase}?path=${encodeURIComponent('/v0/inventoryNonZero')}&clientId=${encodeURIComponent(CLIENT_ID)}&key=${encodeURIComponent(API_KEY)}`;
+        fetchOpts = { method: 'GET' };
+    }
 
     try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'clientId': CLIENT_ID,
-                'key': API_KEY,
-                'Accept': 'application/json'
-            }
-        });
+        const response = await fetch(url, fetchOpts);
 
         if (!response.ok) {
             const errBody = await response.text();
